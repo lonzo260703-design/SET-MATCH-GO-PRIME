@@ -1,43 +1,16 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tu Diagnóstico — SET-MATCH-GO!</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% extends "base.html" %}
+{% block title %}Tu Diagnóstico — SET-MATCH-GO!{% endblock %}
+{% block extra_css %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/test.css') }}">
-</head>
-<body>
+{% endblock %}
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="{{ url_for('index') }}" class="nav-brand" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
-      <img src="{{ url_for('static', filename='Logo.jpg') }}" alt="Logo" style="height: 38px; width: auto; object-fit: contain;">
-      <span>SET-MATCH-GO!</span>
-    </a>
-
-    <ul class="nav-center">
-      <li><a href="{{ url_for('index') }}">Inicio</a></li>
-      <li><a href="#">Colecciones</a></li>
-      <li><a href="#">Teoría del Color</a></li>
-    </ul>
-
-    <ul class="nav-right">
-      <li><a href="#">Buscar ☼</a></li>
-      <li><a href="{{ url_for('login') }}">Iniciar Sesión</a></li>
-      <li><a href="{{ url_for('test') }}" class="btn-test">Test Colorimetría</a></li>
-    </ul>
-
-    <button class="menu-toggle" id="menuBtn">☰</button>
-  </nav>
-
-  <!-- RESULTADO DEL TEST -->
+{% block content %}
   <main class="test-wrapper">
     <div class="test-header">
       <h1>Tu Paleta Ideal</h1>
       <h2 style="font-size: 20px; font-weight: 700; margin: 15px 0 10px; letter-spacing: 1px;">{{ estacion }}</h2>
       <p style="max-width: 600px; margin: 0 auto; line-height: 1.6;">{{ descripcion }}</p>
-    </div>|
+    </div>
 
     <!-- MUESTRA DE COLORES RECOMENDADOS -->
     {% if paleta %}
@@ -48,17 +21,15 @@
       </div>
     {% endif %}
 
+    <p class="result-note">
+      {% if current_user.is_authenticated %}
+        Este resultado quedó guardado en tu <a href="{{ url_for('historial') }}">historial</a>.
+      {% else %}
+        <a href="{{ url_for('login') }}">Inicia sesión</a> o <a href="{{ url_for('register') }}">crea una cuenta</a>
+        antes de hacer el test para guardar tus resultados.
+      {% endif %}
+    </p>
+
     <a href="{{ url_for('test') }}" class="btn-submit" style="text-align: center; text-decoration: none;">Repetir Test</a>
   </main>
-
-  <script>
-    const menuBtn = document.getElementById('menuBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-    if (menuBtn && mobileMenu) {
-      menuBtn.addEventListener('click', () => {
-        mobileMenu.classList.toggle('active');
-      });
-    }
-  </script>
-</body>
-</html>
+{% endblock %}

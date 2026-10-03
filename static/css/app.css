@@ -1,0 +1,189 @@
+/* ==========================================
+   ESTILOS COMPARTIDOS: auth, mensajes, historial
+   ========================================== */
+
+/* Navbar: ajuste para pantallas medianas */
+@media (max-width: 1100px) {
+  .navbar { padding: 0 20px; }
+  .nav-center, .nav-right { gap: 12px; }
+}
+
+/* Botón con aspecto de enlace (Cerrar sesión) */
+.logout-form { margin: 0; }
+
+.nav-link-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #000;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.nav-link-btn:hover { background-color: #f0f0f0; }
+
+.mobile-dropdown .nav-link-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 0;
+  color: #555555;
+  border-radius: 0;
+}
+
+.mobile-dropdown .nav-link-btn:hover {
+  background-color: #f2f2f2;
+  color: #000;
+  font-weight: 700;
+}
+
+/* Mensajes flash */
+.flash-stack {
+  position: fixed;
+  top: 82px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92%, 460px);
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.flash {
+  padding: 12px 16px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  background: #fff;
+  border: 1px solid #000;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.flash-error   { border-color: #b91c1c; color: #b91c1c; }
+.flash-success { border-color: #15803d; color: #15803d; }
+.flash-warning { border-color: #b45309; color: #b45309; }
+.flash-info    { border-color: #1e3a8a; color: #1e3a8a; }
+
+/* Login / Registro */
+.login-wrapper {
+  max-width: 420px;
+  margin: 120px auto 60px;
+  padding: 40px 30px;
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+}
+
+.login-header { text-align: center; margin-bottom: 35px; }
+
+.login-header h1 {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 24px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.login-header p { font-size: 12px; color: #777; letter-spacing: 1px; }
+
+.form-group { margin-bottom: 20px; }
+
+.form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  color: #222;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  background: #fafafa;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.form-group input:focus { outline: none; border-color: #000; background: #fff; }
+
+.login-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  font-size: 12px;
+}
+
+.forgot-link { color: #666; text-decoration: none; transition: color 0.2s ease; }
+.forgot-link:hover { color: #000; text-decoration: underline; }
+
+.btn-login {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: #000;
+  color: #fff;
+  border: none;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-login:hover { background: #333; }
+
+.login-footer {
+  text-align: center;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+  font-size: 12px;
+  color: #666;
+}
+
+.login-footer a { color: #000; font-weight: 600; text-decoration: none; }
+.login-footer a:hover { text-decoration: underline; }
+
+/* Resultado e historial */
+.result-note {
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  letter-spacing: 1px;
+  margin: 10px 0 20px;
+}
+
+.result-note a { color: #000; font-weight: 600; }
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: #fafafa;
+  border: 1px solid #e5e5e5;
+  padding: 20px 24px;
+  margin-bottom: 15px;
+}
+
+.history-title { font-size: 13px; font-weight: 700; letter-spacing: 1px; }
+.history-date  { font-size: 11px; color: #777; letter-spacing: 1px; margin-top: 4px; }
+
+.history-palette { display: flex; gap: 8px; }
+
+.history-palette span {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}

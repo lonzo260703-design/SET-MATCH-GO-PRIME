@@ -1,70 +1,9 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SET-MATCH-GO!</title>
+{% extends "base.html" %}
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-
-  <nav class="navbar">
-    <a href="{{ url_for('index') }}" class="nav-brand" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
-      <img src="{{ url_for('static', filename='Logo.jpg') }}" alt="Logo" style="height: 38px; width: auto; object-fit: contain;">
-      <span>SET-MATCH-GO!</span>
-    </a>
-
-    <ul class="nav-center">
-      <li><a href="#">Inicio</a></li>
-      <li><a href="#">Colecciones</a></li>
-      <li><a href="#">Teoría del Color</a></li>
-    </ul>
-
-    <ul class="nav-right">
-      <li><a href="#">Buscar ☼</a></li>
-      <li><a href="{{ url_for('login') }}">Iniciar Sesión</a></li>
-      <a href="{{ url_for('test') }}" class="btn-test">Test Colorimetría</a>
-    </ul>
-
-    <button class="menu-toggle" id="menuBtn">☰</button>
-  </nav>
-
-  <div class="mobile-dropdown" id="mobileMenu">
-    <ul>
-      <li><a href="#">Inicio</a></li>
-      <li><a href="#">Colecciones</a></li>
-      <li><a href="#">Teoría del Color</a></li>
-      <li><a href="#">Buscar ☼</a></li>
-      <li><a href="#">Iniciar Sesión</a></li>
-      <li style="padding: 10px 0;">
-        <a href="{{ url_for('test') }}" class="btn-test" style="display:inline-block; width:auto; padding: 10px 24px;">Test Colorimetría</a>
-      </li>
-    </ul>
-  </div>
-
-  <div class="menu-overlay" id="menuOverlay"></div>
-
+{% block content %}
   <div class="hero-container">
     <div class="column">Columna 1</div>
     <div class="column">Columna 2</div>
     <div class="column">Columna 3</div>
   </div>
-
-  <script>
-    const menuBtn = document.getElementById('menuBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-    const menuOverlay = document.getElementById('menuOverlay');
-
-    function toggleMenu() {
-      const isOpen = mobileMenu.classList.toggle('active');
-      menuOverlay.classList.toggle('active', isOpen);
-      menuBtn.textContent = isOpen ? '✕' : '☰';
-    }
-
-    menuBtn.addEventListener('click', toggleMenu);
-    menuOverlay.addEventListener('click', toggleMenu);
-  </script>
-
-</body>
-</html>
+{% endblock %}

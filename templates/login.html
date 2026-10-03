@@ -1,151 +1,7 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iniciar Sesión — SET-MATCH-GO!</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <style>
-    .login-wrapper {
-      max-width: 420px;
-      margin: 120px auto 60px;
-      padding: 40px 30px;
-      background: #ffffff;
-      border: 1px solid #e5e5e5;
-    }
+{% extends "base.html" %}
+{% block title %}Iniciar Sesión — SET-MATCH-GO!{% endblock %}
 
-    .login-header {
-      text-align: center;
-      margin-bottom: 35px;
-    }
-
-    .login-header h1 {
-      font-family: 'Times New Roman', Times, serif;
-      font-size: 24px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .login-header p {
-      font-size: 12px;
-      color: #777;
-      letter-spacing: 1px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      color: #222;
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1px solid #ccc;
-      font-size: 13px;
-      background: #fafafa;
-      box-sizing: border-box;
-      transition: border-color 0.2s ease, background 0.2s ease;
-    }
-
-    .form-group input:focus {
-      outline: none;
-      border-color: #000;
-      background: #fff;
-    }
-
-    .login-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
-      font-size: 12px;
-    }
-
-    .forgot-link {
-      color: #666;
-      text-decoration: none;
-      transition: color 0.2s ease;
-    }
-
-    .forgot-link:hover {
-      color: #000;
-      text-decoration: underline;
-    }
-
-    .btn-login {
-      display: block;
-      width: 100%;
-      padding: 14px;
-      background: #000;
-      color: #fff;
-      border: none;
-      font-size: 12px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-
-    .btn-login:hover {
-      background: #333;
-    }
-
-    .login-footer {
-      text-align: center;
-      margin-top: 25px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
-      font-size: 12px;
-      color: #666;
-    }
-
-    .login-footer a {
-      color: #000;
-      font-weight: 600;
-      text-decoration: none;
-    }
-
-    .login-footer a:hover {
-      text-decoration: underline;
-    }
-  </style>
-</head>
-<body>
-
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="{{ url_for('index') }}" class="nav-brand" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
-      <img src="{{ url_for('static', filename='Logo.jpg') }}" alt="Logo" style="height: 38px; width: auto; object-fit: contain;">
-      <span>SET-MATCH-GO!</span>
-    </a>
-
-    <ul class="nav-center">
-      <li><a href="{{ url_for('index') }}">Inicio</a></li>
-      <li><a href="#">Colecciones</a></li>
-      <li><a href="#">Teoría del Color</a></li>
-    </ul>
-
-    <ul class="nav-right">
-      <li><a href="#">Buscar ☼</a></li>
-      <li><a href="{{ url_for('login') }}">Iniciar Sesión</a></li>
-      <li><a href="{{ url_for('test') }}" class="btn-test">Test Colorimetría</a></li>
-    </ul>
-
-    <button class="menu-toggle" id="menuBtn">☰</button>
-  </nav>
-
-  <!-- FORMULARIO DE LOGIN -->
+{% block content %}
   <main class="login-wrapper">
     <div class="login-header">
       <h1>Inicio de Sesión</h1>
@@ -153,9 +9,12 @@
     </div>
 
     <form action="{{ url_for('login') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="next" value="{{ next_url or '' }}">
+
       <div class="form-group">
-        <label for="email">Usuario/Correo Electrónico</label>
-        <input type="email" id="email" name="email" placeholder="Ingresa tu usuario o correo electrónico" required>
+        <label for="email">Correo Electrónico</label>
+        <input type="email" id="email" name="email" value="{{ email or '' }}" placeholder="Ingresa tu correo electrónico" required autofocus>
       </div>
 
       <div class="form-group">
@@ -171,18 +30,7 @@
     </form>
 
     <div class="login-footer">
-      ¿Aún no tienes cuenta? <a href="#">Regístrate</a>
+      ¿Aún no tienes cuenta? <a href="{{ url_for('register') }}">Regístrate</a>
     </div>
   </main>
-
-  <script>
-    const menuBtn = document.getElementById('menuBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-    if (menuBtn && mobileMenu) {
-      menuBtn.addEventListener('click', () => {
-        mobileMenu.classList.toggle('active');
-      });
-    }
-  </script>
-</body>
-</html>
+{% endblock %}

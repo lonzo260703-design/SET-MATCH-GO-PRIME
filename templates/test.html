@@ -1,40 +1,10 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test de Colorimetría — SET-MATCH-GO!</title>
-
-  <!-- 1. Estilos generales (Navbar, layout general) -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <!-- 2. Estilos propios de esta página -->
+{% extends "base.html" %}
+{% block title %}Test de Colorimetría — SET-MATCH-GO!{% endblock %}
+{% block extra_css %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/test.css') }}">
-</head>
-<body>
+{% endblock %}
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="{{ url_for('index') }}" class="nav-brand" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
-      <img src="{{ url_for('static', filename='Logo.jpg') }}" alt="Logo" style="height: 38px; width: auto; object-fit: contain;">
-      <span>SET-MATCH-GO!</span>
-    </a>
-
-    <ul class="nav-center">
-      <li><a href="{{ url_for('index') }}">Inicio</a></li>
-      <li><a href="#">Colecciones</a></li>
-      <li><a href="#">Teoría del Color</a></li>
-    </ul>
-
-    <ul class="nav-right">
-      <li><a href="#">Buscar ☼</a></li>
-      <li><a href="{{ url_for('login') }}">Iniciar Sesión</a></li>
-      <li><a href="{{ url_for('test') }}" class="btn-test">Test Colorimetría</a></li>
-    </ul>
-
-    <button class="menu-toggle" id="menuBtn">☰</button>
-  </nav>
-
-  <!-- CONTENIDO DEL TEST -->
+{% block content %}
   <main class="test-wrapper">
     <div class="test-header">
       <h1>Test de Colorimetría</h1>
@@ -42,15 +12,17 @@
     </div>
 
     <form action="{{ url_for('test') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
       <!-- PREGUNTA 1 -->
       <div class="question-card">
         <div class="question-title">1. ¿De qué tono se ven las venas de tus muñecas bajo la luz natural?</div>
         <div class="options-grid">
           <label class="option-label">
-            <input type="radio" name="p1" value="frio" required> Verdosas
+            <input type="radio" name="p1" value="calido" required> Verdosas
           </label>
           <label class="option-label">
-            <input type="radio" name="p1" value="calido"> Azuladas o violáceas
+            <input type="radio" name="p1" value="frio"> Azuladas o violáceas
           </label>
           <label class="option-label">
             <input type="radio" name="p1" value="neutro"> Una mezcla de ambas
@@ -90,15 +62,4 @@
       <button type="submit" class="btn-submit">Obtener mi Diagnóstico</button>
     </form>
   </main>
-
-  <script>
-    const menuBtn = document.getElementById('menuBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-    if (menuBtn && mobileMenu) {
-      menuBtn.addEventListener('click', () => {
-        mobileMenu.classList.toggle('active');
-      });
-    }
-  </script>
-</body>
-</html>
+{% endblock %}
