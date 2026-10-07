@@ -1,34 +1,35 @@
 {% extends "base.html" %}
 {% block title %}Mi historial — SET-MATCH-GO!{% endblock %}
 {% block extra_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/test.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/test.css') }}">
 {% endblock %}
 
 {% block content %}
-  <main class="test-wrapper">
-    <div class="test-header">
-      <h1>Mi Historial</h1>
-      <p>Tus diagnósticos de colorimetría guardados</p>
+<main class="test-wrapper">
+  <div class="test-header">
+    <h1>Mi Historial</h1>
+    <p>Tus diagnósticos de colorimetría guardados</p>
+  </div>
+
+  {% if resultados %}
+  {% for r in resultados %}
+  <div class="history-item">
+    <div>
+      <div class="history-title">{{ r.estacion }}</div>
+      <div class="history-date">{{ r.created_at.strftime('%d/%m/%Y') }}</div>
     </div>
-
-    {% if resultados %}
-      {% for r in resultados %}
-        <div class="history-item">
-          <div>
-            <div class="history-title">{{ r.estacion }}</div>
-            <div class="history-date">{{ r.created_at.strftime('%d/%m/%Y') }}</div>
-          </div>
-          <div class="history-palette">
-            {% for color in perfiles[r.subtono].paleta %}
-              <span style="background-color: {{ color }};"></span>
-            {% endfor %}
-          </div>
-        </div>
+    <div class="history-palette">
+      {% for color in perfiles[r.estacion].paleta %}
+      <span style="--color: {{ color }}; background-color: var(--color);"></span>
       {% endfor %}
-    {% else %}
-      <p class="result-note">Aún no tienes resultados guardados.</p>
-    {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <p class="result-note">Aún no tienes resultados guardados.</p>
+  {% endif %}
 
-    <a href="{{ url_for('test') }}" class="btn-submit" style="text-align: center; text-decoration: none;">Hacer el test</a>
-  </main>
+  <a href="{{ url_for('test') }}" class="btn-submit" style="text-align: center; text-decoration: none;">Hacer el
+    test</a>
+</main>
 {% endblock %}
