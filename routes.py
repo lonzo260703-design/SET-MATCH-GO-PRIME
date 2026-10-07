@@ -138,7 +138,7 @@ def register_routes(app):
             descripcion=datos["descripcion"],
             paleta=datos["paleta"],
         )
-
+    
     @app.route("/historial")
     @login_required
     def historial():

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
     * {
       box-sizing: border-box;
     }
+
     body {
       font-family: 'Roboto', sans-serif;
       margin: 0;
@@ -26,26 +28,31 @@
       justify-content: space-between;
       align-items: center;
       padding: 0 20px;
-      background-color: #ffffff; /* Fondo blanco */
-      color: #333333; /* Texto en color oscuro */
+      background-color: #ffffff;
+      /* Fondo blanco */
+      color: #333333;
+      /* Texto en color oscuro */
       position: relative;
       height: 60px;
       z-index: 1000;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); /* Sombra para separar del fondo */
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      /* Sombra para separar del fondo */
     }
 
     .nav-brand {
       display: flex;
       align-items: center;
       gap: 10px;
-      color: #2c3e50; /* Texto del logo en azul oscuro/negro */
+      color: #2c3e50;
+      /* Texto del logo en azul oscuro/negro */
       text-decoration: none;
       font-weight: bold;
       font-size: 1.1rem;
     }
 
     /* LISTAS DE NAVEGACIÓN */
-    .nav-center, .nav-right {
+    .nav-center,
+    .nav-right {
       display: flex;
       align-items: center;
       list-style: none;
@@ -54,7 +61,8 @@
       height: 100%;
     }
 
-    .nav-center > li, .nav-right > li {
+    .nav-center>li,
+    .nav-right>li {
       position: relative;
       height: 100%;
       display: flex;
@@ -63,7 +71,8 @@
 
     /* LETRAS DE NAVEGACIÓN EN NEGRO */
     .navbar a {
-      color: #2c3e50; /* Texto en negro / gris oscuro */
+      color: #2c3e50;
+      /* Texto en negro / gris oscuro */
       text-decoration: none;
       padding: 0 15px;
       line-height: 60px;
@@ -73,7 +82,8 @@
     }
 
     .navbar a:hover {
-      color: #e74c3c; /* Tono rojo al pasar el cursor */
+      color: #e74c3c;
+      /* Tono rojo al pasar el cursor */
     }
 
     /* BOTONES DENTRO DE LA NAV */
@@ -88,6 +98,7 @@
       margin-left: 10px;
       font-weight: bold;
     }
+
     .btn-test:hover {
       background-color: #c0392b;
     }
@@ -95,13 +106,15 @@
     .nav-link-btn {
       background: none;
       border: none;
-      color: #2c3e50; /* Texto del botón de salir en negro */
+      color: #2c3e50;
+      /* Texto del botón de salir en negro */
       cursor: pointer;
       padding: 0 15px;
       font-size: 1rem;
       font-family: inherit;
       font-weight: 500;
     }
+
     .nav-link-btn:hover {
       color: #e74c3c;
     }
@@ -111,14 +124,16 @@
       position: relative;
     }
 
-    .mega-menu, .search-dropdown {
-      display: none; /* Ocultos por defecto */
+    .mega-menu,
+    .search-dropdown {
+      display: none;
+      /* Ocultos por defecto */
       position: absolute;
       top: 100%;
       left: 0;
       background-color: #ffffff;
       color: #333333;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
       border-radius: 0 0 8px 8px;
       border-top: 1px solid #eee;
       z-index: 1001;
@@ -237,7 +252,8 @@
       display: none;
       background: none;
       border: none;
-      color: #2c3e50; /* Icono del menú hamburguesa en negro */
+      color: #2c3e50;
+      /* Icono del menú hamburguesa en negro */
       font-size: 1.5rem;
       cursor: pointer;
     }
@@ -250,7 +266,7 @@
       left: 0;
       width: 100%;
       background-color: #ffffff;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       z-index: 999;
     }
 
@@ -274,7 +290,7 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0,0,0,0.4);
+      background: rgba(0, 0, 0, 0.4);
       z-index: 998;
     }
 
@@ -286,32 +302,179 @@
       z-index: 2000;
     }
 
+    /* Contenedor del desplegable */
+    .user-dropdown-container {
+      position: relative;
+    }
+
+    .user-toggle {
+      display: flex !important;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    .user-avatar-badge {
+      width: 24px;
+      height: 24px;
+      background-color: #000000;
+      color: #ffffff;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .arrow-down {
+      font-size: 10px;
+      color: #666;
+    }
+
+    /* Tarjeta flotante al estilo Colecciones */
+    .user-dropdown-card {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      width: 260px;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      border: 1px solid #eaeaea;
+      padding: 16px;
+      z-index: 1000;
+      box-sizing: border-box;
+      text-align: left;
+    }
+
+    /* Hover o clase active para mostrar */
+    .user-dropdown-container:hover .user-dropdown-card,
+    .user-dropdown-card.show {
+      display: block;
+    }
+
+    /* Encabezado: Nombre arriba, Correo abajo */
+    .user-card-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-bottom: 4px;
+    }
+
+    .user-card-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: #1a1a1a;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      line-height: 1.2;
+    }
+
+    .user-card-email {
+      font-size: 12px;
+      color: #666666;
+      font-weight: 400;
+      word-break: break-all;
+      font-family: inherit;
+    }
+
+    /* Divisor idéntico al de Colecciones */
+    .user-card-divider {
+      height: 1px;
+      background-color: #e5e5e5;
+      margin: 12px 0;
+    }
+
+    /* Botones de opción (Mi Historial / Cerrar Sesión) */
+    .user-card-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: transparent;
+      border: none;
+      color: #222222;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-decoration: none;
+      cursor: pointer;
+      box-sizing: border-box;
+      transition: background-color 0.15s ease, color 0.15s ease;
+      text-transform: uppercase;
+    }
+
+    .user-card-item:hover {
+      background-color: #f5f5f5;
+      color: #000000;
+    }
+
+    .user-card-item .item-icon {
+      stroke: #444444;
+    }
+
+    /* Opción de Cerrar Sesión */
+    .logout-item {
+      color: #1a1a1a;
+    }
+
+    .logout-item:hover {
+      background-color: #fff1f0;
+      color: #e53e3e;
+    }
+
+    .logout-item:hover .item-icon {
+      stroke: #e53e3e;
+    }
+
     .flash {
       padding: 12px 20px;
       margin-bottom: 10px;
       border-radius: 5px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
-    .flash-success { background-color: #2ecc71; color: white; }
-    .flash-error { background-color: #e74c3c; color: white; }
+
+    .flash-success {
+      background-color: #2ecc71;
+      color: white;
+    }
+
+    .flash-error {
+      background-color: #e74c3c;
+      color: white;
+    }
 
     /* MEDIA QUERIES (MÓVIL) */
     @media (max-width: 868px) {
-      .nav-center, .nav-right {
+
+      .nav-center,
+      .nav-right {
         display: none;
       }
+
       .menu-toggle {
         display: block;
       }
+
       .mobile-dropdown.active {
         display: block;
       }
+
       .menu-overlay.active {
         display: block;
       }
     }
   </style>
 </head>
+
 <body>
 
   <!-- NAVBAR -->
@@ -323,7 +486,7 @@
 
     <ul class="nav-center">
       <li><a href="{{ url_for('index') }}">Inicio</a></li>
-      
+
       <!-- DESPLEGABLE DE COLECCIONES -->
       <li class="dropdown">
         <a href="#" class="dropdown-toggle">Colecciones ▾</a>
@@ -431,16 +594,52 @@
         </div>
       </li>
 
+      <!-- MENÚ DESPLEGABLE DE USUARIO (SUSTITUYE AL CERRAR SESIÓN) -->
       {% if current_user.is_authenticated %}
-        <li><a href="{{ url_for('historial') }}">Mi historial</a></li>
-        <li>
-          <form action="{{ url_for('logout') }}" method="POST" class="logout-form" style="margin: 0;">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="nav-link-btn">Cerrar sesión</button>
+      <li class="dropdown user-dropdown-container">
+        <a href="#" class="dropdown-toggle user-toggle">
+          <span class="user-avatar-badge">{{ current_user.nombre[0] | upper }}</span>
+          <span class="user-display-name">{{ current_user.nombre.split()[0] }}</span>
+          <span class="arrow-down">▾</span>
+        </a>
+
+        <div class="user-dropdown-card">
+          <!-- Encabezado con Nombre y Correo abajo -->
+          <div class="user-card-header">
+            <span class="user-card-name">{{ current_user.nombre }}</span>
+            <span class="user-card-email">{{ current_user.email }}</span>
+          </div>
+
+          <div class="user-card-divider"></div>
+
+          <!-- Opciones del menú -->
+          <a href="{{ url_for('historial') }}" class="user-card-item">
+            <svg class="item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <circle cx="12" cy="12" r="9" />
+              <polyline points="12 7 12 12 15 15" />
+            </svg>
+            <span>MI HISTORIAL</span>
+          </a>
+
+          <div class="user-card-divider"></div>
+
+          <form action="{{ url_for('logout') }}" method="POST" style="margin: 0;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+            <button type="submit" class="user-card-item logout-item">
+              <svg class="item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              <span>CERRAR SESIÓN</span>
+            </button>
           </form>
-        </li>
+        </div>
+      </li>
       {% else %}
-        <li><a href="{{ url_for('login') }}">Iniciar Sesión</a></li>
+      <li><a href="{{ url_for('login') }}">INICIAR SESIÓN</a></li>
       {% endif %}
       <li><a href="{{ url_for('test') }}" class="btn-test">Test Colorimetría</a></li>
     </ul>
@@ -448,7 +647,7 @@
     <button class="menu-toggle" id="menuBtn" aria-label="Abrir menú">☰</button>
   </nav>
 
-  <!-- MENÚ MÓVIL -->
+  <!-- MENÚ MÓVIL ACTUALIZADO -->
   <div class="mobile-dropdown" id="mobileMenu">
     <ul>
       <li><a href="{{ url_for('index') }}">Inicio</a></li>
@@ -456,36 +655,38 @@
       <li><a href="#">Teoría del Color</a></li>
       <li>
         <form action="#" method="GET" style="padding: 10px 15px;">
-          <input type="text" name="q" placeholder="Buscar..." style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+          <input type="text" name="q" placeholder="Buscar..."
+            style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
         </form>
       </li>
       {% if current_user.is_authenticated %}
-        <li><a href="{{ url_for('historial') }}">Mi historial</a></li>
-        <li>
-          <form action="{{ url_for('logout') }}" method="POST" class="logout-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="nav-link-btn">Cerrar sesión</button>
-          </form>
-        </li>
+      <li><a href="{{ url_for('historial') }}">Mi historial</a></li>
+      <li>
+        <form action="{{ url_for('logout') }}" method="POST" class="logout-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+          <button type="submit" class="nav-link-btn" style="color: #dc2626;">Cerrar sesión ({{
+            current_user.nombre.split()[0] }})</button>
+        </form>
+      </li>
       {% else %}
-        <li><a href="{{ url_for('login') }}">Iniciar Sesión</a></li>
+      <li><a href="{{ url_for('login') }}">Iniciar Sesión</a></li>
       {% endif %}
       <li>
-        <a href="{{ url_for('test') }}" class="btn-test" style="margin: 10px 15px; text-align: center; display: block;">Test Colorimetría</a>
+        <a href="{{ url_for('test') }}" class="btn-test"
+          style="margin: 10px 15px; text-align: center; display: block;">Test Colorimetría</a>
       </li>
     </ul>
   </div>
   <div class="menu-overlay" id="menuOverlay"></div>
-
   <!-- MENSAJES FLASH -->
   {% with mensajes = get_flashed_messages(with_categories=true) %}
-    {% if mensajes %}
-      <div class="flash-stack" id="flashStack">
-        {% for categoria, texto in mensajes %}
-          <div class="flash flash-{{ categoria }}">{{ texto }}</div>
-        {% endfor %}
-      </div>
-    {% endif %}
+  {% if mensajes %}
+  <div class="flash-stack" id="flashStack">
+    {% for categoria, texto in mensajes %}
+    <div class="flash flash-{{ categoria }}">{{ texto }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
   {% endwith %}
 
   {% block content %}{% endblock %}
@@ -506,5 +707,21 @@
     const flashStack = document.getElementById('flashStack');
     if (flashStack) setTimeout(() => flashStack.remove(), 5000);
   </script>
+  <script>
+    function toggleUserMenu(event) {
+      event.stopPropagation();
+      const menu = document.getElementById('userMenu');
+      menu.classList.toggle('show');
+    }
+
+    // Cierra el menú si se hace clic fuera de él
+    document.addEventListener('click', function (event) {
+      const menu = document.getElementById('userMenu');
+      if (menu && menu.classList.contains('show')) {
+        menu.classList.remove('show');
+      }
+    });
+  </script>
 </body>
+
 </html>
