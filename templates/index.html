@@ -1,9 +1,30 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div class="hero-container">
-    <div class="column">Columna 1</div>
-    <div class="column">Columna 2</div>
-    <div class="column">Columna 3</div>
+<div class="hero-container">
+  <!-- Tarjeta 1 -->
+  <div class="card-column">
+    <div class="card-icon">🎨</div>
+    <h3>Test de Colorimetría</h3>
+    <p>Descubre qué paleta de colores resalta tu tono de piel y potencia tu estilo personal en pocos pasos.</p>
+    <a href="#" class="btn-card primary">Hacer el Test</a>
   </div>
+
+  <!-- Tarjeta 2 -->
+  <div class="card-column featured">
+    <span class="badge">Popular</span>
+    <div class="card-icon">👗</div>
+    <h3>Colecciones & Outfits</h3>
+    <p>Explora combinaciones de ropa diseñadas según la teoría del color y encuentra tu look ideal.</p>
+    <a href="#" class="btn-card accent">Ver Colecciones</a>
+  </div>
+
+  <!-- Tarjeta 3 -->
+  <div class="card-column">
+    <div class="card-icon">📖</div>
+    <h3>Teoría del Color</h3>
+    <p>Aprende las reglas de armonía cromática, contraste y cómo combinar prendas como un experto.</p>
+    <a href="#" class="btn-card outline">Aprender Más</a>
+  </div>
+</div>
 {% endblock %}

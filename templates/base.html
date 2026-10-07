@@ -23,6 +23,8 @@
       padding: 10px 20px;
       background-color: #2c3e50;
       color: white;
+
+      position: relative;
     }
     .navbar a {
       color: white;
@@ -35,6 +37,177 @@
     }
     .nav-center, .nav-right {
       display: flex;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      align-items: center;
+    }
+    
+    /* ESTILOS DE LOS MENÚS DESPLEGABLES (MEGA MENUS) */
+    .dropdown {
+      position: relative;
+    }
+    .dropdown-toggle {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .dropdown:hover .mega-menu,
+    .dropdown:hover .search-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    /* MEGA MENU GENERAL (Para Colecciones) */
+    .mega-menu {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      width: 600px;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      color: #333;
+    }
+
+    /* POSICIONAMIENTO ESPECÍFICO PARA TEORÍA DEL COLOR (Alineado hacia la izquierda) */
+    .dropdown-color .mega-menu {
+      left: 0;
+      transform: translateY(10px);
+    }
+    .dropdown-color:hover .mega-menu {
+      transform: translateY(0);
+    }
+
+    .mega-menu-content {
+      display: flex;
+      gap: 20px;
+    }
+    .menu-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .menu-column h4 {
+      margin: 0 0 5px 0;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #7f8c8d;
+      letter-spacing: 1px;
+    }
+    .menu-column a {
+      margin: 0 !important;
+      padding: 8px !important;
+      border-radius: 6px;
+      display: flex !important;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.2s;
+    }
+    .menu-column a:hover {
+      background: #f8f9fa;
+    }
+    .menu-column strong {
+      display: block;
+      color: #2c3e50;
+      font-size: 13px;
+    }
+    .menu-column p {
+      margin: 0;
+      font-size: 11px;
+      color: #7f8c8d;
+    }
+
+    /* Puntos decorativos e iconos */
+    .palette-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .palette-dot.spring { background: linear-gradient(135deg, #f1c40f, #e67e22); }
+    .palette-dot.autumn { background: linear-gradient(135deg, #d35400, #c0392b); }
+    .palette-dot.summer { background: linear-gradient(135deg, #3498db, #9b59b6); }
+    .palette-dot.winter { background: linear-gradient(135deg, #2c3e50, #8e44ad); }
+
+    .menu-icon {
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .menu-column.featured-info {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px dashed #dcdde1;
+      justify-content: space-between;
+    }
+    .menu-column.featured-info h5 {
+      margin: 0 0 6px 0;
+      font-size: 12px;
+      color: #2c3e50;
+    }
+    .menu-column.featured-info p {
+      font-size: 11px;
+      line-height: 1.4;
+      color: #636e72;
+    }
+
+    /* ESTILOS DE LA BARRA DE BÚSQUEDA DESPLEGABLE */
+    .search-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      transform: translateY(10px);
+      width: 300px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      padding: 12px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    .search-form {
+      display: flex;
+      gap: 8px;
+    }
+    .search-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 13px;
+      outline: none;
+    }
+    .search-input:focus {
+      border-color: #e74c3c;
+    }
+    .search-btn {
+      background-color: #2c3e50;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.2s;
+    }
+    .search-btn:hover {
+      background-color: #e74c3c;
+    }
     }
     .btn-test {
       background-color: #e74c3c;
@@ -46,6 +219,7 @@
     }
     .btn-test:hover {
       background-color: #c0392b;
+      color: white !important;
     }
     .flash {
       padding: 10px;
@@ -61,6 +235,7 @@
       background-color: #e74c3c;
       color: white;
     }
+    /* Estilos para móviles */
     /* Mobile styles */
     @media (max-width: 768px) {
       .navbar {
@@ -78,6 +253,9 @@
       .menu-overlay.active {
         display: block;
       }
+      .mega-menu, .search-dropdown {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -92,12 +270,118 @@
 
     <ul class="nav-center">
       <li><a href="{{ url_for('index') }}">Inicio</a></li>
-      <li><a href="#">Colecciones</a></li>
-      <li><a href="#">Teoría del Color</a></li>
+      
+      <!-- DESPLEGABLE DE COLECCIONES -->
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle">Colecciones ▾</a>
+        <div class="mega-menu">
+          <div class="mega-menu-content">
+            <div class="menu-column">
+              <h4>Estaciones Cálidas</h4>
+              <a href="#">
+                <span class="palette-dot spring"></span>
+                <div>
+                  <strong>Primavera</strong>
+                  <p>Tonos brillantes y luminosos</p>
+                </div>
+              </a>
+              <a href="#">
+                <span class="palette-dot autumn"></span>
+                <div>
+                  <strong>Otoño</strong>
+                  <p>Tonos tierra y profundos</p>
+                </div>
+              </a>
+            </div>
+            <div class="menu-column">
+              <h4>Estaciones Frías</h4>
+              <a href="#">
+                <span class="palette-dot summer"></span>
+                <div>
+                  <strong>Verano</strong>
+                  <p>Tonos suaves y pasteles</p>
+                </div>
+              </a>
+              <a href="#">
+                <span class="palette-dot winter"></span>
+                <div>
+                  <strong>Invierno</strong>
+                  <p>Contrastes e intensidad</p>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- DESPLEGABLE DE TEORÍA DEL COLOR (Alineado a la izquierda) -->
+      <li class="dropdown dropdown-color">
+        <a href="#" class="dropdown-toggle">Teoría del Color ▾</a>
+        <div class="mega-menu">
+          <div class="mega-menu-content">
+            
+            <div class="menu-column">
+              <h4>Fundamentos</h4>
+              <a href="#">
+                <span class="menu-icon">⭕</span>
+                <div>
+                  <strong>Círculo Cromático</strong>
+                  <p>Colores primarios, secundarios y terciarios</p>
+                </div>
+              </a>
+              <a href="#">
+                <span class="menu-icon">🌡️</span>
+                <div>
+                  <strong>Temperatura de Color</strong>
+                  <p>Identifica tonos cálidos vs. fríos</p>
+                </div>
+              </a>
+            </div>
+
+            <div class="menu-column">
+              <h4>Armonías</h4>
+              <a href="#">
+                <span class="menu-icon">⚡</span>
+                <div>
+                  <strong>Colores Complementarios</strong>
+                  <p>Combinaciones de alto contraste e impacto</p>
+                </div>
+              </a>
+              <a href="#">
+                <span class="menu-icon">🎨</span>
+                <div>
+                  <strong>Monocromático & Análogo</strong>
+                  <p>Estilos sobrios, elegantes y armónicos</p>
+                </div>
+              </a>
+            </div>
+
+            <div class="menu-column featured-info">
+              <div>
+                <h5>💡 Tip de Estilo</h5>
+                <p>Usa la regla 60-30-10 para combinar prendas: 60% color dominante, 30% secundario y 10% de acento.</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </li>
+
     </ul>
 
     <ul class="nav-right">
-      <li><a href="#">Buscar ☼</a></li>
+
+      <!-- DESPLEGABLE DE BÚSQUEDA -->
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle">Buscar ☼</a>
+        <div class="search-dropdown">
+          <form action="#" method="GET" class="search-form">
+            <input type="text" name="q" class="search-input" placeholder="Buscar color, estilo, prendas..." required>
+            <button type="submit" class="search-btn">Buscar</button>
+          </form>
+        </div>
+      </li>
+
       {% if current_user.is_authenticated %}
         <li><a href="{{ url_for('historial') }}">Mi historial</a></li>
         <li>
@@ -121,7 +405,11 @@
       <li><a href="{{ url_for('index') }}">Inicio</a></li>
       <li><a href="#">Colecciones</a></li>
       <li><a href="#">Teoría del Color</a></li>
-      <li><a href="#">Buscar ☼</a></li>
+      <li>
+        <form action="#" method="GET" style="padding: 10px 15px;">
+          <input type="text" name="q" placeholder="Buscar..." style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+        </form>
+      </li>
       {% if current_user.is_authenticated %}
         <li><a href="{{ url_for('historial') }}">Mi historial</a></li>
         <li>

@@ -7,7 +7,7 @@
 }
 
 body {
-  background-color: #ffffff;
+  background-color: #f9fafb;
   color: #000000;
   overflow-x: hidden;
 }
@@ -133,7 +133,6 @@ body {
   transition: all 0.2s ease;
 }
 
-/* HIGHLIGHT / COLOR AL SELECCIONAR EN EL MENÚ MÓVIL */
 .mobile-dropdown a:hover,
 .mobile-dropdown a:active {
   background-color: #f2f2f2;
@@ -162,31 +161,105 @@ body {
   pointer-events: auto;
 }
 
-/* CONTENEDOR HERO */
+/* CONTENEDOR DE TARJETAS (HERO CONTAINER ADAPTADO) */
 .hero-container {
-  width: 100vw;
-  min-height: 100vh;
+  width: 100%;
+  max-width: 1200px;
+  min-height: calc(100vh - 70px);
+  margin: 0 auto;
+  padding: 120px 20px 60px 20px;
   display: flex;
-  flex-direction: row;
-  padding-top: 70px;
+  justify-content: center;
+  align-items: stretch;
+  gap: 24px;
 }
 
-.column {
+/* ESTILOS DE LAS TARJETAS */
+.card-column {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 40px 24px;
   flex: 1;
-  min-height: calc(100vh - 70px);
-  background-color: #f4f4f4;
-  border-right: 1px solid #e5e5e5;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  color: #a0a0a0;
-  font-size: 12px;
-  letter-spacing: 2px;
+  text-align: center;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+}
+
+.card-column:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+.card-column.featured {
+  border: 2px solid #000000;
+}
+
+.badge {
+  position: absolute;
+  top: -12px;
+  background: #000000;
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
-.column:last-child {
-  border-right: none;
+.card-icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+}
+
+.card-column h3 {
+  font-size: 20px;
+  color: #000000;
+  margin-bottom: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.card-column p {
+  color: #666666;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 28px;
+  flex-grow: 1;
+}
+
+.btn-card {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.btn-card.primary,
+.btn-card.accent {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.btn-card.outline {
+  background-color: transparent;
+  color: #000000;
+  border: 1px solid #000000;
+}
+
+.btn-card:hover {
+  opacity: 0.85;
 }
 
 /* RESPONSIVE DESIGN */
@@ -205,11 +278,136 @@ body {
 
   .hero-container {
     flex-direction: column;
+    padding-top: 90px;
   }
 
-  .column {
-    min-height: 350px;
-    border-right: none;
-    border-bottom: 1px solid #e5e5e5;
+  .card-column {
+    width: 100%;
   }
+
+.nav-item.dropdown {
+  position: relative;
+}
+
+.dropdown-toggle .arrow {
+  font-size: 10px;
+  margin-left: 4px;
+  transition: transform 0.2s ease;
+}
+
+/* Mostrar menú al pasar el cursor */
+.nav-item.dropdown:hover .mega-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.nav-item.dropdown:hover .arrow {
+  transform: rotate(180deg);
+}
+
+/* Estructura del Mega Menu */
+.mega-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  width: 680px;
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease-in-out;
+  z-index: 200;
+}
+
+.mega-menu-content {
+  display: flex;
+  gap: 24px;
+}
+
+.menu-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.menu-column h4 {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #888888;
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+.menu-column a {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px !important;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.menu-column a:hover {
+  background: #f5f5f5 !important;
+}
+
+.menu-column strong {
+  display: block;
+  font-size: 13px;
+  color: #000000;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.menu-column p {
+  font-size: 11px;
+  color: #666666;
+  margin: 0;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+
+/* Indicadores de color por estación */
+.palette-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.palette-dot.spring { background: linear-gradient(135deg, #fbd38d, #f6ad55); }
+.palette-dot.autumn { background: linear-gradient(135deg, #dd6b20, #9b2c2c); }
+.palette-dot.summer { background: linear-gradient(135deg, #90cdf4, #fbb6ce); }
+.palette-dot.winter { background: linear-gradient(135deg, #3182ce, #805ad5); }
+
+/* Caja Destacada dentro del menú */
+.featured-box {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px dashed #e5e5e5;
+  justify-content: space-between;
+}
+
+.btn-mega {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #000000 !important;
+  padding: 0 !important;
+  margin-top: 8px;
+}
+
+.btn-mega:hover {
+  background: transparent !important;
+  text-decoration: underline;
+}
 }
