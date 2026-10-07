@@ -6,14 +6,87 @@
   <title>{% block title %}SET-MATCH-GO!{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   {% block extra_css %}{% endblock %}
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #2c3e50;
+      color: white;
+    }
+    .navbar a {
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      transition: color 0.3s;
+    }
+    .navbar a:hover {
+      color: #e74c3c;
+    }
+    .nav-center, .nav-right {
+      display: flex;
+    }
+    .btn-test {
+      background-color: #e74c3c;
+      padding: 10px 20px;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+    .btn-test:hover {
+      background-color: #c0392b;
+    }
+    .flash {
+      padding: 10px;
+      margin: 10px;
+      border-radius: 5px;
+      transition: opacity 0.5s ease;
+    }
+    .flash-success {
+      background-color: #2ecc71;
+      color: white;
+    }
+    .flash-error {
+      background-color: #e74c3c;
+      color: white;
+    }
+    /* Mobile styles */
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+      }
+      .menu-toggle {
+        display: block;
+      }
+      .mobile-dropdown {
+        display: none;
+      }
+      .mobile-dropdown.active {
+        display: block;
+      }
+      .menu-overlay.active {
+        display: block;
+      }
+    }
+  </style>
 </head>
 <body>
 
   <!-- NAVBAR -->
   <nav class="navbar">
-    <a href="{{ url_for('index') }}" class="nav-brand" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
-      <img src="{{ url_for('static', filename='Logo.jpg') }}" alt="Logo" style="height: 38px; width: auto; object-fit: contain;">
+    <a href="{{ url_for('index') }}" class="nav-brand">
+      <img src="{{ url_for('static', filename='Logo.jpg') }}" alt="Logo" style="height: 38px; object-fit: contain;">
       <span>SET-MATCH-GO!</span>
     </a>
 
@@ -60,8 +133,8 @@
       {% else %}
         <li><a href="{{ url_for('login') }}">Iniciar Sesión</a></li>
       {% endif %}
-      <li style="padding: 10px 0;">
-        <a href="{{ url_for('test') }}" class="btn-test" style="display:inline-block; width:auto; padding: 10px 24px;">Test Colorimetría</a>
+      <li>
+        <a href="{{ url_for('test') }}" class="btn-test">Test Colorimetría</a>
       </li>
     </ul>
   </div>
