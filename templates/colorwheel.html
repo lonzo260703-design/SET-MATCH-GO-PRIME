@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Círculo Cromático — SET-MATCH-GO!{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/colorwheel.css') }}">
+{% endblock %}
+
+{% block content %}
+  <main class="colorwheel-wrapper">
+    <div class="colorwheel-header">
+      <h1>Círculo Cromático</h1>
+      <p>Explora la rueda de colores y descubre combinaciones armoniosas para tus outfits</p>
+    </div>
+
+    <div class="colorwheel-container">
+      <img src="{{ url_for('static', filename='images/colorwheel.png') }}" alt="Círculo Cromático" class="colorwheel-image">
+    </div>
+
+    <div class="colorwheel-info">
+      <h2>Cómo usar el círculo cromático</h2>
+      <p>El círculo cromático es una herramienta esencial para entender la teoría del color. Puedes combinar colores complementarios, análogos o triádicos para crear looks equilibrados y atractivos.</p>
+    </div>
+  </main>
+{% endblock %}
