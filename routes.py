@@ -27,6 +27,11 @@ def register_routes(app):
     def index():
         return render_template("index.html")
 
+    # ---------- TEORÍA Y HERRAMIENTAS DE COLOR ----------
+    @app.route("/colorwheel")
+    def colorwheel():
+        return render_template("colorwheel.html")
+
     # ---------- AUTENTICACIÓN ----------
     @app.route("/registro", methods=["GET", "POST"])
     def register():
@@ -122,7 +127,7 @@ def register_routes(app):
                     )
                 )
                 db.session.commit()
-            return redirect(url_for("resultado"))  # POST -> redirect -> GET
+            return redirect(url_for("resultado"))
 
         return render_template("test.html")
 
@@ -138,9 +143,22 @@ def register_routes(app):
             descripcion=datos["descripcion"],
             paleta=datos["paleta"],
         )
-    
+
+    # ---------- HISTORIAL ----------
     @app.route("/historial")
     @login_required
     def historial():
         resultados = current_user.resultados.all()
         return render_template("historial.html", resultados=resultados, perfiles=PERFILES)
+
+    @app.route("/historial/eliminar/<int:id>", methods=["POST"])
+    @login_required
+    def eliminar_historial(id):
+        resultado = db.session.scalar(
+            select(TestResult).filter_by(id=id, user_id=current_user.id)
+        )
+        if resultado:
+            db.session.delete(resultado)
+            db.session.commit()
+            flash("Registro eliminado del historial.", "success")
+        return redirect(url_for("historial"))

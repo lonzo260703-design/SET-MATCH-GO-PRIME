@@ -1,0 +1,163 @@
+.colorwheel-wrapper {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: inherit;
+}
+
+.colorwheel-header {
+  text-align: center;
+  margin-bottom: 35px;
+}
+
+.colorwheel-header h1 {
+  font-size: 26px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Grid Principal */
+.colorwheel-interactive-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  align-items: start;
+  margin-bottom: 40px;
+}
+
+@media (max-width: 768px) {
+  .colorwheel-interactive-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tarjeta del Canvas */
+.wheel-canvas-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  text-align: center;
+}
+
+.canvas-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#colorWheelCanvas {
+  cursor: crosshair;
+  border-radius: 50%;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.wheel-instruction {
+  font-size: 12px;
+  color: #666;
+  margin-top: 15px;
+}
+
+/* Tarjeta de Controles y Armonías */
+.color-controls-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.color-controls-card h3 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 12px;
+  color: #1a1a1a;
+}
+
+.harmony-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.harmony-btn {
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.harmony-btn.active, .harmony-btn:hover {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+.control-divider {
+  border: none;
+  border-top: 1px solid #f0f0f0;
+  margin: 18px 0;
+}
+
+/* Muestra del color seleccionado */
+.selected-color-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.color-preview-large {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.color-label {
+  font-size: 13px;
+  color: #444;
+}
+
+/* Paleta resultante */
+.palette-results-container {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.palette-swatch-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.swatch-hex {
+  font-size: 10px;
+  font-weight: 700;
+  color: #555;
+}
+
+.colorwheel-action {
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}

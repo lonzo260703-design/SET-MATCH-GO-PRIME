@@ -1,23 +1,255 @@
 {% extends "base.html" %}
-{% block title %}Círculo Cromático — SET-MATCH-GO!{% endblock %}
+{% block title %}Círculo Interactivo de Armonias — SET-MATCH-GO!{% endblock %}
 {% block extra_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/colorwheel.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/colorwheel.css') }}">
 {% endblock %}
 
 {% block content %}
-  <main class="colorwheel-wrapper">
+<main class="colorwheel-wrapper">
+    <!-- Encabezado -->
     <div class="colorwheel-header">
-      <h1>Círculo Cromático</h1>
-      <p>Explora la rueda de colores y descubre combinaciones armoniosas para tus outfits</p>
+        <h1>Generador de Armonías</h1>
+        <p>Selecciona un color en la rueda y explora combinaciones de estilo en tiempo real.</p>
     </div>
 
-    <div class="colorwheel-container">
-      <img src="{{ url_for('static', filename='images/colorwheel.png') }}" alt="Círculo Cromático" class="colorwheel-image">
+    <div class="colorwheel-interactive-grid">
+        <!-- Selector y Canvas -->
+        <div class="wheel-canvas-card">
+            <div class="canvas-container">
+                <canvas id="colorWheelCanvas" width="320" height="320"></canvas>
+            </div>
+            <p class="wheel-instruction">💡 Haz clic o arrastra sobre la rueda para seleccionar un color</p>
+        </div>
+
+        <!-- Panel de Control y Armonías -->
+        <div class="color-controls-card">
+            <h3>Modo de Armonía</h3>
+            <div class="harmony-selector">
+                <button type="button" class="harmony-btn active" data-mode="complementary">Complementario</button>
+                <button type="button" class="harmony-btn" data-mode="analogous">Análogo</button>
+                <button type="button" class="harmony-btn" data-mode="triadic">Triádico</button>
+                <button type="button" class="harmony-btn" data-mode="monochromatic">Monocromático</button>
+            </div>
+
+            <hr class="control-divider">
+
+            <h3>Color Seleccionado</h3>
+            <div class="selected-color-info">
+                <div id="selectedColorBox" class="color-preview-large" style="background-color: #ff0000;"></div>
+                <div>
+                    <span class="color-label">HEX: <strong id="selectedHex">#FF0000</strong></span>
+                </div>
+            </div>
+
+            <hr class="control-divider">
+
+            <h3>Combinación Generada</h3>
+            <div id="paletteResults" class="palette-results-container">
+                <!-- Se genera dinámicamente mediante JavaScript -->
+            </div>
+        </div>
     </div>
 
-    <div class="colorwheel-info">
-      <h2>Cómo usar el círculo cromático</h2>
-      <p>El círculo cromático es una herramienta esencial para entender la teoría del color. Puedes combinar colores complementarios, análogos o triádicos para crear looks equilibrados y atractivos.</p>
+    <!-- Botón de acción -->
+    <div class="colorwheel-action">
+        <p>¿Quieres descubrir qué paleta específica favorece tu tono de piel?</p>
+        <a href="{{ url_for('test') }}" class="btn-submit"
+            style="text-align: center; text-decoration: none; display: inline-block;">
+            Hacer el Test de Colorimetría
+        </a>
     </div>
-  </main>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const canvas = document.getElementById("colorWheelCanvas");
+  const ctx = canvas.getContext("2d");
+  const radius = canvas.width / 2;
+  
+  let currentHue = 0; // 0 a 360 grados
+  let currentHarmony = "complementary";
+
+  // Convertir HSL a HEX
+  function hslToHex(h, s, l) {
+    l /= 100;
+    const a = s * Math.min(l, 1 - l) / 100;
+    const f = n => {
+      const k = (n + h / 30) % 12;
+      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+      return Math.round(255 * color).toString(16).padStart(2, '0');
+    };
+    return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
+  }
+
+  // Dibujar rueda de colores y la figura geométrica activa
+  function drawWheel() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 1. Dibujar Rueda Cromática
+    for (let angle = 0; angle < 360; angle += 1) {
+      const startAngle = (angle - 1) * (Math.PI / 180);
+      const endAngle = (angle + 1) * (Math.PI / 180);
+      
+      ctx.beginPath();
+      ctx.moveTo(radius, radius);
+      ctx.arc(radius, radius, radius - 10, startAngle, endAngle);
+      ctx.closePath();
+
+      ctx.fillStyle = `hsl(${angle}, 100%, 50%)`;
+      ctx.fill();
+    }
+
+    // 2. Dibujar figura geométrica de la armonía
+    drawHarmonyOverlay();
+  }
+
+  // Dibujar figuras geométricas (Triángulo, Línea, Abanico)
+  function drawHarmonyOverlay() {
+    const margin = radius - 15;
+    
+    // Obtener ángulos según el modo
+    let angles = [currentHue];
+    if (currentHarmony === "complementary") {
+      angles.push((currentHue + 180) % 360);
+    } else if (currentHarmony === "triadic") {
+      angles.push((currentHue + 120) % 360);
+      angles.push((currentHue + 240) % 360);
+    } else if (currentHarmony === "analogous") {
+      angles.push((currentHue + 30) % 360);
+      angles.push((currentHue + 330) % 360);
+    }
+
+    // Convertir ángulo a coordenadas (X, Y)
+    const points = angles.map(ang => {
+      const rad = ang * (Math.PI / 180);
+      return {
+        x: radius + margin * Math.cos(rad),
+        y: radius + margin * Math.sin(rad)
+      };
+    });
+
+    // Dibujar las líneas / polígonos
+    ctx.save();
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 3;
+    ctx.shadowColor = "rgba(0,0,0,0.5)";
+    ctx.shadowBlur = 6;
+
+    ctx.beginPath();
+    if (currentHarmony === "triadic") {
+      // Dibuja Triángulo
+      ctx.moveTo(points[0].x, points[0].y);
+      ctx.lineTo(points[1].x, points[1].y);
+      ctx.lineTo(points[2].x, points[2].y);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+      ctx.fill();
+    } else if (currentHarmony === "complementary") {
+      // Dibuja Línea recta
+      ctx.moveTo(points[0].x, points[0].y);
+      ctx.lineTo(points[1].x, points[1].y);
+    } else if (currentHarmony === "analogous") {
+      // Dibuja Abanico
+      ctx.moveTo(points[1].x, points[1].y);
+      ctx.lineTo(radius, radius);
+      ctx.lineTo(points[2].x, points[2].y);
+      ctx.moveTo(points[0].x, points[0].y);
+      ctx.lineTo(radius, radius);
+    } else if (currentHarmony === "monochromatic") {
+      // Radio simple
+      ctx.moveTo(radius, radius);
+      ctx.lineTo(points[0].x, points[0].y);
+    }
+    ctx.stroke();
+
+    // Dibujar nodos/círculos en cada vértice
+    points.forEach((pt, i) => {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, i === 0 ? 8 : 6, 0, Math.PI * 2);
+      ctx.fillStyle = i === 0 ? "#000000" : "#FFFFFF";
+      ctx.fill();
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+
+    ctx.restore();
+  }
+
+  // Calcular paleta resultante
+  function calculateHarmony(hue, mode) {
+    let hues = [hue];
+    if (mode === "complementary") {
+      hues.push((hue + 180) % 360);
+    } else if (mode === "analogous") {
+      hues.push((hue + 30) % 360);
+      hues.push((hue + 330) % 360);
+    } else if (mode === "triadic") {
+      hues.push((hue + 120) % 360);
+      hues.push((hue + 240) % 360);
+    } else if (mode === "monochromatic") {
+      return [
+        { hex: hslToHex(hue, 100, 30), label: "Oscuro" },
+        { hex: hslToHex(hue, 100, 50), label: "Base" },
+        { hex: hslToHex(hue, 100, 75), label: "Claro" }
+      ];
+    }
+    return hues.map(h => ({ hex: hslToHex(h, 100, 50) }));
+  }
+
+  // Actualizar la interfaz
+  function updateUI() {
+    drawWheel(); // Redibuja rueda con la nueva geometría
+
+    const selectedHex = hslToHex(currentHue, 100, 50);
+    document.getElementById("selectedColorBox").style.backgroundColor = selectedHex;
+    document.getElementById("selectedHex").textContent = selectedHex;
+
+    const paletteContainer = document.getElementById("paletteResults");
+    paletteContainer.innerHTML = "";
+
+    const colors = calculateHarmony(currentHue, currentHarmony);
+    colors.forEach(item => {
+      const swatch = document.createElement("div");
+      swatch.className = "palette-swatch-item";
+      swatch.innerHTML = `
+        <div class="swatch-circle" style="background-color: ${item.hex}"></div>
+        <span class="swatch-hex">${item.hex}</span>
+      `;
+      paletteContainer.appendChild(swatch);
+    });
+  }
+
+  // Interacción táctil o de mouse
+  function handleCanvasInteraction(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left - radius;
+    const y = e.clientY - rect.top - radius;
+    
+    let angle = Math.atan2(y, x) * (180 / Math.PI);
+    if (angle < 0) angle += 360;
+
+    currentHue = angle;
+    updateUI();
+  }
+
+  let isDragging = false;
+  canvas.addEventListener("mousedown", (e) => { isDragging = true; handleCanvasInteraction(e); });
+  canvas.addEventListener("mousemove", (e) => { if (isDragging) handleCanvasInteraction(e); });
+  document.addEventListener("mouseup", () => { isDragging = false; });
+
+  // Botones de selector de modo
+  document.querySelectorAll(".harmony-btn").forEach(btn => {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".harmony-btn").forEach(b => b.classList.remove("active"));
+      this.classList.add("active");
+      currentHarmony = this.getAttribute("data-mode");
+      updateUI();
+    });
+  });
+
+  // Inicializar
+  updateUI();
+});
+</script>
 {% endblock %}
