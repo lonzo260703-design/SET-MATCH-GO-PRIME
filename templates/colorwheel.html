@@ -1,254 +1,321 @@
 {% extends "base.html" %}
-{% block title %}Círculo Interactivo de Armonias — SET-MATCH-GO!{% endblock %}
+{% block title %}Rueda de Armonías — SET-MATCH-GO!{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/colorwheel.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/colorwheel.css') }}">
 {% endblock %}
 
 {% block content %}
-<main class="colorwheel-wrapper">
-    <!-- Encabezado -->
-    <div class="colorwheel-header">
-        <h1>Generador de Armonías</h1>
-        <p>Selecciona un color en la rueda y explora combinaciones de estilo en tiempo real.</p>
+<main class="cw-wrapper">
+  
+  <!-- Encabezado -->
+  <div class="cw-header">
+    <h1>Rueda de Armonías</h1>
+    <p>Selecciona un color en la rueda para explorar combinaciones ideales en tiempo real</p>
+  </div>
+
+  <!-- Barra Flotante de Valores -->
+  <div class="cw-top-bar">
+    <div class="cw-active-color">
+      <span class="cw-color-preview-circle" id="topColorBadge"></span>
+      <span class="cw-color-hex-title" id="topHex">#1E0001</span>
+    </div>
+    <div class="cw-specs-divider"></div>
+    <div class="cw-specs-grid">
+      <div class="cw-spec-item">
+        <span class="cw-spec-label">RGB</span>
+        <span class="cw-spec-value" id="topRgb">30, 0, 1</span>
+      </div>
+      <div class="cw-spec-item">
+        <span class="cw-spec-label">HSL</span>
+        <span class="cw-spec-value" id="topHsl">359°, 99%, 6%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Principal -->
+  <div class="cw-dashboard">
+    
+    <!-- Panel Izquierdo: Rueda + Barra Rectangular -->
+    <div class="cw-card cw-canvas-card">
+      <div class="cw-canvas-wrapper">
+        <canvas id="colorWheelCanvas" width="320" height="360"></canvas>
+      </div>
+      <p class="cw-hint">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Usa la rueda para el tono y la barra rectangular inferior para ajustar el brillo.
+      </p>
     </div>
 
-    <div class="colorwheel-interactive-grid">
-        <!-- Selector y Canvas -->
-        <div class="wheel-canvas-card">
-            <div class="canvas-container">
-                <canvas id="colorWheelCanvas" width="320" height="320"></canvas>
-            </div>
-            <p class="wheel-instruction">💡 Haz clic o arrastra sobre la rueda para seleccionar un color</p>
-        </div>
+    <!-- Panel Derecho: Armonías y Tarjetas -->
+    <div class="cw-card cw-controls-card">
+      <div class="cw-section-title">Modo de Armonía</div>
+      
+      <div class="cw-segmented-control">
+        <button type="button" class="cw-segment-btn active" data-mode="complementary">Complementario</button>
+        <button type="button" class="cw-segment-btn" data-mode="analogous">Análogo</button>
+        <button type="button" class="cw-segment-btn" data-mode="triadic">Triádico</button>
+        <button type="button" class="cw-segment-btn" data-mode="monochromatic">Monocromático</button>
+      </div>
 
-        <!-- Panel de Control y Armonías -->
-        <div class="color-controls-card">
-            <h3>Modo de Armonía</h3>
-            <div class="harmony-selector">
-                <button type="button" class="harmony-btn active" data-mode="complementary">Complementario</button>
-                <button type="button" class="harmony-btn" data-mode="analogous">Análogo</button>
-                <button type="button" class="harmony-btn" data-mode="triadic">Triádico</button>
-                <button type="button" class="harmony-btn" data-mode="monochromatic">Monocromático</button>
-            </div>
+      <div class="cw-section-title" style="margin-top: 10px;">Paleta Resultante</div>
 
-            <hr class="control-divider">
-
-            <h3>Color Seleccionado</h3>
-            <div class="selected-color-info">
-                <div id="selectedColorBox" class="color-preview-large" style="background-color: #ff0000;"></div>
-                <div>
-                    <span class="color-label">HEX: <strong id="selectedHex">#FF0000</strong></span>
-                </div>
-            </div>
-
-            <hr class="control-divider">
-
-            <h3>Combinación Generada</h3>
-            <div id="paletteResults" class="palette-results-container">
-                <!-- Se genera dinámicamente mediante JavaScript -->
-            </div>
-        </div>
+      <div id="paletteResultsCards" class="cw-palette-stack">
+        <!-- Generado dinámicamente con JS -->
+      </div>
     </div>
 
-    <!-- Botón de acción -->
-    <div class="colorwheel-action">
-        <p>¿Quieres descubrir qué paleta específica favorece tu tono de piel?</p>
-        <a href="{{ url_for('test') }}" class="btn-submit"
-            style="text-align: center; text-decoration: none; display: inline-block;">
-            Hacer el Test de Colorimetría
-        </a>
-    </div>
+  </div>
 </main>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const canvas = document.getElementById("colorWheelCanvas");
   const ctx = canvas.getContext("2d");
-  const radius = canvas.width / 2;
-  
-  let currentHue = 0; // 0 a 360 grados
+
+  // Dimensiones Rueda
+  const wheelCenterX = canvas.width / 2;
+  const wheelCenterY = 145;
+  const wheelRadius = 135;
+
+  // Dimensiones Barra Rectangular de Brillo
+  const sliderX = 25;
+  const sliderY = 305;
+  const sliderWidth = canvas.width - 50;
+  const sliderHeight = 22;
+  const sliderRadius = 8;
+
+  // Estado
+  let currentHue = 359;    
+  let currentSat = 0.99;   
+  let currentLight = 0.06; 
   let currentHarmony = "complementary";
 
-  // Convertir HSL a HEX
-  function hslToHex(h, s, l) {
-    l /= 100;
-    const a = s * Math.min(l, 1 - l) / 100;
-    const f = n => {
-      const k = (n + h / 30) % 12;
-      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-      return Math.round(255 * color).toString(16).padStart(2, '0');
-    };
-    return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
+  function hslToRgb(h, s, l) {
+    let c = (1 - Math.abs(2 * l - 1)) * s;
+    let x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    let m = l - c / 2;
+    let r = 0, g = 0, b = 0;
+
+    if (0 <= h && h < 60) { r = c; g = x; b = 0; }
+    else if (60 <= h && h < 120) { r = x; g = c; b = 0; }
+    else if (120 <= h && h < 180) { r = 0; g = c; b = x; }
+    else if (180 <= h && h < 240) { r = 0; g = x; b = c; }
+    else if (240 <= h && h < 300) { r = x; g = 0; b = c; }
+    else if (300 <= h && h < 360) { r = c; g = 0; b = x; }
+
+    return [
+      Math.round((r + m) * 255),
+      Math.round((g + m) * 255),
+      Math.round((b + m) * 255)
+    ];
   }
 
-  // Dibujar rueda de colores y la figura geométrica activa
-  function drawWheel() {
+  function rgbToHex(r, g, b) {
+    return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+  }
+
+  function hslToHex(h, s, l) {
+    const [r, g, b] = hslToRgb(h, s, l);
+    return rgbToHex(r, g, b);
+  }
+
+  function drawCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. Dibujar Rueda Cromática
-    for (let angle = 0; angle < 360; angle += 1) {
-      const startAngle = (angle - 1) * (Math.PI / 180);
-      const endAngle = (angle + 1) * (Math.PI / 180);
-      
-      ctx.beginPath();
-      ctx.moveTo(radius, radius);
-      ctx.arc(radius, radius, radius - 10, startAngle, endAngle);
-      ctx.closePath();
+    // 1. DIBUJAR RUEDA CROMÁTICA
+    for (let angle = 0; angle < 360; angle++) {
+      const start = (angle - 1) * (Math.PI / 180);
+      const end = (angle + 1) * (Math.PI / 180);
 
+      ctx.beginPath();
+      ctx.moveTo(wheelCenterX, wheelCenterY);
+      ctx.arc(wheelCenterX, wheelCenterY, wheelRadius, start, end);
+      ctx.closePath();
       ctx.fillStyle = `hsl(${angle}, 100%, 50%)`;
       ctx.fill();
     }
 
-    // 2. Dibujar figura geométrica de la armonía
-    drawHarmonyOverlay();
+    // Degradado Blanco Central
+    const whiteGrad = ctx.createRadialGradient(wheelCenterX, wheelCenterY, 0, wheelCenterX, wheelCenterY, wheelRadius);
+    whiteGrad.addColorStop(0, "rgba(255, 255, 255, 1)");
+    whiteGrad.addColorStop(0.8, "rgba(255, 255, 255, 0.15)");
+    whiteGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+
+    ctx.beginPath();
+    ctx.arc(wheelCenterX, wheelCenterY, wheelRadius, 0, Math.PI * 2);
+    ctx.fillStyle = whiteGrad;
+    ctx.fill();
+
+    // Nodos sobre la Rueda
+    drawWheelNodes();
+
+    // 2. DIBUJAR BARRA RECTANGULAR DE BRILLO (Negro -> Color -> Blanco)
+    drawBrightnessSlider();
   }
 
-  // Dibujar figuras geométricas (Triángulo, Línea, Abanico)
-  function drawHarmonyOverlay() {
-    const margin = radius - 15;
-    
-    // Obtener ángulos según el modo
+  function drawWheelNodes() {
     let angles = [currentHue];
     if (currentHarmony === "complementary") {
       angles.push((currentHue + 180) % 360);
-    } else if (currentHarmony === "triadic") {
-      angles.push((currentHue + 120) % 360);
-      angles.push((currentHue + 240) % 360);
     } else if (currentHarmony === "analogous") {
       angles.push((currentHue + 30) % 360);
       angles.push((currentHue + 330) % 360);
+    } else if (currentHarmony === "triadic") {
+      angles.push((currentHue + 120) % 360);
+      angles.push((currentHue + 240) % 360);
     }
 
-    // Convertir ángulo a coordenadas (X, Y)
-    const points = angles.map(ang => {
+    const dist = currentSat * (wheelRadius - 10);
+
+    angles.forEach((ang, idx) => {
       const rad = ang * (Math.PI / 180);
-      return {
-        x: radius + margin * Math.cos(rad),
-        y: radius + margin * Math.sin(rad)
-      };
-    });
+      const x = wheelCenterX + dist * Math.cos(rad);
+      const y = wheelCenterY + dist * Math.sin(rad);
 
-    // Dibujar las líneas / polígonos
-    ctx.save();
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 3;
-    ctx.shadowColor = "rgba(0,0,0,0.5)";
-    ctx.shadowBlur = 6;
-
-    ctx.beginPath();
-    if (currentHarmony === "triadic") {
-      // Dibuja Triángulo
-      ctx.moveTo(points[0].x, points[0].y);
-      ctx.lineTo(points[1].x, points[1].y);
-      ctx.lineTo(points[2].x, points[2].y);
-      ctx.closePath();
-      ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-      ctx.fill();
-    } else if (currentHarmony === "complementary") {
-      // Dibuja Línea recta
-      ctx.moveTo(points[0].x, points[0].y);
-      ctx.lineTo(points[1].x, points[1].y);
-    } else if (currentHarmony === "analogous") {
-      // Dibuja Abanico
-      ctx.moveTo(points[1].x, points[1].y);
-      ctx.lineTo(radius, radius);
-      ctx.lineTo(points[2].x, points[2].y);
-      ctx.moveTo(points[0].x, points[0].y);
-      ctx.lineTo(radius, radius);
-    } else if (currentHarmony === "monochromatic") {
-      // Radio simple
-      ctx.moveTo(radius, radius);
-      ctx.lineTo(points[0].x, points[0].y);
-    }
-    ctx.stroke();
-
-    // Dibujar nodos/círculos en cada vértice
-    points.forEach((pt, i) => {
       ctx.beginPath();
-      ctx.arc(pt.x, pt.y, i === 0 ? 8 : 6, 0, Math.PI * 2);
-      ctx.fillStyle = i === 0 ? "#000000" : "#FFFFFF";
+      ctx.arc(x, y, idx === 0 ? 8 : 6, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255,0.45)";
       ctx.fill();
       ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = "rgba(0,0,0,0.2)";
+      ctx.shadowBlur = 4;
       ctx.stroke();
+      ctx.shadowBlur = 0;
     });
-
-    ctx.restore();
   }
 
-  // Calcular paleta resultante
-  function calculateHarmony(hue, mode) {
-    let hues = [hue];
-    if (mode === "complementary") {
-      hues.push((hue + 180) % 360);
-    } else if (mode === "analogous") {
-      hues.push((hue + 30) % 360);
-      hues.push((hue + 330) % 360);
-    } else if (mode === "triadic") {
-      hues.push((hue + 120) % 360);
-      hues.push((hue + 240) % 360);
-    } else if (mode === "monochromatic") {
+  function drawBrightnessSlider() {
+    ctx.save();
+    
+    // Crear rectángulo redondeado para la barra
+    ctx.beginPath();
+    ctx.roundRect(sliderX, sliderY, sliderWidth, sliderHeight, sliderRadius);
+    ctx.clip();
+
+    // Gradiente de Negro -> Color Seleccionado (50%) -> Blanco
+    const grad = ctx.createLinearGradient(sliderX, 0, sliderX + sliderWidth, 0);
+    grad.addColorStop(0, "#000000");
+    grad.addColorStop(0.5, `hsl(${currentHue}, ${currentSat * 100}%, 50%)`);
+    grad.addColorStop(1, "#FFFFFF");
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(sliderX, sliderY, sliderWidth, sliderHeight);
+    ctx.restore();
+
+    // Borde exterior
+    ctx.beginPath();
+    ctx.roundRect(sliderX, sliderY, sliderWidth, sliderHeight, sliderRadius);
+    ctx.strokeStyle = "#E5E7EB";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Indicador/Selector flotante en el slider
+    const thumbX = sliderX + (currentLight * sliderWidth);
+    const thumbY = sliderY + (sliderHeight / 2);
+
+    ctx.beginPath();
+    ctx.arc(thumbX, thumbY, 8, 0, Math.PI * 2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+    ctx.strokeStyle = "#111111";
+    ctx.lineWidth = 2;
+    ctx.shadowColor = "rgba(0,0,0,0.25)";
+    ctx.shadowBlur = 4;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  function getHarmonyColors() {
+    let hues = [currentHue];
+    if (currentHarmony === "complementary") {
+      hues.push((currentHue + 180) % 360);
+    } else if (currentHarmony === "analogous") {
+      hues.push((currentHue + 30) % 360);
+      hues.push((currentHue + 330) % 360);
+    } else if (currentHarmony === "triadic") {
+      hues.push((currentHue + 120) % 360);
+      hues.push((currentHue + 240) % 360);
+    } else if (currentHarmony === "monochromatic") {
       return [
-        { hex: hslToHex(hue, 100, 30), label: "Oscuro" },
-        { hex: hslToHex(hue, 100, 50), label: "Base" },
-        { hex: hslToHex(hue, 100, 75), label: "Claro" }
+        { h: currentHue, s: currentSat, l: Math.max(0.08, currentLight - 0.2) },
+        { h: currentHue, s: currentSat, l: currentLight },
+        { h: currentHue, s: currentSat, l: Math.min(0.92, currentLight + 0.2) }
       ];
     }
-    return hues.map(h => ({ hex: hslToHex(h, 100, 50) }));
+
+    return hues.map(h => ({ h, s: currentSat, l: currentLight }));
   }
 
-  // Actualizar la interfaz
   function updateUI() {
-    drawWheel(); // Redibuja rueda con la nueva geometría
+    drawCanvas();
 
-    const selectedHex = hslToHex(currentHue, 100, 50);
-    document.getElementById("selectedColorBox").style.backgroundColor = selectedHex;
-    document.getElementById("selectedHex").textContent = selectedHex;
+    const [r, g, b] = hslToRgb(currentHue, currentSat, currentLight);
+    const hex = rgbToHex(r, g, b);
 
-    const paletteContainer = document.getElementById("paletteResults");
-    paletteContainer.innerHTML = "";
+    document.getElementById("topColorBadge").style.backgroundColor = hex;
+    document.getElementById("topHex").textContent = hex;
+    document.getElementById("topRgb").textContent = `${r}, ${g}, ${b}`;
+    document.getElementById("topHsl").textContent = `${Math.round(currentHue)}°, ${Math.round(currentSat * 100)}%, ${Math.round(currentLight * 100)}%`;
 
-    const colors = calculateHarmony(currentHue, currentHarmony);
-    colors.forEach(item => {
-      const swatch = document.createElement("div");
-      swatch.className = "palette-swatch-item";
-      swatch.innerHTML = `
-        <div class="swatch-circle" style="background-color: ${item.hex}"></div>
-        <span class="swatch-hex">${item.hex}</span>
-      `;
-      paletteContainer.appendChild(swatch);
+    const cardsContainer = document.getElementById("paletteResultsCards");
+    cardsContainer.innerHTML = "";
+
+    const colors = getHarmonyColors();
+    colors.forEach(col => {
+      const colorHex = hslToHex(col.h, col.s, col.l);
+      const card = document.createElement("div");
+      card.className = "cw-palette-card";
+      card.style.backgroundColor = colorHex;
+      
+      const isLight = col.l > 0.65;
+      card.style.color = isLight ? "#111111" : "#FFFFFF";
+
+      card.innerHTML = `<span class="cw-card-hex">${colorHex.replace("#", "")}</span>`;
+      cardsContainer.appendChild(card);
     });
   }
 
-  // Interacción táctil o de mouse
-  function handleCanvasInteraction(e) {
+  function handleInteraction(e) {
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left - radius;
-    const y = e.clientY - rect.top - radius;
-    
-    let angle = Math.atan2(y, x) * (180 / Math.PI);
-    if (angle < 0) angle += 360;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
 
-    currentHue = angle;
+    // Distancia al centro de la rueda
+    const dx = mouseX - wheelCenterX;
+    const dy = mouseY - wheelCenterY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // Clic en la rueda
+    if (dist <= wheelRadius) {
+      let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+      if (angle < 0) angle += 360;
+      currentHue = angle;
+      currentSat = Math.max(0.05, dist / wheelRadius);
+    } 
+    // Clic o arrastre en el área de la barra rectangular inferior
+    else if (mouseY >= sliderY - 10 && mouseY <= sliderY + sliderHeight + 10) {
+      const clampedX = Math.max(sliderX, Math.min(mouseX, sliderX + sliderWidth));
+      currentLight = (clampedX - sliderX) / sliderWidth;
+    }
+
     updateUI();
   }
 
   let isDragging = false;
-  canvas.addEventListener("mousedown", (e) => { isDragging = true; handleCanvasInteraction(e); });
-  canvas.addEventListener("mousemove", (e) => { if (isDragging) handleCanvasInteraction(e); });
+  canvas.addEventListener("mousedown", (e) => { isDragging = true; handleInteraction(e); });
+  canvas.addEventListener("mousemove", (e) => { if (isDragging) handleInteraction(e); });
   document.addEventListener("mouseup", () => { isDragging = false; });
 
-  // Botones de selector de modo
-  document.querySelectorAll(".harmony-btn").forEach(btn => {
+  document.querySelectorAll(".cw-segment-btn").forEach(btn => {
     btn.addEventListener("click", function () {
-      document.querySelectorAll(".harmony-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".cw-segment-btn").forEach(b => b.classList.remove("active"));
       this.classList.add("active");
       currentHarmony = this.getAttribute("data-mode");
       updateUI();
     });
   });
 
-  // Inicializar
   updateUI();
 });
 </script>
