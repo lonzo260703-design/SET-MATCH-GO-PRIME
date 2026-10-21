@@ -14,7 +14,7 @@
     <form action="{{ url_for('test') }}" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-      <!-- PREGUNTA 1 -->
+      <!-- PREGUNTA 1: VENAS -->
       <div class="question-card">
         <div class="question-title">1. ¿De qué tono se ven las venas de tus muñecas bajo la luz natural?</div>
         <div class="options-grid">
@@ -30,7 +30,7 @@
         </div>
       </div>
 
-      <!-- PREGUNTA 2 -->
+      <!-- PREGUNTA 2: ACCESORIOS -->
       <div class="question-card">
         <div class="question-title">2. ¿Qué tipo de accesorios favorecen más tu rostro?</div>
         <div class="options-grid">
@@ -46,7 +46,7 @@
         </div>
       </div>
 
-      <!-- PREGUNTA 3 -->
+      <!-- PREGUNTA 3: EXPOSICIÓN AL SOL -->
       <div class="question-card">
         <div class="question-title">3. ¿Cómo reacciona tu piel ante la exposición al sol?</div>
         <div class="options-grid">
@@ -55,6 +55,61 @@
           </label>
           <label class="option-label">
             <input type="radio" name="p3" value="calido"> Se broncea rápidamente con tono dorado
+          </label>
+          <label class="option-label">
+            <input type="radio" name="p3" value="neutro"> Primero se enrojece ligeramente y luego se broncea
+          </label>
+        </div>
+      </div>
+
+      <!-- PREGUNTA 4: COLOR DE OJOS -->
+      <div class="question-card">
+        <div class="question-title">4. ¿Cuál es el tono natural de tus ojos?</div>
+        <div class="options-grid">
+          <label class="option-label">
+            <input type="radio" name="p4" value="frio" required> Azul, gris, verde claro o café muy oscuro / casi negro
+          </label>
+          <label class="option-label">
+            <input type="radio" name="p4" value="calido"> Miel, café cálido, avellana con destellos dorados o verde oliva
+          </label>
+        </div>
+      </div>
+
+      <!-- PREGUNTA 5: CABELLO NATURAL -->
+      <div class="question-card">
+        <div class="question-title">5. ¿Qué matiz refleja tu cabello natural bajo el sol?</div>
+        <div class="options-grid">
+          <label class="option-label">
+            <input type="radio" name="p5" value="frio" required> Reflexiones cenizas, rojizo frío, castaño oscuro o negro azabache
+          </label>
+          <label class="option-label">
+            <input type="radio" name="p5" value="calido"> Reflejos dorados, cobrizos, castaño claro cálido o pelirrojo
+          </label>
+        </div>
+      </div>
+
+      <!-- PREGUNTA 6: PREFERENCIA DE NEUTROS -->
+      <div class="question-card">
+        <div class="question-title">6. ¿Qué colores neutros hacen que tu rostro luzca más iluminado?</div>
+        <div class="options-grid">
+          <label class="option-label">
+            <input type="radio" name="p6" value="frio" required> Blanco puro, negro o gris
+          </label>
+          <label class="option-label">
+            <input type="radio" name="p6" value="calido"> Beige, crema, marfil o café terracota
+          </label>
+        </div>
+      </div>
+
+      <!-- PREGUNTA 7: CONTRASTE FACIAL -->
+      <div class="question-card">
+        <div class="question-title">7. ¿Cuál es el nivel de contraste entre tu piel, tus ojos y tu cabello?</div>
+        <div class="options-grid">
+          <label class="option-label">
+            <input type="radio" name="p7" value="alto" required> Alto (Ej. Piel clara con cabello y ojos oscuros)
+          </label>
+          <label class="option-label">
+            <input type="radio" name="p7" value="suave"> Suave / Bajo (Tono de piel, ojos y cabello muy similares o delicados)
           </label>
         </div>
       </div>

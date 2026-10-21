@@ -1,7 +1,7 @@
 import os
 
 import click
-from flask import Flask, flash, redirect, request, url_for
+from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_wtf.csrf import CSRFError
 
 from config import DEFAULT_SECRET, config_by_name

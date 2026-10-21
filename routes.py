@@ -27,6 +27,12 @@ def register_routes(app):
     def index():
         return render_template("index.html")
 
+    # ---------- COLECCIONES ----------
+    @app.route("/colecciones")
+    def colecciones():
+        estacion = request.args.get("estacion")
+        return render_template("colecciones.html", estacion=estacion)
+
     # ---------- TEORÍA Y HERRAMIENTAS DE COLOR ----------
     @app.route("/colorwheel")
     def colorwheel():

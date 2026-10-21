@@ -22,7 +22,7 @@
       color: #333;
     }
 
-    /* NAVBAR BASE - CAMBIADO A BLANCO CON SOMBRA SUAVE */
+    /* NAVBAR BASE DESKTOP */
     .navbar {
       display: flex;
       justify-content: space-between;
@@ -46,7 +46,7 @@
       font-size: 1.1rem;
     }
 
-    /* LISTAS DE NAVEGACIÓN */
+    /* LISTAS DE NAVEGACIÓN DESKTOP */
     .nav-center,
     .nav-right {
       display: flex;
@@ -65,7 +65,6 @@
       align-items: center;
     }
 
-    /* LETRAS DE NAVEGACIÓN EN NEGRO */
     .navbar a {
       color: #2c3e50;
       text-decoration: none;
@@ -112,7 +111,7 @@
       color: #e74c3c;
     }
 
-    /* DESPLEGABLES / MEGA MENU */
+    /* DESPLEGABLES DENTRO DEL NAVBAR DESKTOP */
     .dropdown {
       position: relative;
     }
@@ -131,212 +130,105 @@
       z-index: 1001;
     }
 
-    /* VISIBILIDAD POR HOVER Y CLASE FORZADA DE APERTURA */
     .dropdown:hover .mega-menu,
-    .dropdown:hover .search-dropdown,
-    .mega-menu.force-show {
+    .dropdown:hover .search-dropdown {
       display: block !important;
     }
 
-    /* VENTANA / MEGA MENU EXTENDIDO DE COLECCIONES */
-    .collections-mega-menu {
-      width: 92vw;
-      max-width: 1250px;
-      max-height: 82vh;
-      overflow-y: auto;
-      padding: 25px;
-      left: 50%;
-      transform: translateX(-35%);
+    /* SUBMENÚ COMPACTO DE COLECCIONES */
+    .collections-dropdown-menu {
+      min-width: 240px;
+      border-radius: 0 0 10px 10px;
+      padding: 8px 0;
     }
 
-    /* BARRA DE SCROLL MODERNA */
-    .collections-mega-menu::-webkit-scrollbar {
-      width: 10px;
-    }
-
-    .collections-mega-menu::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
-    }
-
-    .collections-mega-menu::-webkit-scrollbar-thumb {
-      background: #e74c3c;
-      border-radius: 10px;
-    }
-
-    .season-card {
-      background: #fafafa;
-      border: 1px solid #eaeaea;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 35px;
-    }
-
-    .season-card:last-child {
-      margin-bottom: 0;
-    }
-
-    .season-header {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #2c3e50;
-      border-bottom: 2px solid #e74c3c;
-      padding-bottom: 8px;
-      margin-bottom: 15px;
+    .collections-dropdown-menu .menu-column a {
+      padding: 10px 20px !important;
+      line-height: normal !important;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
-    .gender-title-badge {
-      display: inline-block;
-      background-color: #2c3e50;
-      color: #ffffff;
-      font-size: 0.85rem;
-      font-weight: bold;
-      padding: 6px 12px;
-      border-radius: 5px;
-      margin: 18px 0 12px 0;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .gender-title-badge.damas {
-      background-color: #c0392b;
-    }
-
-    /* GRID DE TARJETAS DE ROPA */
-    .clothes-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 15px;
-    }
-
-    .clothing-card {
-      background: #ffffff;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      border: 1px solid #eeeeee;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .clothing-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
-    }
-
-    .clothing-img {
-      width: 100%;
-      height: 170px;
-      object-fit: cover;
-      background-color: #e2e8f0;
-    }
-
-    .clothing-info {
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      flex-grow: 1;
-    }
-
-    .clothing-name {
-      font-size: 0.82rem;
-      font-weight: bold;
-      color: #1a1a1a;
-      margin: 0;
-    }
-
-    .clothing-details {
-      font-size: 0.73rem;
-      color: #666666;
-      margin: 0;
-    }
-
-    .clothing-tag {
-      display: inline-block;
-      font-size: 0.68rem;
-      font-weight: 600;
-      color: #e74c3c;
-      background: #fdf0ed;
-      padding: 2px 6px;
-      border-radius: 3px;
-      align-self: flex-start;
-      margin-top: 4px;
-    }
-
-    /* MEGA MENU TEORÍA DEL COLOR */
-    .mega-menu-content {
-      display: flex;
-      padding: 20px;
-      gap: 30px;
-      min-width: 550px;
-    }
-
-    .menu-column {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      flex: 1;
-    }
-
-    .menu-column h4 {
-      margin: 0 0 10px 0;
-      color: #2c3e50;
-      font-size: 0.95rem;
-      text-transform: uppercase;
-      border-bottom: 2px solid #e74c3c;
-      padding-bottom: 5px;
-    }
-
-    .menu-column a {
-      color: #333333 !important;
-      line-height: 1.3 !important;
-      padding: 8px !important;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-    }
-
-    .menu-column a:hover {
+    .collections-dropdown-menu .menu-column a:hover {
       background-color: #f8f9fa;
       color: #e74c3c !important;
     }
 
-    .menu-column strong {
-      display: block;
-      font-size: 0.9rem;
+    /* MEGA MENU TEORÍA DEL COLOR RESTRUCTURADO */
+    .color-theory-dropdown {
+      min-width: 380px;
+      padding: 20px;
     }
 
-    .menu-column p {
-      margin: 2px 0 0 0;
-      font-size: 0.75rem;
-      color: #666666;
+    .color-menu-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
     }
 
-    .featured-info {
+    .color-menu-items {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .color-menu-items a {
+      color: #333333 !important;
+      line-height: 1.3 !important;
+      padding: 10px 12px !important;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .color-menu-items a:hover {
       background-color: #f8f9fa;
-      padding: 12px;
-      border-radius: 6px;
-      border-left: 4px solid #e74c3c;
+      color: #e74c3c !important;
     }
 
-    .featured-info h5 {
-      margin: 0 0 5px 0;
+    .color-menu-items strong {
+      display: block;
+      font-size: 0.92rem;
       color: #2c3e50;
     }
 
-    .featured-info p {
-      font-size: 0.8rem;
-      color: #555555;
+    .color-menu-items p {
+      margin: 2px 0 0 0;
+      font-size: 0.78rem;
+      color: #666666;
     }
 
-    /* ESTILOS DE LA VENTANA MODAL DE TEMPERATURA DE COLOR */
+    /* TIP DE ESTILO ABAJO */
+    .featured-info-bottom {
+      background-color: #f8f9fa;
+      padding: 12px 15px;
+      border-radius: 8px;
+      border-left: 4px solid #e74c3c;
+      margin-top: 5px;
+    }
+
+    .featured-info-bottom h5 {
+      margin: 0 0 4px 0;
+      color: #2c3e50;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .featured-info-bottom p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #555555;
+      line-height: 1.35;
+    }
+
+    /* VENTANA MODAL TEMPERATURA DE COLOR */
     .temp-modal-overlay {
       display: none;
       position: fixed;
@@ -374,6 +266,7 @@
         opacity: 0;
         transform: translateY(-20px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -418,7 +311,6 @@
       flex-grow: 1;
     }
 
-    /* PESTAÑAS DENTRO DE LA VENTANA */
     .temp-tabs-bar {
       display: flex;
       gap: 12px;
@@ -462,7 +354,6 @@
       display: block;
     }
 
-    /* MUESTRAS FÍSICAS DE COLOR */
     .color-swatches-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -531,60 +422,7 @@
       background-color: #1a252f;
     }
 
-    /* MENÚ MÓVIL Y BOTÓN DE HAMBURGUESA */
-    .menu-toggle {
-      display: none;
-      background: none;
-      border: none;
-      color: #2c3e50;
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
-
-    .mobile-dropdown {
-      display: none;
-      position: absolute;
-      top: 60px;
-      left: 0;
-      width: 100%;
-      background-color: #ffffff;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      z-index: 999;
-    }
-
-    .mobile-dropdown ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .mobile-dropdown a {
-      color: #2c3e50;
-      line-height: normal;
-      padding: 12px 20px;
-      border-bottom: 1px solid #eee;
-    }
-
-    .menu-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.4);
-      z-index: 998;
-    }
-
-    /* ESTILOS FLASH */
-    .flash-stack {
-      position: fixed;
-      top: 70px;
-      right: 20px;
-      z-index: 2000;
-    }
-
-    /* Contenedor del desplegable de usuario */
+    /* USER DROPDOWN */
     .user-dropdown-container {
       position: relative;
     }
@@ -630,12 +468,9 @@
       border: 1px solid #eaeaea;
       padding: 16px;
       z-index: 1000;
-      box-sizing: border-box;
-      text-align: left;
     }
 
-    .user-dropdown-container:hover .user-dropdown-card,
-    .user-dropdown-card.show {
+    .user-dropdown-container:hover .user-dropdown-card {
       display: block;
     }
 
@@ -651,16 +486,12 @@
       font-weight: 800;
       color: #1a1a1a;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
-      line-height: 1.2;
     }
 
     .user-card-email {
       font-size: 12px;
       color: #666666;
-      font-weight: 400;
       word-break: break-all;
-      font-family: inherit;
     }
 
     .user-card-divider {
@@ -681,11 +512,9 @@
       color: #222222;
       font-size: 12px;
       font-weight: 700;
-      letter-spacing: 1px;
       text-decoration: none;
       cursor: pointer;
-      box-sizing: border-box;
-      transition: background-color 0.15s ease, color 0.15s ease;
+      transition: background-color 0.15s ease;
       text-transform: uppercase;
     }
 
@@ -694,21 +523,17 @@
       color: #000000;
     }
 
-    .user-card-item .item-icon {
-      stroke: #444444;
-    }
-
-    .logout-item {
-      color: #1a1a1a;
-    }
-
     .logout-item:hover {
       background-color: #fff1f0;
       color: #e53e3e;
     }
 
-    .logout-item:hover .item-icon {
-      stroke: #e53e3e;
+    /* FLASH MESSAGES */
+    .flash-stack {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      z-index: 2000;
     }
 
     .flash {
@@ -728,7 +553,176 @@
       color: white;
     }
 
-    /* MEDIA QUERIES (MÓVIL) */
+    /* BOTÓN Y PANEL MÓVIL (OFF-CANVAS) */
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: #2c3e50;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .mobile-sidebar {
+      position: fixed;
+      top: 0;
+      right: -300px;
+      width: 280px;
+      height: 100vh;
+      background-color: #ffffff;
+      box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15);
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mobile-sidebar.active {
+      right: 0;
+    }
+
+    .mobile-sidebar-header {
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eeeeee;
+    }
+
+    .mobile-close-btn {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      color: #2c3e50;
+      cursor: pointer;
+    }
+
+    .mobile-sidebar-body {
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+
+    .mobile-nav-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .mobile-nav-link {
+      display: flex;
+      align-items: center;
+      padding: 14px 20px;
+      color: #2c3e50;
+      font-weight: 500;
+      text-decoration: none;
+      border-bottom: 1px solid #f8f9fa;
+      transition: background-color 0.2s;
+    }
+
+    .mobile-nav-link:hover {
+      background-color: #f8f9fa;
+      color: #e74c3c;
+    }
+
+    /* ACORDEONES MÓVILES */
+    .mobile-accordion-btn {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      background: none;
+      border: none;
+      border-bottom: 1px solid #f8f9fa;
+      color: #2c3e50;
+      font-size: 1rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .mobile-accordion-btn .arrow {
+      transition: transform 0.3s ease;
+    }
+
+    .mobile-accordion.active .mobile-accordion-btn .arrow {
+      transform: rotate(180deg);
+    }
+
+    .mobile-accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      background-color: #f8f9fa;
+      transition: max-height 0.3s ease-out;
+    }
+
+    .mobile-accordion-content a {
+      display: block;
+      padding: 10px 20px 10px 40px;
+      color: #555555;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .mobile-accordion-content a:hover {
+      color: #e74c3c;
+    }
+
+    .mobile-search-box {
+      padding: 12px 20px;
+      border-bottom: 1px solid #f8f9fa;
+    }
+
+    .mobile-search-box form {
+      display: flex;
+      gap: 5px;
+    }
+
+    .mobile-search-box input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    .mobile-search-box button {
+      background: #2c3e50;
+      color: #ffffff;
+      border: none;
+      padding: 0 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .mobile-logout-btn {
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      padding: 14px 5px;
+      color: #e74c3c;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    .menu-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1999;
+    }
+
+    .menu-overlay.active {
+      display: block;
+    }
+
     @media (max-width: 868px) {
 
       .nav-center,
@@ -738,20 +732,6 @@
 
       .menu-toggle {
         display: block;
-      }
-
-      .mobile-dropdown.active {
-        display: block;
-      }
-
-      .menu-overlay.active {
-        display: block;
-      }
-
-      .collections-mega-menu {
-        width: 95vw;
-        left: 0;
-        transform: none;
       }
     }
   </style>
@@ -769,752 +749,62 @@
     <ul class="nav-center">
       <li><a href="{{ url_for('index') }}">Inicio</a></li>
 
-      <!-- DESPLEGABLE DE COLECCIONES CON EVENTO DE CLIC DIRECTO -->
+      <!-- DESPLEGABLE DE COLECCIONES SOLO TÍTULOS -->
       <li class="dropdown">
-        <a href="#collections-menu" class="dropdown-toggle" id="collectionsNavBtn">Colecciones ▾</a>
-        <div class="mega-menu collections-mega-menu" id="collectionsMegaMenu">
-
-          <!-- 1. PRIMAVERA -->
-          <div class="season-card">
-            <div class="season-header">🌸 Colección Primavera</div>
-
-            <div class="gender-title-badge">👨 Caballeros (10 Prendas)</div>
-            <div class="clothes-grid">
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400" alt="Camisa M/Larga" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Camisa M/Larga</p>
-                  <p class="clothing-details">Lino Coral Pastel</p>
-                  <span class="clothing-tag">Primavera</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400" alt="Camisa M/Corta" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Camisa M/Corta</p>
-                  <p class="clothing-details">Verde Menta Floral</p>
-                  <span class="clothing-tag">Fresco</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400" alt="Playera" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Playera Algodón</p>
-                  <p class="clothing-details">Cuello O Blanco/Verde</p>
-                  <span class="clothing-tag">Casual</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=400" alt="Traje casual" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Traje casual</p>
-                  <p class="clothing-details">Mezclilla Clara</p>
-                  <span class="clothing-tag">Urbano</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400" alt="Pantalón Chino" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Pantalón Chino</p>
-                  <p class="clothing-details">Beige Claro</p>
-                  <span class="clothing-tag">Semiformal</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400" alt="Shorts" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Shorts Casuales</p>
-                  <p class="clothing-details">Turquesa Pastel</p>
-                  <span class="clothing-tag">Cómodo</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1560343090-f0409e92791a?w=400" alt="Calzado Casual" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Mocasines Gamuza</p>
-                  <p class="clothing-details">Tono Marrón / Miel</p>
-                  <span class="clothing-tag">Calzado</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=400" alt="Tenis Blancos" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Tenis Clásicos</p>
-                  <p class="clothing-details">Lona Blanca</p>
-                  <span class="clothing-tag">Calzado</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400" alt="Saco Lino" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Saco de Lino</p>
-                  <p class="clothing-details">Azul Claro Ligero</p>
-                  <span class="clothing-tag">Formal</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=400" alt="Chaleco Ligero" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Chaleco Casual</p>
-                  <p class="clothing-details">Gris Claro / Algodón</p>
-                  <span class="clothing-tag">Estilo</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="gender-title-badge damas">👩 Damas (10 Prendas)</div>
-            <div class="clothes-grid">
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1564257631407-4deb1f99d992?w=400" alt="Blusa Encaje" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Blusa de Encaje</p>
-                  <p class="clothing-details">Rosa Pastel</p>
-                  <span class="clothing-tag">Primavera</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=400" alt="Falda Floral" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Falda Plegada</p>
-                  <p class="clothing-details">Amarillo Floral</p>
-                  <span class="clothing-tag">Fresco</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400" alt="Pantalón Palazzo" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Pantalón Palazzo</p>
-                  <p class="clothing-details">Blanco de Lino</p>
-                  <span class="clothing-tag">Elegante</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400" alt="Vestido Floral" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Vestido Midi</p>
-                  <p class="clothing-details">Estampado Primavera</p>
-                  <span class="clothing-tag">Vestidos</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400" alt="Top Casual" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Top Hombros Libres</p>
-                  <p class="clothing-details">Verde Menta</p>
-                  <span class="clothing-tag">Casual</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400" alt="Zapatillas" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Zapatillas</p>
-                  <p class="clothing-details">Color Miel / Beige</p>
-                  <span class="clothing-tag">Calzado</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=400" alt="Tenis de Plataforma" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Tenis de Plataforma</p>
-                  <p class="clothing-details">Rosa Salmón</p>
-                  <span class="clothing-tag">Calzado</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?w=400" alt="Cardigan Ligero" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Cárdigan Ligero</p>
-                  <p class="clothing-details">Tejido Crema</p>
-                  <span class="clothing-tag">Abrigo</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400" alt="Jeans Claros" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Jeans Corte Recto</p>
-                  <p class="clothing-details">Azul Claro Pastel</p>
-                  <span class="clothing-tag">Básicos</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=400" alt="Blazer Pastel" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Blazer Ligero</p>
-                  <p class="clothing-details">Lila / Lavanda</p>
-                  <span class="clothing-tag">Moda</span>
-                </div>
-              </div>
-            </div>
+        <a href="{{ url_for('colecciones') }}" class="dropdown-toggle">Colecciones ▾</a>
+        <div class="mega-menu collections-dropdown-menu">
+          <div class="menu-column">
+            <a href="{{ url_for('colecciones', _anchor='primavera') }}">
+              <span class="menu-icon">🌸</span>
+              <div><strong>Primavera</strong></div>
+            </a>
+            <a href="{{ url_for('colecciones', _anchor='verano') }}">
+              <span class="menu-icon">☀️</span>
+              <div><strong>Verano</strong></div>
+            </a>
+            <a href="{{ url_for('colecciones', _anchor='otono') }}">
+              <span class="menu-icon">🍂</span>
+              <div><strong>Otoño</strong></div>
+            </a>
+            <a href="{{ url_for('colecciones', _anchor='invierno') }}">
+              <span class="menu-icon">❄️</span>
+              <div><strong>Invierno</strong></div>
+            </a>
+            <div style="border-top: 1px solid #eee; margin: 4px 0;"></div>
+            <a href="{{ url_for('colecciones') }}">
+              <span class="menu-icon">🛍️</span>
+              <div><strong>Ver Todo</strong></div>
+            </a>
           </div>
-
-          <!-- 2. VERANO -->
-          <div class="season-card">
-            <div class="season-header">☀️ Colección Verano</div>
-
-            <div class="gender-title-badge">👨 Caballeros (10 Prendas)</div>
-            <div class="clothes-grid">
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400" alt="Camisa Tropical" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Camisa Tropical</p>
-                  <p class="clothing-details">Azul Cielo / Estampado</p>
-                  <span class="clothing-tag">Verano</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=400" alt="Playera Polo" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Playera Polo</p>
-                  <p class="clothing-details">Amarillo / Blanco</p>
-                  <span class="clothing-tag">Deportivo</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=400" alt="Playera Sin Mangas" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Playera Tank Top</p>
-                  <p class="clothing-details">Gris / Algodón Fresco</p>
-                  <span class="clothing-tag">Playa</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1565084888279-aca607ecce0c?w=400" alt="Shorts Lino" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Shorts de Lino</p>
-                  <p class="clothing-details">Azul Marino / Beige</p>
-                  <span class="clothing-tag">Fresco</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=400" alt="Pans" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Pans</p>
-                  <p class="clothing-details">Rojo / Rayas</p>
-                  <span class="clothing-tag">Acuático</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=400" alt="Pantalón Lino" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Pantalón de Lino</p>
-                  <p class="clothing-details">Color Crema Holgado</p>
-                  <span class="clothing-tag">Casual</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=400" alt="Sandalias Cuero" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Sandalias de Cuero</p>
-                  <p class="clothing-details">Tono Café Oscuro</p>
-                  <span class="clothing-tag">Calzado</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400" alt="Shorts Bermudas" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Bermudas Verano</p>
-                  <p class="clothing-details">Azul Marino / Lino</p>
-                  <span class="clothing-tag">Prenda</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400" alt="Lentes" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Lentes</p>
-                  <p class="clothing-details">Paja Tejida Natural</p>
-                  <span class="clothing-tag">Accesorio</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400" alt="Gafas de Sol" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Lentes de Sol</p>
-                  <p class="clothing-details">Estilo Aviador</p>
-                  <span class="clothing-tag">Accesorio</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="gender-title-badge damas">👩 Damas (10 Prendas)</div>
-            <div class="clothes-grid">
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=400" alt="Crop Top" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Crop Top de Tiras</p>
-                  <p class="clothing-details">Turquesa / Coral</p>
-                  <span class="clothing-tag">Verano</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1577900232427-18219b9166a0?w=400" alt="Falda Denim" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Falda Denim Short</p>
-                  <p class="clothing-details">Corte A Mezclilla</p>
-                  <span class="clothing-tag">Casual</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400" alt="Vestido Playero" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Vestido Playero</p>
-                  <p class="clothing-details">Estampado Bohemio</p>
-                  <span class="clothing-tag">Fresco</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=400" alt="Vestido de Jean" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Vestido de Jean</p>
-                  <p class="clothing-details">Desgastados Azules</p>
-                  <span class="clothing-tag">Moda</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400" alt="Blusa cerrada" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Blusa cerrada</p>
-                  <p class="clothing-details">Rojo Pasión</p>
-                  <span class="clothing-tag">Playa</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1603808033192-082d6919d3e1?w=400" alt="Tenis Planos" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Tenis Planos</p>
-                  <p class="clothing-details">Doradas / Tiras</p>
-                  <span class="clothing-tag">Calzado</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400" alt="Bolso Playa" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Bolso de Tejido Yute</p>
-                  <p class="clothing-details">Tejido Natural</p>
-                  <span class="clothing-tag">Accesorio</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1508296695146-257a814070b4?w=400" alt="Lentes Sol Dama" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Lentes de Sol Oversize</p>
-                  <p class="clothing-details">Armazón Carey</p>
-                  <span class="clothing-tag">Accesorio</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=400" alt="Kimono Verano" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Kimono Estampado</p>
-                  <p class="clothing-details">Seda Transparente</p>
-                  <span class="clothing-tag">Estilo</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1516762689617-e1cffcef479d?w=400" alt="Conjunto" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Conjunto</p>
-                  <p class="clothing-details">Lino Blanco puro</p>
-                  <span class="clothing-tag">Básico</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 3. OTOÑO -->
-          <div class="season-card">
-            <div class="season-header">🍂 Colección Otoño</div>
-
-            <div class="gender-title-badge">👨 Caballeros (10 Prendas)</div>
-            <div class="clothes-grid">
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1603252109303-2751441dd157?w=400" alt="Camisa" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Camisa</p>
-                  <p class="clothing-details">Mostaza / Terracota</p>
-                  <span class="clothing-tag">Otoño</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400" alt="Playera Cuello V" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Playera Cuello V</p>
-                  <p class="clothing-details">Verde Olivo / Lana</p>
-                  <span class="clothing-tag">Cálido</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400" alt="Chamarra Cuero Hombre" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Chamarra de Piel</p>
-                  <p class="clothing-details">Marrón Oscuro Hombre</p>
-                  <span class="clothing-tag">Urbano</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=400" alt="Pantalón Pana Hombre" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Pantalón de Pana</p>
-                  <p class="clothing-details">Tono Café Cobre</p>
-                  <span class="clothing-tag">Clásico</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400" alt="Jeans Oscuros" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Jeans Mezclilla</p>
-                  <p class="clothing-details">Azul Indigo Oscuro</p>
-                  <span class="clothing-tag">Casual</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=400" alt="Botas Piel" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Botas de Piel</p>
-                  <p class="clothing-details">Color Miel Rústico</p>
-                  <span class="clothing-tag">Calzado</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=400" alt="Gabardina Corta" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Gabardina Corta</p>
-                  <p class="clothing-details">Beige Tradicional</p>
-                  <span class="clothing-tag">Elegante</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1516826957135-700dedea698c?w=400" alt="Sudadera Capucha" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Sudadera Capucha</p>
-                  <p class="clothing-details">Color Vino / Borgoña</p>
-                  <span class="clothing-tag">Sport</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400" alt="Pantalones de mezclilla" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Pantalones de mezclilla</p>
-                  <p class="clothing-details">Verde Militar</p>
-                  <span class="clothing-tag">Cómodo</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?w=400" alt="Zapatos Gamuza" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Zapatos Derby</p>
-                  <p class="clothing-details">Gamuza Marrón</p>
-                  <span class="clothing-tag">Calzado</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="gender-title-badge damas">👩 Damas (10 Prendas)</div>
-            <div class="clothes-grid">
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400" alt="Pantalones" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Pantalones</p>
-                  <p class="clothing-details">Tono Vino / Mostaza</p>
-                  <span class="clothing-tag">Otoño</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=400" alt="Falda Gamuza" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Falda de Gamuza</p>
-                  <p class="clothing-details">Color Terracota</p>
-                  <span class="clothing-tag">Moda</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1551803091-e20673f15770?w=400" alt="Vestido" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Vestido</p>
-                  <p class="clothing-details">Tacón Medio Café</p>
-                  <span class="clothing-tag">Calzado</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=400" alt="Saco Tejido" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Saco Oversize</p>
-                  <p class="clothing-details">Cuadros Tonos Tierra</p>
-                  <span class="clothing-tag">Elegante</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1548883354-7622d03aca27?w=400" alt="Bufanda Tejida" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Bufanda Tejida</p>
-                  <p class="clothing-details">Lana Color Crema</p>
-                  <span class="clothing-tag">Accesorio</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=400" alt="Blusa" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Blusa</p>
-                  <p class="clothing-details">Tono Camel / Marrón</p>
-                  <span class="clothing-tag">Semiformal</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400" alt="Conjunto" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Conjunto</p>
-                  <p class="clothing-details">Manga Larga Verde Olivo</p>
-                  <span class="clothing-tag">Vestidos</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1520975954732-35dd22299614?w=400" alt="Boina Otoño" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Boina / Gorro</p>
-                  <p class="clothing-details">Lana Negra</p>
-                  <span class="clothing-tag">Accesorio</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400" alt="Chamarra Gabardina" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Trench Coat</p>
-                  <p class="clothing-details">Impermeable Beige</p>
-                  <span class="clothing-tag">Estilo</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400" alt="Mocasines Dama" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Mocasines Clásicos</p>
-                  <p class="clothing-details">Piel Marrón / Suela Goma</p>
-                  <span class="clothing-tag">Calzado</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 4. INVIERNO -->
-          <div class="season-card">
-            <div class="season-header">❄️ Colección Invierno</div>
-
-            <div class="gender-title-badge">👨 Caballeros (10 Prendas)</div>
-            <div class="clothes-grid">
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=400" alt="Camisa Franela" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Camisa de Franela</p>
-                  <p class="clothing-details">Manga Larga Gris/Azul</p>
-                  <span class="clothing-tag">Invierno</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400" alt="Playera Cuello Alto" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Playera Cuello Tortuga</p>
-                  <p class="clothing-details">Negra / Guinda</p>
-                  <span class="clothing-tag">Cálido</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1544923246-77307dd654cb?w=400" alt="Abrigo Lana" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Abrigo Largo Lana</p>
-                  <p class="clothing-details">Gris Marengo / Paño</p>
-                  <span class="clothing-tag">Formal</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1548883354-7622d03aca27?w=400" alt="Chamarra Puffer Hombre" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Chamarra Puffer</p>
-                  <p class="clothing-details">Térmica Negra Hombre</p>
-                  <span class="clothing-tag">Térmico</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400" alt="Pantalón Lana Hombre" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Pantalón de Lana</p>
-                  <p class="clothing-details">Corte de Vestir Gris</p>
-                  <span class="clothing-tag">Elegante</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=400" alt="Zapatos" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Zapatos</p>
-                  <p class="clothing-details">Lana Tejida Azul</p>
-                  <span class="clothing-tag">Accesorio</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=400" alt="Botas Invierno" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Botas de Nieve/Piel</p>
-                  <p class="clothing-details">Impermeable Café</p>
-                  <span class="clothing-tag">Calzado</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1516826957135-700dedea698c?w=400" alt="Sudadera Térmica" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Sudadera Térmica</p>
-                  <p class="clothing-details">Afelpada Interior</p>
-                  <span class="clothing-tag">Sport</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=400" alt="Gabardinas" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Gabardinas</p>
-                  <p class="clothing-details">Piel Negra Táctica</p>
-                  <span class="clothing-tag">Accesorio</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1520975954732-35dd22299614?w=400" alt="Cazadora de piel" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Cazadora de piel</p>
-                  <p class="clothing-details">Gris Claro / Cuadros</p>
-                  <span class="clothing-tag">Accesorio</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="gender-title-badge damas">👩 Damas (10 Prendas)</div>
-            <div class="clothes-grid">
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400" alt="Suéter" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Suéter</p>
-                  <p class="clothing-details">Tejido Blanco Marfil</p>
-                  <span class="clothing-tag">Invierno</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=400" alt="Abrigo Largo Dama" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Abrigo de Paño</p>
-                  <p class="clothing-details">Corte Elegante Camel</p>
-                  <span class="clothing-tag">Elegante</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400" alt="Zapatillas Altas" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Zapatillas Altas</p>
-                  <p class="clothing-details">Gamuza Negra</p>
-                  <span class="clothing-tag">Calzado</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=400" alt="Chamarra Puffer Dama" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Chamarra Puffer Metallized</p>
-                  <p class="clothing-details">Gris Plata / Capucha</p>
-                  <span class="clothing-tag">Térmica</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400" alt="Pantalón Térmico" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Pantalón de Pana Dama</p>
-                  <p class="clothing-details">Color Marrón / Vinotinto</p>
-                  <span class="clothing-tag">Cálido</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=400" alt="Falda Tejida" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Falda Larga Tejida</p>
-                  <p class="clothing-details">Lana Gruesa Gris</p>
-                  <span class="clothing-tag">Moda</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=400" alt="Zapatos" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Zapatos</p>
-                  <p class="clothing-details">Lana Tejida Rosa</p>
-                  <span class="clothing-tag">Accesorio</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1548883354-7622d03aca27?w=400" alt="Pantalon" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Pantalon</p>
-                  <p class="clothing-details">Efecto Peluche Crema</p>
-                  <span class="clothing-tag">Accesorio</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1551803091-e20673f15770?w=400" alt="Vestido" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Vestido</p>
-                  <p class="clothing-details">Interior Forrado</p>
-                  <span class="clothing-tag">Calzado</span>
-                </div>
-              </div>
-              <div class="clothing-card">
-                <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400" alt="Ensamble Lana" class="clothing-img">
-                <div class="clothing-info">
-                  <p class="clothing-name">Ensamble Tejido</p>
-                  <p class="clothing-details">Largo / Abierto Café</p>
-                  <span class="clothing-tag">Estilo</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
       </li>
 
-      <!-- DESPLEGABLE DE TEORÍA DEL COLOR -->
+      <!-- DESPLEGABLE DE TEORÍA DEL COLOR ACTUALIZADO -->
       <li class="dropdown dropdown-color">
         <a href="#" class="dropdown-toggle">Teoría del Color ▾</a>
-        <div class="mega-menu">
-          <div class="mega-menu-content">
-            <div class="menu-column">
-              <h4>Fundamentos</h4>
+        <div class="mega-menu color-theory-dropdown">
+          <div class="color-menu-container">
+            <div class="color-menu-items">
               <a href="{{ url_for('colorwheel') }}">
-                <span class="menu-icon">⭕</span>
+                <span class="menu-icon" style="font-size: 1.2rem;">🎨</span>
                 <div>
-                  <strong>Círculo Cromático</strong>
-                  <p>Colores primarios, secundarios y terciarios</p>
+                  <strong>Rueda de Armonías & Probador</strong>
+                  <p>Explora combinaciones cromáticas y prueba tonos</p>
                 </div>
               </a>
               <a id="openTempModalBtn">
-                <span class="menu-icon">🌡️</span>
+                <span class="menu-icon" style="font-size: 1.2rem;">🌡️</span>
                 <div>
-                  <strong>Temperatura de Color (Ver Guía Visual)</strong>
-                  <p>Abre el comparador de tonos cálidos, fríos y neutros</p>
+                  <strong>Temperatura de Color</strong>
+                  <p>Guía de tonos cálidos, fríos y neutros</p>
                 </div>
               </a>
             </div>
 
-            <div class="menu-column">
-              <h4>Armonías</h4>
-              <a href="#">
-                <span class="menu-icon">⚡</span>
-                <div>
-                  <strong>Colores Complementarios</strong>
-                  <p>Combinaciones de alto contraste e impacto</p>
-                </div>
-              </a>
-              <a href="#">
-                <span class="menu-icon">🎨</span>
-                <div>
-                  <strong>Monocromático & Análogo</strong>
-                  <p>Estilos sobrios, elegantes y armónicos</p>
-                </div>
-              </a>
-            </div>
-
-            <div class="menu-column featured-info">
-              <div>
-                <h5>💡 Tip de Estilo</h5>
-                <p>Usa la regla 60-30-10 para combinar prendas: 60% color dominante, 30% secundario y 10% de acento.</p>
-              </div>
+            <!-- TIP DE ESTILO UBICADO ABAJO -->
+            <div class="featured-info-bottom">
+              <h5>💡 Tip de Estilo</h5>
+              <p>Usa la regla 60-30-10 para combinar prendas: 60% color dominante, 30% secundario y 10% de acento.</p>
             </div>
           </div>
         </div>
@@ -1522,18 +812,16 @@
     </ul>
 
     <ul class="nav-right">
-      <!-- DESPLEGABLE DE BÚSQUEDA -->
       <li class="dropdown">
         <a href="#" class="dropdown-toggle">Buscar 🔍</a>
         <div class="search-dropdown">
           <form action="#" method="GET" class="search-form">
-            <input type="text" name="q" class="search-input" placeholder="Buscar color, estilo, prendas..." required>
+            <input type="text" name="q" class="search-input" placeholder="Buscar prenda, estilo..." required>
             <button type="submit" class="search-btn">Buscar</button>
           </form>
         </div>
       </li>
 
-      <!-- MENÚ DESPLEGABLE DE USUARIO -->
       {% if current_user.is_authenticated %}
       <li class="dropdown user-dropdown-container">
         <a href="#" class="dropdown-toggle user-toggle">
@@ -1584,14 +872,100 @@
     <button class="menu-toggle" id="menuBtn" aria-label="Abrir menú">☰</button>
   </nav>
 
-  <!-- VENTANA MODAL INTERACTIVA DE TEMPERATURA DE COLOR -->
+  <!-- MENÚ MÓVIL OFF-CANVAS MEJORADO -->
+  <div class="mobile-sidebar" id="mobileMenu">
+    <div class="mobile-sidebar-header">
+      <div class="nav-brand">
+        <img src="{{ url_for('static', filename='Logo.jpg') }}" alt="Logo" style="height: 32px; object-fit: contain;">
+        <span>SET-MATCH-GO!</span>
+      </div>
+      <button class="mobile-close-btn" id="closeMobileMenuBtn">✕</button>
+    </div>
+
+    <div class="mobile-sidebar-body">
+      <ul class="mobile-nav-list">
+        <li>
+          <a href="{{ url_for('index') }}" class="mobile-nav-link">
+            <span>🏠 Inicio</span>
+          </a>
+        </li>
+
+        <!-- ACORDEÓN: COLECCIONES -->
+        <li class="mobile-accordion">
+          <button class="mobile-accordion-btn">
+            <span>🛍️ Colecciones</span>
+            <span class="arrow">▾</span>
+          </button>
+          <div class="mobile-accordion-content">
+            <a href="{{ url_for('colecciones', estacion='primavera') }}">🌸 Primavera</a>
+            <a href="{{ url_for('colecciones', estacion='verano') }}">☀️ Verano</a>
+            <a href="{{ url_for('colecciones', estacion='otono') }}">🍂 Otoño</a>
+            <a href="{{ url_for('colecciones', estacion='invierno') }}">❄️ Invierno</a>
+            <a href="{{ url_for('colecciones') }}" style="font-weight: bold; color: #e74c3c;">Ver Todo el Catálogo</a>
+          </div>
+        </li>
+
+        <!-- ACORDEÓN: TEORÍA DEL COLOR -->
+        <li class="mobile-accordion">
+          <button class="mobile-accordion-btn">
+            <span>🎨 Teoría del Color</span>
+            <span class="arrow">▾</span>
+          </button>
+          <div class="mobile-accordion-content">
+            <a href="{{ url_for('colorwheel') }}">🎨 Rueda de Armonías & Probador</a>
+            <a href="#" id="mobileOpenTempModal">🌡️ Temperatura de Color</a>
+          </div>
+        </li>
+
+        <li>
+          <div class="mobile-search-box">
+            <form action="#" method="GET">
+              <input type="text" name="q" placeholder="Buscar prendas, estilos..." required>
+              <button type="submit">🔍</button>
+            </form>
+          </div>
+        </li>
+
+        {% if current_user.is_authenticated %}
+        <li>
+          <a href="{{ url_for('historial') }}" class="mobile-nav-link">
+            <span>📋 Mi Historial</span>
+          </a>
+        </li>
+        <li>
+          <form action="{{ url_for('logout') }}" method="POST" style="margin: 0; padding: 0 15px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+            <button type="submit" class="mobile-logout-btn">
+              🚪 Cerrar Sesión ({{ current_user.nombre.split()[0] }})
+            </button>
+          </form>
+        </li>
+        {% else %}
+        <li>
+          <a href="{{ url_for('login') }}" class="mobile-nav-link">
+            <span>👤 Iniciar Sesión</span>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+
+      <div style="padding: 20px 15px;">
+        <a href="{{ url_for('test') }}" class="btn-test"
+          style="display: block; text-align: center; margin: 0; padding: 12px !important; font-size: 1rem;">
+          Test Colorimetría
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="menu-overlay" id="menuOverlay"></div>
+
+  <!-- MODAL TEMPERATURA DE COLOR -->
   <div class="temp-modal-overlay" id="tempModalOverlay">
     <div class="temp-modal-window">
       <div class="temp-modal-header">
         <h3>🌡️ Muestrario Físico: Temperatura de Color</h3>
         <button class="temp-modal-close" id="closeTempModalBtn">✕</button>
       </div>
-
       <div class="temp-modal-body">
         <div class="temp-tabs-bar">
           <button class="temp-tab-btn active warm" onclick="switchTempTab('warm', this)">🔥 Tonos Cálidos</button>
@@ -1601,10 +975,9 @@
 
         <div class="temp-tab-content active" id="tab-warm">
           <p style="margin-top: 0; color: #555; font-size: 0.9rem;">
-            Los <strong>tonos cálidos</strong> contienen pigmentos dominantes amarillos, rojos y dorados. Generan sensación de vitalidad, cercanía y realzan pieles con subtono cálido/dorado.
+            Los <strong>tonos cálidos</strong> contienen pigmentos amarillos, rojos y dorados. Generan sensación de
+            vitalidad y realzan pieles cálidas.
           </p>
-
-          <h5 style="margin: 15px 0 8px 0; color: #2c3e50;">Paleta de Muestras Físicas:</h5>
           <div class="color-swatches-grid">
             <div class="color-swatch-item">
               <div class="color-swatch-box" style="background-color: #E67E22;"></div>
@@ -1618,47 +991,13 @@
               <div class="color-swatch-box" style="background-color: #F1C40F;"></div>
               <div class="color-swatch-label">Amarillo Mostaza<span class="color-swatch-hex">#F1C40F</span></div>
             </div>
-            <div class="color-swatch-item">
-              <div class="color-swatch-box" style="background-color: #D35400;"></div>
-              <div class="color-swatch-label">Terracota<span class="color-swatch-hex">#D35400</span></div>
-            </div>
-          </div>
-
-          <h5 style="margin: 15px 0 10px 0; color: #2c3e50;">Ejemplos de Prendas Reales en Tonos Cálidos:</h5>
-          <div class="clothes-grid">
-            <div class="clothing-card">
-              <img src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400" class="clothing-img" alt="Camisa Coral">
-              <div class="clothing-info">
-                <p class="clothing-name">Camisa M/Larga</p>
-                <p class="clothing-details">Lino Coral Pastel</p>
-                <span class="clothing-tag" style="background: #fef5ec; color: #e67e22;">Cálido</span>
-              </div>
-            </div>
-            <div class="clothing-card">
-              <img src="https://images.unsplash.com/photo-1603252109303-2751441dd157?w=400" class="clothing-img" alt="Camisa Mostaza">
-              <div class="clothing-info">
-                <p class="clothing-name">Camisa Mostaza</p>
-                <p class="clothing-details">Algodón Terracota</p>
-                <span class="clothing-tag" style="background: #fef5ec; color: #e67e22;">Cálido</span>
-              </div>
-            </div>
-            <div class="clothing-card">
-              <img src="https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=400" class="clothing-img" alt="Falda Amarillo">
-              <div class="clothing-info">
-                <p class="clothing-name">Falda Plegada</p>
-                <p class="clothing-details">Amarillo Floral</p>
-                <span class="clothing-tag" style="background: #fef5ec; color: #e67e22;">Cálido</span>
-              </div>
-            </div>
           </div>
         </div>
 
         <div class="temp-tab-content" id="tab-cool">
           <p style="margin-top: 0; color: #555; font-size: 0.9rem;">
-            Los <strong>tonos fríos</strong> contienen base azulada, verdosa o violeta. Evocan frescura, elegancia sobria y favorecen especialmente a personas de tez clara o rosa.
+            Los <strong>tonos fríos</strong> tienen base azulada, verdosa o violeta. Evocan frescura y elegancia sobria.
           </p>
-
-          <h5 style="margin: 15px 0 8px 0; color: #2c3e50;">Paleta de Muestras Físicas:</h5>
           <div class="color-swatches-grid">
             <div class="color-swatch-item">
               <div class="color-swatch-box" style="background-color: #2980B9;"></div>
@@ -1666,53 +1005,20 @@
             </div>
             <div class="color-swatch-item">
               <div class="color-swatch-box" style="background-color: #16A085;"></div>
-              <div class="color-swatch-label">Verde Menta / Esmeralda<span class="color-swatch-hex">#16A085</span></div>
+              <div class="color-swatch-label">Verde Menta<span class="color-swatch-hex">#16A085</span></div>
             </div>
             <div class="color-swatch-item">
               <div class="color-swatch-box" style="background-color: #8E44AD;"></div>
-              <div class="color-swatch-label">Violeta / Lavanda<span class="color-swatch-hex">#8E44AD</span></div>
-            </div>
-            <div class="color-swatch-item">
-              <div class="color-swatch-box" style="background-color: #34495E;"></div>
-              <div class="color-swatch-label">Gris Pizarra<span class="color-swatch-hex">#34495E</span></div>
-            </div>
-          </div>
-
-          <h5 style="margin: 15px 0 10px 0; color: #2c3e50;">Ejemplos de Prendas Reales en Tonos Fríos:</h5>
-          <div class="clothes-grid">
-            <div class="clothing-card">
-              <img src="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400" class="clothing-img" alt="Camisa Azul">
-              <div class="clothing-info">
-                <p class="clothing-name">Camisa Tropical</p>
-                <p class="clothing-details">Azul Cielo Fresco</p>
-                <span class="clothing-tag" style="background: #ebf5fb; color: #2980b9;">Frío</span>
-              </div>
-            </div>
-            <div class="clothing-card">
-              <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=400" class="clothing-img" alt="Blazer Lila">
-              <div class="clothing-info">
-                <p class="clothing-name">Blazer Ligero</p>
-                <p class="clothing-details">Lila / Lavanda</p>
-                <span class="clothing-tag" style="background: #ebf5fb; color: #2980b9;">Frío</span>
-              </div>
-            </div>
-            <div class="clothing-card">
-              <img src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400" class="clothing-img" alt="Camisa Verde Menta">
-              <div class="clothing-info">
-                <p class="clothing-name">Camisa M/Corta</p>
-                <p class="clothing-details">Verde Menta</p>
-                <span class="clothing-tag" style="background: #ebf5fb; color: #2980b9;">Frío</span>
-              </div>
+              <div class="color-swatch-label">Violeta<span class="color-swatch-hex">#8E44AD</span></div>
             </div>
           </div>
         </div>
 
         <div class="temp-tab-content" id="tab-neutral">
           <p style="margin-top: 0; color: #555; font-size: 0.9rem;">
-            Los <strong>tonos neutros</strong> son acromáticos o de muy baja saturación (blanco, negro, gris, beige). Sirven como la base estructural perfecta para equilibrar tonos cálidos o fríos.
+            Los <strong>tonos neutros</strong> son acromáticos o de muy baja saturación. Sirven como base estructural
+            perfecta.
           </p>
-
-          <h5 style="margin: 15px 0 8px 0; color: #2c3e50;">Paleta de Muestras Físicas:</h5>
           <div class="color-swatches-grid">
             <div class="color-swatch-item">
               <div class="color-swatch-box" style="background-color: #FFFFFF; border-bottom: 1px solid #ddd;"></div>
@@ -1723,79 +1029,14 @@
               <div class="color-swatch-label">Negro Intenso<span class="color-swatch-hex">#1A1A1A</span></div>
             </div>
             <div class="color-swatch-item">
-              <div class="color-swatch-box" style="background-color: #F5F5DC;"></div>
-              <div class="color-swatch-label">Beige / Crema<span class="color-swatch-hex">#F5F5DC</span></div>
-            </div>
-            <div class="color-swatch-item">
               <div class="color-swatch-box" style="background-color: #BDC3C7;"></div>
               <div class="color-swatch-label">Gris Perla<span class="color-swatch-hex">#BDC3C7</span></div>
             </div>
           </div>
-
-          <h5 style="margin: 15px 0 10px 0; color: #2c3e50;">Ejemplos de Prendas Reales en Tonos Neutros:</h5>
-          <div class="clothes-grid">
-            <div class="clothing-card">
-              <img src="https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400" class="clothing-img" alt="Pantalón Beige">
-              <div class="clothing-info">
-                <p class="clothing-name">Pantalón Chino</p>
-                <p class="clothing-details">Beige Claro</p>
-                <span class="clothing-tag" style="background: #f2f4f4; color: #64748b;">Neutro</span>
-              </div>
-            </div>
-            <div class="clothing-card">
-              <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400" class="clothing-img" alt="Pantalón Palazzo">
-              <div class="clothing-info">
-                <p class="clothing-name">Pantalón Palazzo</p>
-                <p class="clothing-details">Blanco de Lino</p>
-                <span class="clothing-tag" style="background: #f2f4f4; color: #64748b;">Neutro</span>
-              </div>
-            </div>
-            <div class="clothing-card">
-              <img src="https://images.unsplash.com/photo-1544923246-77307dd654cb?w=400" class="clothing-img" alt="Abrigo Gris">
-              <div class="clothing-info">
-                <p class="clothing-name">Abrigo Largo Lana</p>
-                <p class="clothing-details">Gris Marengo</p>
-                <span class="clothing-tag" style="background: #f2f4f4; color: #64748b;">Neutro</span>
-              </div>
-            </div>
-          </div>
         </div>
-
       </div>
     </div>
   </div>
-
-  <!-- MENÚ MÓVIL ACTUALIZADO -->
-  <div class="mobile-dropdown" id="mobileMenu">
-    <ul>
-      <li><a href="{{ url_for('index') }}">Inicio</a></li>
-      <li><a href="#collections-menu" class="btn-open-collections-mobile">Colecciones</a></li>
-      <li><a href="#">Teoría del Color</a></li>
-      <li>
-        <form action="#" method="GET" style="padding: 10px 15px;">
-          <input type="text" name="q" placeholder="Buscar..."
-            style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
-        </form>
-      </li>
-      {% if current_user.is_authenticated %}
-      <li><a href="{{ url_for('historial') }}">Mi historial</a></li>
-      <li>
-        <form action="{{ url_for('logout') }}" method="POST" class="logout-form">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
-          <button type="submit" class="nav-link-btn" style="color: #dc2626;">Cerrar sesión ({{
-            current_user.nombre.split()[0] }})</button>
-        </form>
-      </li>
-      {% else %}
-      <li><a href="{{ url_for('login') }}">Iniciar Sesión</a></li>
-      {% endif %}
-      <li>
-        <a href="{{ url_for('test') }}" class="btn-test"
-          style="margin: 10px 15px; text-align: center; display: block;">Test Colorimetría</a>
-      </li>
-    </ul>
-  </div>
-  <div class="menu-overlay" id="menuOverlay"></div>
 
   <!-- MENSAJES FLASH -->
   {% with mensajes = get_flashed_messages(with_categories=true) %}
@@ -1811,64 +1052,64 @@
   {% block content %}{% endblock %}
 
   <script>
-    /* MENÚ MÓVIL */
+    /* CONTROL DEL MENÚ MÓVIL OFF-CANVAS */
     const menuBtn = document.getElementById('menuBtn');
+    const closeMobileMenuBtn = document.getElementById('closeMobileMenuBtn');
     const mobileMenu = document.getElementById('mobileMenu');
     const menuOverlay = document.getElementById('menuOverlay');
 
-    function toggleMenu() {
-      const isOpen = mobileMenu.classList.toggle('active');
-      menuOverlay.classList.toggle('active', isOpen);
-      menuBtn.textContent = isOpen ? '✕' : '☰';
+    function openMobileMenu() {
+      mobileMenu.classList.add('active');
+      menuOverlay.classList.add('active');
     }
-    menuBtn.addEventListener('click', toggleMenu);
-    menuOverlay.addEventListener('click', toggleMenu);
+
+    function closeMobileMenu() {
+      mobileMenu.classList.remove('active');
+      menuOverlay.classList.remove('active');
+    }
+
+    if (menuBtn) menuBtn.addEventListener('click', openMobileMenu);
+    if (closeMobileMenuBtn) closeMobileMenuBtn.addEventListener('click', closeMobileMenu);
+    if (menuOverlay) menuOverlay.addEventListener('click', closeMobileMenu);
+
+    /* ACORDEÓN INTERACTIVO EN MÓVIL */
+    const accordions = document.querySelectorAll('.mobile-accordion-btn');
+
+    accordions.forEach(btn => {
+      btn.addEventListener('click', function () {
+        const parent = this.parentElement;
+        const content = this.nextElementSibling;
+
+        parent.classList.toggle('active');
+
+        if (content.style.maxHeight) {
+          content.style.maxHeight = null;
+        } else {
+          content.style.maxHeight = content.scrollHeight + "px";
+        }
+      });
+    });
 
     const flashStack = document.getElementById('flashStack');
     if (flashStack) setTimeout(() => flashStack.remove(), 5000);
 
-    /* VINCULACIÓN AL HACER CLIC EN "COLECCIONES" O "OUTFITS" PARA ABRIR Y MOSTRAR EL MENÚ */
-    const collectionsNavBtn = document.getElementById('collectionsNavBtn');
-    const collectionsMegaMenu = document.getElementById('collectionsMegaMenu');
-
-    function openCollectionsMenu(e) {
-      if (e) e.preventDefault();
-      collectionsMegaMenu.classList.toggle('force-show');
-      collectionsMegaMenu.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    if (collectionsNavBtn) {
-      collectionsNavBtn.addEventListener('click', openCollectionsMenu);
-    }
-
-    /* ENLACES EXTERNOS/INTERNOS CON CLASE .btn-open-collections O REFERENCIAS EN EL INICIO */
-    document.addEventListener('click', function (e) {
-      const target = e.target.closest('a, button');
-      if (target) {
-        const href = target.getAttribute('href');
-        const text = target.innerText ? target.innerText.toLowerCase() : '';
-        if (href === '#collections-menu' || href === '#outfits' || text.includes('outfits') || text.includes('colecciones')) {
-          e.preventDefault();
-          openCollectionsMenu();
-        }
-      }
-    });
-
-    /* CERRAR EL MENÚ DE COLECCIONES SI SE HACE CLIC FUERA DE ÉL */
-    document.addEventListener('click', function (e) {
-      if (!collectionsNavBtn.contains(e.target) && !collectionsMegaMenu.contains(e.target)) {
-        collectionsMegaMenu.classList.remove('force-show');
-      }
-    });
-
-    /* CONTROL DE LA VENTANA MODAL INTERACTIVA DE TEMPERATURA DE COLOR */
+    /* MODAL TEMPERATURA DE COLOR */
     const openTempModalBtn = document.getElementById('openTempModalBtn');
+    const mobileOpenTempModal = document.getElementById('mobileOpenTempModal');
     const closeTempModalBtn = document.getElementById('closeTempModalBtn');
     const tempModalOverlay = document.getElementById('tempModalOverlay');
 
     if (openTempModalBtn) {
       openTempModalBtn.addEventListener('click', (e) => {
         e.preventDefault();
+        tempModalOverlay.classList.add('active');
+      });
+    }
+
+    if (mobileOpenTempModal) {
+      mobileOpenTempModal.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeMobileMenu();
         tempModalOverlay.classList.add('active');
       });
     }
@@ -1881,25 +1122,16 @@
 
     if (tempModalOverlay) {
       tempModalOverlay.addEventListener('click', (e) => {
-        if (e.target === tempModalOverlay) {
-          tempModalOverlay.classList.remove('active');
-        }
+        if (e.target === tempModalOverlay) tempModalOverlay.classList.remove('active');
       });
     }
 
-    /* CAMBIO DE PESTAÑAS DE TEMPERATURA */
     function switchTempTab(type, btnElement) {
-      const tabs = document.querySelectorAll('.temp-tab-btn');
-      const contents = document.querySelectorAll('.temp-tab-content');
-
-      tabs.forEach(t => t.classList.remove('active'));
-      contents.forEach(c => c.classList.remove('active'));
-
+      document.querySelectorAll('.temp-tab-btn').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.temp-tab-content').forEach(c => c.classList.remove('active'));
       btnElement.classList.add('active');
       const activeContent = document.getElementById('tab-' + type);
-      if (activeContent) {
-        activeContent.classList.add('active');
-      }
+      if (activeContent) activeContent.classList.add('active');
     }
   </script>
 </body>
