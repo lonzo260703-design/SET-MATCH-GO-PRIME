@@ -199,63 +199,59 @@
 </style>
 
 <script>
-  // Fases de análisis para proyectar un pensamiento realista y profundo
-  const etapas = [
-    { texto: "Iniciando escaneo de atributos cromáticos...", porcentaje: 15 },
-    { texto: "Evaluando la temperatura de piel y venas...", porcentaje: 35 },
-    { texto: "Calculando el nivel de contraste entre cabello y facciones...", porcentaje: 55 },
-    { texto: "Consultando la rueda cromática para determinar la estación...", porcentaje: 75 },
-    { texto: "Sintetizando combinaciones de ropa e itinerario de color...", porcentaje: 90 },
-    { texto: "¡Diagnóstico y asesoría completados!", porcentaje: 100 }
-  ];
+  document.addEventListener("DOMContentLoaded", function () {
+    const statusEl = document.getElementById('aiStatusText');
+    const progressEl = document.getElementById('aiProgressBar');
+    const percentEl = document.getElementById('progressPercent');
 
-  let pasoActual = 0;
-  const totalTiempoAnimacion = 8500; // 8.5 segundos totales para pensar de forma pausada
-  const intervaloTiempo = totalTiempoAnimacion / etapas.length;
+    const etapas = [
+      { texto: "Iniciando escaneo de atributos cromáticos...", porcentaje: 15 },
+      { texto: "Evaluando la temperatura de piel y contraste...", porcentaje: 35 },
+      { texto: "Consultando motor de IA de SET-MATCH-GO!...", porcentaje: 60 },
+      { texto: "Sintetizando paleta armónica y sugerencias de outfit...", porcentaje: 85 },
+      { texto: "¡Diagnóstico y asesoría completados!", porcentaje: 100 }
+    ];
 
-  const statusEl = document.getElementById('aiStatusText');
-  const progressEl = document.getElementById('aiProgressBar');
-  const percentEl = document.getElementById('progressPercent');
-
-  // Promesa para la llamada al servidor
-  const peticionDiagnostico = fetch('/api/generar-diagnostico', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' }
-  });
-
-  // Animación del texto y barra
-  const timer = setInterval(() => {
-    pasoActual++;
+    let pasoActual = 0;
     
-    if (pasoActual < etapas.length) {
-      statusEl.style.opacity = 0;
-      statusEl.style.transform = 'translateY(6px)';
+    // Configuración del ritmo de la animación (intervalos de ~800ms por etapa)
+    const intervalTime = 850; 
 
-      setTimeout(() => {
-        statusEl.textContent = etapas[pasoActual].texto;
-        statusEl.style.opacity = 1;
-        statusEl.style.transform = 'translateY(0)';
-      }, 300);
+    // Disparar la generación de la IA en segundo plano
+    const apiPromise = fetch('/api/generar-diagnostico', { method: 'POST' })
+      .then(r => r.json())
+      .catch(err => console.error("Aviso Gemini:", err));
 
-      const pct = etapas[pasoActual].porcentaje;
-      progressEl.style.width = pct + '%';
-      percentEl.textContent = pct + '%';
-    } else {
-      clearInterval(timer);
-    }
-  }, intervaloTiempo);
+    // Animación fluida paso a paso
+    const timer = setInterval(() => {
+      pasoActual++;
+      
+      if (pasoActual < etapas.length - 1) {
+        statusEl.style.opacity = 0;
+        setTimeout(() => {
+          statusEl.textContent = etapas[pasoActual].texto;
+          statusEl.style.opacity = 1;
+        }, 150);
 
-  // Redirección sincrónica al finalizar tanto la llamada a Gemini como el tiempo de animación
-  Promise.all([peticionDiagnostico, new Promise(res => setTimeout(res, totalTiempoAnimacion))])
-    .then(([respuestaHttp]) => {
-      if (respuestaHttp.ok) {
-        window.location.href = "{{ url_for('resultado') }}";
+        const pct = etapas[pasoActual].porcentaje;
+        progressEl.style.width = pct + '%';
+        percentEl.textContent = pct + '%';
       } else {
-        window.location.href = "{{ url_for('test') }}";
+        // En la última etapa, esperamos a que la promesa de la API se complete
+        clearInterval(timer);
+        
+        apiPromise.then(() => {
+          progressEl.style.width = '100%';
+          percentEl.textContent = '100%';
+          statusEl.textContent = etapas[etapas.length - 1].texto;
+
+          // Breve pausa para mostrar la barra llena al 100% antes de redirigir
+          setTimeout(() => {
+            window.location.href = "{{ url_for('resultado') }}";
+          }, 600);
+        });
       }
-    })
-    .catch(() => {
-      window.location.href = "{{ url_for('test') }}";
-    });
+    }, intervalTime);
+  });
 </script>
 {% endblock %}

@@ -1,162 +1,348 @@
 {% extends "base.html" %}
-{% block title %}Tu Diagnóstico — SET-MATCH-GO!{% endblock %}
-{% block extra_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/test.css') }}">
-  <style>
-    /* Estructura compacta tipo Dashboard */
-    .results-compact-container {
-      max-width: 1100px;
-      margin: 15px auto;
-      padding: 0 15px;
-    }
-
-    .results-header-compact {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .results-grid-layout {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 20px;
-      align-items: stretch;
-    }
-
-    .card-result-box {
-      background: #ffffff;
-      border-radius: 14px;
-      padding: 22px;
-      border: 1px solid #eef2f5;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .palette-swatches {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
-      justify-items: center;
-      align-items: center;
-      margin-top: 15px;
-    }
-
-    .swatch-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .swatch-circle {
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
-      border: 2px solid #ffffff;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-      transition: transform 0.2s;
-    }
-
-    .swatch-circle:hover {
-      transform: scale(1.1);
-    }
-
-    .ia-recommendation-compact {
-      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-      border-left: 4px solid #e74c3c;
-    }
-
-    .actions-footer-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 20px;
-      padding-top: 15px;
-      border-top: 1px solid #eaeaea;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-
-    @media (max-width: 850px) {
-      .results-grid-layout {
-        grid-template-columns: 1fr;
-      }
-      .palette-swatches {
-        grid-template-columns: repeat(4, 1fr);
-      }
-    }
-  </style>
-{% endblock %}
+{% block title %}Tu Diagnóstico de Colorimetría | SET-MATCH-GO!{% endblock %}
 
 {% block content %}
-<main class="results-compact-container">
-  
-  <!-- ENCABEZADO COMPACTO -->
-  <div class="results-header-compact">
-    <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #e74c3c; letter-spacing: 1.5px;">DIAGNÓSTICO PERSONALIZADO</span>
-    <h1 style="font-size: 1.8rem; color: #2c3e50; margin: 4px 0;">Tu Paleta Ideal</h1>
-    <h2 style="font-size: 1.2rem; font-weight: 700; color: #e74c3c; margin: 0 0 8px 0;">{{ estacion }}</h2>
-    <p style="max-width: 750px; margin: 0 auto; line-height: 1.4; color: #555555; font-size: 0.9rem;">{{ descripcion }}</p>
-  </div>
-
-  <!-- DISPOSICIÓN A DOS COLUMNAS -->
-  <div class="results-grid-layout">
+<main class="resultado-section">
+  <div class="resultado-container">
     
-    <!-- COLUMNA IZQUIERDA: MUESTRARIO DE COLORES -->
-    {% if paleta %}
-    <div class="card-result-box">
-      <div>
-        <h3 style="font-size: 0.9rem; color: #2c3e50; margin: 0; text-align: center; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">
-          🎨 Tonos Clave
-        </h3>
-        <div class="palette-swatches">
-          {% for color in paleta %}
-            <div class="swatch-item">
-              <div class="swatch-circle" style="background-color: {{ color }};"></div>
-              <span style="font-size: 0.72rem; font-weight: 600; color: #666666;">{{ color }}</span>
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-      <div style="text-align: center; margin-top: 15px;">
-        <a href="{{ url_for('colecciones', estacion=estacion) }}" style="display: block; width: 100%; background: #2c3e50; color: white; text-align: center; text-decoration: none; padding: 10px 0; border-radius: 6px; font-weight: 700; font-size: 0.85rem; box-shadow: 0 3px 8px rgba(0,0,0,0.1);">
-          🛍️ Ver Prendas Sugeridas
-        </a>
-      </div>
-    </div>
-    {% endif %}
+    <!-- ENCABEZADO PRINCIPAL -->
+    <header class="resultado-header">
+      <span class="badge-diagnostico">✨ Diagnóstico Personalizado</span>
+      <h1 class="titulo-estacion">Tu Paleta Ideal: <span class="destaque-estacion">{{ estacion }}</span></h1>
+      {% if subtono %}
+        <p class="subtitulo-subtono">Subtono detectado: <strong>{{ subtono | capitalize }}</strong></p>
+      {% endif %}
+    </header>
 
-    <!-- COLUMNA DERECHA: ASESORÍA DE LA IA -->
-    <div class="card-result-box ia-recommendation-compact">
-      <div>
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-          <span style="font-size: 1.3rem;">✨</span>
-          <h3 style="color: #2c3e50; margin: 0; font-size: 1.05rem; font-weight: 700;">
-            Asesoría de Estilo & Outfit Sugerido (IA)
-          </h3>
+    <div class="resultado-grid">
+      
+      <!-- TARJETA 1: ASESORÍA DE IA -->
+      <article class="card-custom card-ia">
+        <div class="card-header-ia">
+          <div class="icon-orb">✨</div>
+          <div>
+            <h2 class="card-title">Asesoría de Estilo & Outfit Sugerido (IA)</h2>
+            <p class="card-subtitle">Generado por SET-MATCH-GO! Stylist Engine</p>
+          </div>
         </div>
-        <div style="color: #444444; line-height: 1.5; font-size: 0.88rem; white-space: pre-line; max-height: 230px; overflow-y: auto; padding-right: 5px;">
-          {{ recomendacion_ia if recomendacion_ia else "Analizando recomendaciones para tu tipo de piel..." }}
-        </div>
-      </div>
 
-      <!-- BOTÓN REPETIR Y REGISTRO -->
-      <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-        <span style="font-size: 0.78rem; color: #777;">
-          {% if current_user.is_authenticated %}
-            Guardado en tu <a href="{{ url_for('historial') }}" style="color: #e74c3c; font-weight: bold;">historial</a>.
+        <div class="card-body-ia">
+          <div class="texto-recomendacion">
+            {{ recomendacion_ia | replace('\n', '<br>') | safe }}
+          </div>
+        </div>
+
+        <footer class="card-footer-ia">
+          {% if not current_user.is_authenticated %}
+            <p class="nota-guardar">
+              <a href="{{ url_for('login') }}" class="link-login">Inicia sesión</a> para guardar tus resultados en tu perfil.
+            </p>
           {% else %}
-            <a href="{{ url_for('login') }}" style="color: #e74c3c; font-weight: bold;">Inicia sesión</a> para guardar tus resultados.
+            <span class="badge-guardado">
+              ✓ Guardado en tu historial
+            </span>
           {% endif %}
-        </span>
-        <a href="{{ url_for('test') }}" style="background: transparent; color: #2c3e50; border: 1.5px solid #2c3e50; text-decoration: none; padding: 7px 14px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; white-space: nowrap;">
-          🔄 Repetir Test
-        </a>
-      </div>
+
+          <a href="{{ url_for('test') }}" class="btn-repetir">
+            🔄 Repetir Test
+          </a>
+        </footer>
+      </article>
+
+      <!-- TARJETA 2: PALETA DE COLORES -->
+      <article class="card-custom card-paleta">
+        <h2 class="card-title mb-2">Tu Círculo Cromático Armónico</h2>
+        <p class="card-descripcion">{{ descripcion }}</p>
+
+        <h3 class="section-subtitle">Muestrario de Colores Favorecedores</h3>
+        
+        <div class="paleta-swatches">
+          {% if paleta %}
+            {% for color in paleta %}
+              <div class="swatch-item" style="background-color: {{ color }};" title="{{ color }}">
+                <span class="swatch-hex">{{ color }}</span>
+              </div>
+            {% endfor %}
+          {% else %}
+            <!-- Fallback estándar si no hay lista -->
+            <div class="swatch-item" style="background-color: #A8C3DA;"><span class="swatch-hex">#A8C3DA</span></div>
+            <div class="swatch-item" style="background-color: #DDA7A5;"><span class="swatch-hex">#DDA7A5</span></div>
+            <div class="swatch-item" style="background-color: #BDB2CF;"><span class="swatch-hex">#BDB2CF</span></div>
+            <div class="swatch-item" style="background-color: #708090;"><span class="swatch-hex">#708090</span></div>
+            <div class="swatch-item" style="background-color: #F4F4F9;"><span class="swatch-hex" style="color:#333;">#F4F4F9</span></div>
+          {% endif %}
+        </div>
+
+        <div class="consejo-box">
+          <span class="consejo-icon">💡</span>
+          <div>
+            <strong>Consejo de Vestuario:</strong>
+            <p>Combina tus colores estrella cerca de tu rostro (camisas, pañuelos, accesorios) para maximizar la luminosidad natural de tus facciones.</p>
+          </div>
+        </div>
+      </article>
+
     </div>
 
   </div>
-
 </main>
+
+<style>
+  /* ESTILOS GLOBALES DE LA VISTA RESULTADO */
+  .resultado-section {
+    background-color: #f8fafc;
+    min-height: 85vh;
+    padding: 40px 20px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .resultado-container {
+    max-width: 1140px;
+    margin: 0 auto;
+  }
+
+  /* ENCABEZADO */
+  .resultado-header {
+    text-align: center;
+    margin-bottom: 35px;
+  }
+
+  .badge-diagnostico {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.08);
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+
+  .titulo-estacion {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0 0 8px 0;
+  }
+
+  .destaque-estacion {
+    color: #e74c3c;
+  }
+
+  .subtitulo-subtono {
+    color: #64748b;
+    font-size: 1.05rem;
+    margin: 0;
+  }
+
+  /* GRID DE TARJETAS EN 2 COLUMNAS */
+  .resultado-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  @media (min-width: 992px) {
+    .resultado-grid {
+      grid-template-columns: 1.2fr 0.8fr;
+    }
+  }
+
+  /* TARJETAS BASE */
+  .card-custom {
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    padding: 30px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* SECCIÓN IA */
+  .card-header-ia {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 20px;
+  }
+
+  .icon-orb {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e74c3c 0%, #2c3e50 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  }
+
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .card-subtitle {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin: 2px 0 0 0;
+  }
+
+  .card-body-ia {
+    flex-grow: 1;
+  }
+
+  .texto-recomendacion {
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+
+  .card-footer-ia {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .nota-guardar {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .link-login {
+    color: #e74c3c;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .link-login:hover {
+    text-decoration: underline;
+  }
+
+  .badge-guardado {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  .btn-repetir {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .btn-repetir:hover {
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+    color: #1e293b;
+  }
+
+  /* PALETA DE COLORES */
+  .card-descripcion {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-top: 0;
+    margin-bottom: 20px;
+  }
+
+  .section-subtitle {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #94a3b8;
+    margin-bottom: 12px;
+  }
+
+  .paleta-swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+    gap: 12px;
+    margin-bottom: 25px;
+  }
+
+  .swatch-item {
+    height: 85px;
+    border-radius: 14px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .swatch-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  .swatch-hex {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+    letter-spacing: 0.5px;
+  }
+
+  .consejo-box {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 15px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .consejo-icon {
+    font-size: 1.2rem;
+  }
+
+  .consejo-box strong {
+    display: block;
+    font-size: 0.85rem;
+    color: #1e293b;
+    margin-bottom: 2px;
+  }
+
+  .consejo-box p {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.4;
+  }
+</style>
 {% endblock %}

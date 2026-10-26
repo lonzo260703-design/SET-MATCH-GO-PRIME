@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 
 from colorimetria import PERFILES, RespuestasInvalidas, clasificar
 from extensions import db
+from extensions import csrf  # O la forma en que instancies csrf_protect en tu app
 from models import TestResult, User
 from services.email_service import (
     enviar_correo_confirmacion,
@@ -79,7 +80,6 @@ def register_routes(app):
                     db.session.rollback()
                     errores.append("Ya existe una cuenta con ese correo.")
                 else:
-                    # Enviar correo de confirmación
                     try:
                         enviar_correo_confirmacion(usuario.email, usuario.nombre)
                         flash(
@@ -92,8 +92,6 @@ def register_routes(app):
                             "warning",
                         )
 
-                    # ❌ SE QUITÓ: login_user(usuario)
-                    # Redirige a la pantalla de login en lugar de iniciar sesión
                     return redirect(url_for("login"))
 
             for e in errores:
@@ -104,7 +102,7 @@ def register_routes(app):
 
     @app.route("/confirmar/<token>")
     def confirmar_cuenta(token):
-        email = verificar_token(token, salt="email-confirm-salt", max_age=86400)  # 24 horas
+        email = verificar_token(token, salt="email-confirm-salt", max_age=86400)
         if not email:
             flash("El enlace de confirmación es inválido o ha expirado.", "error")
             return redirect(url_for("login"))
@@ -136,7 +134,6 @@ def register_routes(app):
                 flash("Correo o contraseña incorrectos.", "error")
                 return render_template("auth.html", modo="login", email=email, next_url=next_url), 401
 
-            # Validación de cuenta confirmada
             if not usuario.is_confirmed:
                 flash("Por favor, confirma tu correo electrónico antes de iniciar sesión.", "warning")
                 return render_template("auth.html", modo="login", email=email, next_url=next_url), 403
@@ -146,7 +143,7 @@ def register_routes(app):
             return redirect(next_url if _url_segura(next_url) else url_for("index"))
 
         return render_template("auth.html", modo="login", next_url=next_url)
-    
+
     @app.route("/olvide-password", methods=["GET", "POST"])
     def olvide_password():
         if request.method == "POST":
@@ -169,7 +166,7 @@ def register_routes(app):
 
     @app.route("/reset-password/<token>", methods=["GET", "POST"])
     def resetear_password(token):
-        email = verificar_token(token, salt="password-reset-salt", max_age=900)  # 15 minutos
+        email = verificar_token(token, salt="password-reset-salt", max_age=900)
         if not email:
             flash("El enlace para restablecer la contraseña es inválido o ha expirado.", "error")
             return redirect(url_for("login"))
@@ -228,10 +225,14 @@ def register_routes(app):
     def test():
         if request.method == "POST":
             try:
-                # 1. Diagnóstico rápido de respuestas
+                # 1. Procesar respuestas reales del formulario p1..p7 con colorimetria.py
                 resultado = clasificar(request.form)
-                # Guardar en sesión para procesar con la IA en la pantalla de carga
-                session["pendiente_ia"] = resultado
+                
+                # 2. Guardar el diagnóstico inmediatamente en la sesión
+                session["ultimo_resultado"] = resultado
+                session.modified = True
+                
+                # 3. Mostrar la pantalla con la animación del orbe
                 return render_template("procesando.html")
             except RespuestasInvalidas as e:
                 flash(str(e), "error")
@@ -239,54 +240,103 @@ def register_routes(app):
 
         return render_template("test.html")
 
-    @app.route("/api/generar-diagnostico", methods=["POST"])
-    def generar_diagnostico_api():
-        datos_pendientes = session.get("pendiente_ia")
-        if not datos_pendientes:
-            return jsonify({"error": "No hay un test pendiente por procesar"}), 400
-
-        # 2. Generación en tiempo real con Gemini IA
-        recomendacion_ia = generar_recomendacion_colorimetria(
-            datos_pendientes["estacion"],
-            datos_pendientes["subtono"],
-            datos_pendientes["respuestas"]
-        )
-        datos_pendientes["recomendacion_ia"] = recomendacion_ia
-
-        # 3. Guardar el resultado final en la sesión
-        session["ultimo_resultado"] = datos_pendientes
-        session.pop("pendiente_ia", None)
-
-        # 4. Guardar en base de datos si el usuario inició sesión
-        if current_user.is_authenticated:
-            db.session.add(
-                TestResult(
-                    user_id=current_user.id,
-                    respuestas=datos_pendientes["respuestas"],
-                    subtono=datos_pendientes["subtono"],
-                    estacion=datos_pendientes["estacion"],
-                )
-            )
-            db.session.commit()
-
-        return jsonify({"success": True})
-
     @app.route("/resultado")
     def resultado():
         datos = session.get("ultimo_resultado")
         if not datos:
             flash("Primero realiza el test de colorimetría.", "info")
             return redirect(url_for("test"))
+
+        # Si aún no hemos generado la recomendación personalizada con Gemini IA, la creamos aquí
+        if "recomendacion_ia" not in datos:
+            try:
+                recomendacion_ia = generar_recomendacion_colorimetria(
+                    datos.get("estacion", "Verano"),
+                    datos.get("subtono", "frio"),
+                    datos.get("respuestas", {})
+                )
+                datos["recomendacion_ia"] = recomendacion_ia
+            except Exception as e:
+                print(f"Error llamando a Gemini IA: {e}")
+                datos["recomendacion_ia"] = (
+                    "Tu paleta ha sido procesada exitosamente. "
+                    "Te recomendamos favorecer las prendas que potencien el contraste y la temperatura natural de tu rostro."
+                )
+
+            # Persistir los datos completos en la sesión
+            session["ultimo_resultado"] = datos
+            session.modified = True
+
+            # Si el usuario inició sesión, guardar en el historial de la base de datos
+            if current_user.is_authenticated:
+                try:
+                    db.session.add(
+                        TestResult(
+                            user_id=current_user.id,
+                            respuestas=datos.get("respuestas", {}),
+                            subtono=datos.get("subtono", ""),
+                            estacion=datos.get("estacion", ""),
+                        )
+                    )
+                    db.session.commit()
+                except Exception as e:
+                    db.session.rollback()
+
         return render_template(
             "resultado.html",
-            estacion=datos["estacion"],
-            descripcion=datos["descripcion"],
-            paleta=datos["paleta"],
+            estacion=datos.get("estacion", ""),
+            subtono=datos.get("subtono", ""),
+            descripcion=datos.get("descripcion", ""),
+            paleta=datos.get("paleta", []),
             recomendacion_ia=datos.get("recomendacion_ia", ""),
         )
 
+    @app.route("/api/generar-diagnostico", methods=["POST"])
+    def generar_diagnostico_api():
+        datos_pendientes = session.get("pendiente_ia")
+        if not datos_pendientes:
+            return jsonify({"success": False, "error": "No hay test pendiente"}), 400
+
+        # Llamar a Gemini IA en segundo plano mientras corre el orbe
+        try:
+            recomendacion = generar_recomendacion_colorimetria(
+                datos_pendientes.get("estacion", "Verano"),
+                datos_pendientes.get("subtono", "Frío"),
+                datos_pendientes.get("respuestas", {})
+            )
+            datos_pendientes["recomendacion_ia"] = recomendacion
+        except Exception as e:
+            print(f"Error generando con Gemini: {e}")
+            datos_pendientes["recomendacion_ia"] = (
+                "Para tu paleta de Verano Frío, prioriza tonos pasteles deslavados como azul sereno, "
+                "rosa cuarzo y lavanda. Combínalos con acentos neutros en gris marengo o blanco roto."
+            )
+
+        # Mover los datos a la sesión final
+        session["ultimo_resultado"] = datos_pendientes
+        session.pop("pendiente_ia", None)
+        session.modified = True
+
+        # Guardar en base de datos si el usuario inició sesión
+        if current_user.is_authenticated:
+            try:
+                db.session.add(
+                    TestResult(
+                        user_id=current_user.id,
+                        respuestas=datos_pendientes.get("respuestas", {}),
+                        subtono=datos_pendientes.get("subtono", ""),
+                        estacion=datos_pendientes.get("estacion", ""),
+                    )
+                )
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+
+        return jsonify({"success": True})
+
     # ---------- API CHAT FLOTANTE DE IA ----------
     @app.route("/api/chat-ia", methods=["POST"])
+    @csrf.exempt  # <--- EVITA EL REDIRECCIONAMIENTO 302
     def chat_ia():
         data = request.get_json() or {}
         pregunta = data.get("pregunta", "").strip()
@@ -294,7 +344,6 @@ def register_routes(app):
         if not pregunta:
             return jsonify({"error": "La pregunta no puede estar vacía"}), 400
 
-        # Límite de 3 consultas para usuarios invitados / no logueados
         if not current_user.is_authenticated:
             preguntas_realizadas = session.get("preguntas_ia_count", 0)
 
@@ -317,7 +366,7 @@ def register_routes(app):
             "preguntas_restantes": preguntas_restantes,
             "limite_alcanzado": False
         })
-
+    
     # ---------- HISTORIAL ----------
     @app.route("/historial")
     @login_required
