@@ -1,12 +1,13 @@
 import os
 from google import genai
 
-# Reemplaza 'TU_NUEVA_API_KEY' por la clave recién creada en un proyecto nuevo
+# Cargar la API key EXCLUSIVAMENTE desde las variables de entorno o el archivo .env
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 def _obtener_cliente():
     """Inicializa el cliente oficial de Gemini."""
-    if not GEMINI_API_KEY or GEMINI_API_KEY == "":
+    if not GEMINI_API_KEY:
+        print("[Gemini Service Warning]: No se encontró GEMINI_API_KEY en las variables de entorno.")
         return None
     try:
         return genai.Client(api_key=GEMINI_API_KEY)
@@ -16,7 +17,7 @@ def _obtener_cliente():
 
 
 def _generar_respuesta_fallback(pregunta):
-    """Respuesta contextual si el servicio de IA no está disponible."""
+    """Respuesta contextual si la API de Gemini no está configurada o falla."""
     p = pregunta.lower()
 
     if any(k in p for k in ["frio", "frío", "invierno", "chamarra", "abrigo", "suéter"]):
