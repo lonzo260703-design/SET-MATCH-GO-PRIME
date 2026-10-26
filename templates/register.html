@@ -8,48 +8,51 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: calc(100vh - 120px);
-      padding: 40px 20px;
+      min-height: calc(100vh - 80px); /* Ocupa la pantalla restando el navbar */
+      padding: 15px;
+      box-sizing: border-box;
     }
 
     .auth-card {
       width: 100%;
-      max-width: 440px;
+      max-width: 420px;
       background: #ffffff;
-      padding: 45px 40px;
-      border-radius: 12px;
+      padding: 24px 32px;
+      border-radius: 14px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
       text-align: center;
       box-sizing: border-box;
+      border: 1px solid #f0f0f0;
     }
 
     .auth-title {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 800;
-      letter-spacing: 2px;
+      letter-spacing: 1.5px;
       color: #1a1a1a;
-      margin-bottom: 8px;
+      margin-top: 0;
+      margin-bottom: 4px;
       text-transform: uppercase;
     }
 
     .auth-subtitle {
-      font-size: 14px;
+      font-size: 13px;
       color: #777777;
-      margin-bottom: 25px;
+      margin-bottom: 16px;
     }
 
     .form-group {
       text-align: left;
-      margin-bottom: 18px;
+      margin-bottom: 12px;
     }
 
     .form-group label {
       display: block;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: 1px;
       color: #222222;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
       text-transform: uppercase;
     }
 
@@ -61,8 +64,8 @@
 
     .form-control {
       width: 100%;
-      padding: 12px 42px 12px 14px;
-      font-size: 14px;
+      padding: 9px 42px 9px 12px;
+      font-size: 13.5px;
       border: 1px solid #d1d5db;
       border-radius: 6px;
       background-color: #fafafa;
@@ -95,8 +98,8 @@
     }
 
     .toggle-password svg {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       fill: none;
       stroke: currentColor;
       stroke-width: 2;
@@ -106,13 +109,13 @@
 
     .btn-auth-submit {
       width: 100%;
-      padding: 14px;
-      margin-top: 10px;
+      padding: 11px;
+      margin-top: 8px;
       background-color: #000000;
       color: #ffffff;
       border: none;
       border-radius: 6px;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 700;
       letter-spacing: 1.5px;
       text-transform: uppercase;
@@ -125,15 +128,20 @@
     }
 
     .auth-footer {
-      margin-top: 25px;
-      font-size: 13px;
+      margin-top: 14px;
+      font-size: 12.5px;
       color: #666666;
+      margin-bottom: 0;
     }
 
     .auth-footer a {
       color: #000000;
       font-weight: 700;
       text-decoration: none;
+    }
+
+    .auth-footer a:hover {
+      color: #e74c3c;
     }
   </style>
 {% endblock %}
@@ -149,12 +157,12 @@
 
       <div class="form-group">
         <label for="nombre">Nombre de Usuario</label>
-        <input type="text" id="nombre" name="nombre" class="form-control" style="padding-right: 14px;" placeholder="Ingresa tu nombre" value="{{ nombre or '' }}" required autocomplete="name">
+        <input type="text" id="nombre" name="nombre" class="form-control" style="padding-right: 12px;" placeholder="Ingresa tu nombre" value="{{ nombre or '' }}" required autocomplete="name">
       </div>
 
       <div class="form-group">
         <label for="email">Correo Electrónico</label>
-        <input type="email" id="email" name="email" class="form-control" style="padding-right: 14px;" placeholder="Ingresa tu correo electrónico" value="{{ email or '' }}" required autocomplete="email">
+        <input type="email" id="email" name="email" class="form-control" style="padding-right: 12px;" placeholder="Ingresa tu correo electrónico" value="{{ email or '' }}" required autocomplete="email">
       </div>
 
       <div class="form-group">
@@ -170,7 +178,6 @@
         </div>
       </div>
 
-      <!-- EL NAME COINCIDE CON TU ROUTES.PY: name="confirmar" -->
       <div class="form-group">
         <label for="confirmar">Confirmar Contraseña</label>
         <div class="password-wrapper">

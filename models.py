@@ -23,6 +23,14 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
 
+    # Estado de verificación por correo
+    is_confirmed = db.Column(db.Boolean, default=False, nullable=False)
+
+    # Campos opcionales de perfil / preferencias cromáticas
+    color_ojos = db.Column(db.String(40), nullable=True)
+    color_cabello = db.Column(db.String(40), nullable=True)
+    biografia = db.Column(db.Text, nullable=True)
+
     resultados = db.relationship(
         "TestResult",
         backref="usuario",

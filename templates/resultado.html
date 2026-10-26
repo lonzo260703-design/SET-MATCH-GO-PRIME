@@ -2,34 +2,161 @@
 {% block title %}Tu Diagnóstico — SET-MATCH-GO!{% endblock %}
 {% block extra_css %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/test.css') }}">
+  <style>
+    /* Estructura compacta tipo Dashboard */
+    .results-compact-container {
+      max-width: 1100px;
+      margin: 15px auto;
+      padding: 0 15px;
+    }
+
+    .results-header-compact {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .results-grid-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .card-result-box {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 22px;
+      border: 1px solid #eef2f5;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .palette-swatches {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      justify-items: center;
+      align-items: center;
+      margin-top: 15px;
+    }
+
+    .swatch-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .swatch-circle {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+      transition: transform 0.2s;
+    }
+
+    .swatch-circle:hover {
+      transform: scale(1.1);
+    }
+
+    .ia-recommendation-compact {
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border-left: 4px solid #e74c3c;
+    }
+
+    .actions-footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #eaeaea;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 850px) {
+      .results-grid-layout {
+        grid-template-columns: 1fr;
+      }
+      .palette-swatches {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
-  <main class="test-wrapper">
-    <div class="test-header">
-      <h1>Tu Paleta Ideal</h1>
-      <h2 style="font-size: 20px; font-weight: 700; margin: 15px 0 10px; letter-spacing: 1px;">{{ estacion }}</h2>
-      <p style="max-width: 600px; margin: 0 auto; line-height: 1.6;">{{ descripcion }}</p>
-    </div>
+<main class="results-compact-container">
+  
+  <!-- ENCABEZADO COMPACTO -->
+  <div class="results-header-compact">
+    <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #e74c3c; letter-spacing: 1.5px;">DIAGNÓSTICO PERSONALIZADO</span>
+    <h1 style="font-size: 1.8rem; color: #2c3e50; margin: 4px 0;">Tu Paleta Ideal</h1>
+    <h2 style="font-size: 1.2rem; font-weight: 700; color: #e74c3c; margin: 0 0 8px 0;">{{ estacion }}</h2>
+    <p style="max-width: 750px; margin: 0 auto; line-height: 1.4; color: #555555; font-size: 0.9rem;">{{ descripcion }}</p>
+  </div>
 
-    <!-- MUESTRA DE COLORES RECOMENDADOS -->
+  <!-- DISPOSICIÓN A DOS COLUMNAS -->
+  <div class="results-grid-layout">
+    
+    <!-- COLUMNA IZQUIERDA: MUESTRARIO DE COLORES -->
     {% if paleta %}
-      <div style="display: flex; gap: 20px; justify-content: center; align-items: center; margin: 40px 0;">
-        {% for color in paleta %}
-          <div style="background-color: {{ color }}; width: 65px; height: 65px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
-        {% endfor %}
+    <div class="card-result-box">
+      <div>
+        <h3 style="font-size: 0.9rem; color: #2c3e50; margin: 0; text-align: center; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">
+          🎨 Tonos Clave
+        </h3>
+        <div class="palette-swatches">
+          {% for color in paleta %}
+            <div class="swatch-item">
+              <div class="swatch-circle" style="background-color: {{ color }};"></div>
+              <span style="font-size: 0.72rem; font-weight: 600; color: #666666;">{{ color }}</span>
+            </div>
+          {% endfor %}
+        </div>
       </div>
+      <div style="text-align: center; margin-top: 15px;">
+        <a href="{{ url_for('colecciones', estacion=estacion) }}" style="display: block; width: 100%; background: #2c3e50; color: white; text-align: center; text-decoration: none; padding: 10px 0; border-radius: 6px; font-weight: 700; font-size: 0.85rem; box-shadow: 0 3px 8px rgba(0,0,0,0.1);">
+          🛍️ Ver Prendas Sugeridas
+        </a>
+      </div>
+    </div>
     {% endif %}
 
-    <p class="result-note">
-      {% if current_user.is_authenticated %}
-        Este resultado quedó guardado en tu <a href="{{ url_for('historial') }}">historial</a>.
-      {% else %}
-        <a href="{{ url_for('login') }}">Inicia sesión</a> o <a href="{{ url_for('register') }}">crea una cuenta</a>
-        antes de hacer el test para guardar tus resultados.
-      {% endif %}
-    </p>
+    <!-- COLUMNA DERECHA: ASESORÍA DE LA IA -->
+    <div class="card-result-box ia-recommendation-compact">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+          <span style="font-size: 1.3rem;">✨</span>
+          <h3 style="color: #2c3e50; margin: 0; font-size: 1.05rem; font-weight: 700;">
+            Asesoría de Estilo & Outfit Sugerido (IA)
+          </h3>
+        </div>
+        <div style="color: #444444; line-height: 1.5; font-size: 0.88rem; white-space: pre-line; max-height: 230px; overflow-y: auto; padding-right: 5px;">
+          {{ recomendacion_ia if recomendacion_ia else "Analizando recomendaciones para tu tipo de piel..." }}
+        </div>
+      </div>
 
-    <a href="{{ url_for('test') }}" class="btn-submit" style="text-align: center; text-decoration: none;">Repetir Test</a>
-  </main>
+      <!-- BOTÓN REPETIR Y REGISTRO -->
+      <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+        <span style="font-size: 0.78rem; color: #777;">
+          {% if current_user.is_authenticated %}
+            Guardado en tu <a href="{{ url_for('historial') }}" style="color: #e74c3c; font-weight: bold;">historial</a>.
+          {% else %}
+            <a href="{{ url_for('login') }}" style="color: #e74c3c; font-weight: bold;">Inicia sesión</a> para guardar tus resultados.
+          {% endif %}
+        </span>
+        <a href="{{ url_for('test') }}" style="background: transparent; color: #2c3e50; border: 1.5px solid #2c3e50; text-decoration: none; padding: 7px 14px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; white-space: nowrap;">
+          🔄 Repetir Test
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+</main>
 {% endblock %}

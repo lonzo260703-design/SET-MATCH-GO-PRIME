@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block title %}Analizando Perfil | SET-MATCH-GO!{% endblock %}
+
+{% block content %}
+<main class="ai-processing-wrapper">
+  <div class="ai-card">
+    
+    <!-- ESFERA O ORBE ANIMADO DE IA -->
+    <div class="ai-orb-container">
+      <div class="ai-orb-ring ring-1"></div>
+      <div class="ai-orb-ring ring-2"></div>
+      <div class="ai-orb-core">
+        <span class="ai-sparkle">✨</span>
+      </div>
+    </div>
+
+    <!-- ENCABEZADO Y ESTADO -->
+    <span class="ai-badge">Motor de Inteligencia Artificial</span>
+    <h2 class="ai-title">Analizando tu Colorimetría</h2>
+    
+    <div class="ai-status-box">
+      <p id="aiStatusText" class="ai-status-text">
+        Iniciando escaneo de atributos cromáticos...
+      </p>
+    </div>
+
+    <!-- BARRA DE PROGRESO DE ALTA PRECISIÓN -->
+    <div class="progress-track">
+      <div id="aiProgressBar" class="progress-fill"></div>
+    </div>
+
+    <div class="progress-footer">
+      <span id="progressPercent">0%</span>
+      <span>SET-MATCH-GO! Stylist AI</span>
+    </div>
+
+  </div>
+</main>
+
+<style>
+  .ai-processing-wrapper {
+    min-height: 75vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px 20px;
+    background: radial-gradient(circle at center, #f8fafc 0%, #e2e8f0 100%);
+  }
+
+  .ai-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 24px;
+    padding: 45px 35px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  /* ORBE Y ANILLOS ANIMADOS DE IA */
+  .ai-orb-container {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    margin: 0 auto 30px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-orb-core {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e74c3c 0%, #2c3e50 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px rgba(231, 76, 60, 0.35);
+    z-index: 2;
+    animation: orbPulse 2.5s infinite ease-in-out;
+  }
+
+  .ai-sparkle {
+    font-size: 2rem;
+    animation: sparkleSpin 4s infinite linear;
+  }
+
+  .ai-orb-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    z-index: 1;
+  }
+
+  .ring-1 {
+    width: 90px;
+    height: 90px;
+    border-top-color: #e74c3c;
+    border-bottom-color: rgba(231, 76, 60, 0.2);
+    animation: spinRight 3s infinite linear;
+  }
+
+  .ring-2 {
+    width: 110px;
+    height: 110px;
+    border-left-color: #2c3e50;
+    border-right-color: rgba(44, 62, 80, 0.2);
+    animation: spinLeft 4.5s infinite linear;
+  }
+
+  /* TEXTO Y INSIGNIA */
+  .ai-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.08);
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+
+  .ai-title {
+    color: #2c3e50;
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin: 0 0 18px 0;
+  }
+
+  .ai-status-box {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 25px;
+  }
+
+  .ai-status-text {
+    color: #555555;
+    font-size: 0.92rem;
+    font-weight: 500;
+    line-height: 1.5;
+    margin: 0;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  /* BARRA DE PROGRESO */
+  .progress-track {
+    width: 100%;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #2c3e50 0%, #e74c3c 100%);
+    border-radius: 10px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .progress-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #888888;
+    font-weight: 600;
+  }
+
+  /* KEYFRAMES DE ANIMACIONES */
+  @keyframes orbPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 10px 25px rgba(231, 76, 60, 0.35); }
+    50% { transform: scale(1.06); box-shadow: 0 15px 35px rgba(231, 76, 60, 0.5); }
+  }
+
+  @keyframes spinRight {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes spinLeft {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-360deg); }
+  }
+
+  @keyframes sparkleSpin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(15deg) scale(1.15); }
+  }
+</style>
+
+<script>
+  // Fases de análisis para proyectar un pensamiento realista y profundo
+  const etapas = [
+    { texto: "Iniciando escaneo de atributos cromáticos...", porcentaje: 15 },
+    { texto: "Evaluando la temperatura de piel y venas...", porcentaje: 35 },
+    { texto: "Calculando el nivel de contraste entre cabello y facciones...", porcentaje: 55 },
+    { texto: "Consultando la rueda cromática para determinar la estación...", porcentaje: 75 },
+    { texto: "Sintetizando combinaciones de ropa e itinerario de color...", porcentaje: 90 },
+    { texto: "¡Diagnóstico y asesoría completados!", porcentaje: 100 }
+  ];
+
+  let pasoActual = 0;
+  const totalTiempoAnimacion = 8500; // 8.5 segundos totales para pensar de forma pausada
+  const intervaloTiempo = totalTiempoAnimacion / etapas.length;
+
+  const statusEl = document.getElementById('aiStatusText');
+  const progressEl = document.getElementById('aiProgressBar');
+  const percentEl = document.getElementById('progressPercent');
+
+  // Promesa para la llamada al servidor
+  const peticionDiagnostico = fetch('/api/generar-diagnostico', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+
+  // Animación del texto y barra
+  const timer = setInterval(() => {
+    pasoActual++;
+    
+    if (pasoActual < etapas.length) {
+      statusEl.style.opacity = 0;
+      statusEl.style.transform = 'translateY(6px)';
+
+      setTimeout(() => {
+        statusEl.textContent = etapas[pasoActual].texto;
+        statusEl.style.opacity = 1;
+        statusEl.style.transform = 'translateY(0)';
+      }, 300);
+
+      const pct = etapas[pasoActual].porcentaje;
+      progressEl.style.width = pct + '%';
+      percentEl.textContent = pct + '%';
+    } else {
+      clearInterval(timer);
+    }
+  }, intervaloTiempo);
+
+  // Redirección sincrónica al finalizar tanto la llamada a Gemini como el tiempo de animación
+  Promise.all([peticionDiagnostico, new Promise(res => setTimeout(res, totalTiempoAnimacion))])
+    .then(([respuestaHttp]) => {
+      if (respuestaHttp.ok) {
+        window.location.href = "{{ url_for('resultado') }}";
+      } else {
+        window.location.href = "{{ url_for('test') }}";
+      }
+    })
+    .catch(() => {
+      window.location.href = "{{ url_for('test') }}";
+    });
+</script>
+{% endblock %}

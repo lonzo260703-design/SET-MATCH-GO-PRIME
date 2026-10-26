@@ -1,0 +1,97 @@
+<!-- BOTÓN FLOTANTE DE IA -->
+<div id="chatIaToggle" onclick="toggleChatWindow()" style="position: fixed; bottom: 25px; right: 25px; z-index: 2500; background: #e74c3c; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+  <span style="font-size: 28px;">✨</span>
+</div>
+
+<!-- VENTANA DEL CHAT -->
+<div id="chatIaWindow" style="display: none; position: fixed; bottom: 95px; right: 25px; width: 340px; height: 460px; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 2500; flex-direction: column; overflow: hidden; border: 1px solid #eee;">
+  <div style="background: #2c3e50; color: white; padding: 14px 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+    <span>✨ Estilista IA SET-MATCH-GO!</span>
+    <span onclick="toggleChatWindow()" style="cursor: pointer; font-size: 18px;">✕</span>
+  </div>
+
+  <div id="chatMessages" style="flex-grow: 1; padding: 15px; overflow-y: auto; background: #f8f9fa; font-size: 0.88rem; display: flex; flex-direction: column; gap: 10px;">
+    <div style="background: #e2e8f0; color: #333; padding: 10px 14px; border-radius: 10px; max-width: 85%; align-self: flex-start;">
+      ¡Hola! 👋 Soy tu estilista personal. Pregúntame sobre combinaciones de prendas, tonos para tu piel o consejos de moda.
+    </div>
+  </div>
+
+  {% if not current_user.is_authenticated %}
+  <div id="chatLimitNotice" style="background: #fff3cd; color: #856404; font-size: 0.75rem; padding: 6px 12px; text-align: center; border-top: 1px solid #ffeeba;">
+    Consultas de prueba disponibles
+  </div>
+  {% endif %}
+
+  <div style="padding: 10px; background: white; border-top: 1px solid #eee; display: flex; gap: 6px;">
+    <input type="text" id="chatInput" placeholder="Escribe tu duda de moda..." style="flex-grow: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.85rem;" onkeypress="if(event.key === 'Enter') enviarPreguntaIa()">
+    <button onclick="enviarPreguntaIa()" style="background: #2c3e50; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer;">Enviar</button>
+  </div>
+</div>
+
+<!-- MODAL DE LÍMITE DE INVITADO -->
+<div id="loginRequireModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 3500; justify-content: center; align-items: center;">
+  <div style="background: white; padding: 30px; border-radius: 12px; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+    <h3 style="margin-top: 0; color: #2c3e50;">🔒 ¡Alcanzaste el Límite de Prueba!</h3>
+    <p style="color: #666; font-size: 0.9rem;">Has utilizado tus 3 preguntas gratuitas de invitado. Inicia sesión o regístrate para chatear sin restricciones.</p>
+    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+      <a href="{{ url_for('login') }}" style="background: #e74c3c; color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: bold;">Iniciar Sesión</a>
+      <button onclick="cerrarModalLogin()" style="background: #ccc; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer;">Volver</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleChatWindow() {
+    const win = document.getElementById('chatIaWindow');
+    win.style.display = (win.style.display === 'none' || win.style.display === '') ? 'flex' : 'none';
+  }
+
+  function cerrarModalLogin() {
+    document.getElementById('loginRequireModal').style.display = 'none';
+  }
+
+  async function enviarPreguntaIa() {
+    const input = document.getElementById('chatInput');
+    const pregunta = input.value.trim();
+    if (!pregunta) return;
+
+    const messagesBox = document.getElementById('chatMessages');
+
+    const userMsg = document.createElement('div');
+    userMsg.style.cssText = "background: #2c3e50; color: white; padding: 10px 14px; border-radius: 10px; max-width: 85%; align-self: flex-end;";
+    userMsg.textContent = pregunta;
+    messagesBox.appendChild(userMsg);
+
+    input.value = '';
+    messagesBox.scrollTop = messagesBox.scrollHeight;
+
+    try {
+      const res = await fetch('/api/chat-ia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pregunta: pregunta })
+      });
+
+      const data = await res.json();
+
+      if (res.status === 403 && data.limite_alcanzado) {
+        document.getElementById('loginRequireModal').style.display = 'flex';
+        return;
+      }
+
+      const iaMsg = document.createElement('div');
+      iaMsg.style.cssText = "background: #e2e8f0; color: #333; padding: 10px 14px; border-radius: 10px; max-width: 85%; align-self: flex-start;";
+      iaMsg.textContent = data.respuesta;
+      messagesBox.appendChild(iaMsg);
+
+      const limitNotice = document.getElementById('chatLimitNotice');
+      if (limitNotice && data.preguntas_restantes !== undefined) {
+        limitNotice.textContent = `Te quedan ${data.preguntas_restantes} consultas de prueba gratis.`;
+      }
+
+      messagesBox.scrollTop = messagesBox.scrollHeight;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+</script>

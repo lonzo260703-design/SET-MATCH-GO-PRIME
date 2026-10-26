@@ -5,7 +5,7 @@ from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_wtf.csrf import CSRFError
 
 from config import DEFAULT_SECRET, config_by_name
-from extensions import csrf, db, login_manager
+from extensions import csrf, db, login_manager, mail
 
 
 def create_app(config_name=None):
@@ -19,6 +19,8 @@ def create_app(config_name=None):
     db.init_app(app)
     csrf.init_app(app)
     login_manager.init_app(app)
+    mail.init_app(app)  # <--- Vinculación de Flask-Mail
+    
     login_manager.login_view = "login"
     login_manager.login_message = "Inicia sesión para acceder a esa página."
     login_manager.login_message_category = "warning"

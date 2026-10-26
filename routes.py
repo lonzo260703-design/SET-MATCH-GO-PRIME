@@ -1,7 +1,7 @@
 import re
 from urllib.parse import urljoin, urlparse
 
-from flask import flash, redirect, render_template, request, session, url_for
+from flask import flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -9,8 +9,15 @@ from sqlalchemy.exc import IntegrityError
 from colorimetria import PERFILES, RespuestasInvalidas, clasificar
 from extensions import db
 from models import TestResult, User
+from services.email_service import (
+    enviar_correo_confirmacion,
+    enviar_correo_recuperacion,
+    verificar_token,
+)
+from services.gemini_service import generar_recomendacion_colorimetria, responder_chat_estilista
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+LIMITE_PREGUNTAS_INVITADO = 3
 
 
 def _url_segura(destino):
@@ -38,7 +45,7 @@ def register_routes(app):
     def colorwheel():
         return render_template("colorwheel.html")
 
-    # ---------- AUTENTICACIÓN ----------
+    # ---------- AUTENTICACIÓN Y RECUPERACIÓN ----------
     @app.route("/registro", methods=["GET", "POST"])
     def register():
         if current_user.is_authenticated:
@@ -63,7 +70,7 @@ def register_routes(app):
                 errores.append("Ya existe una cuenta con ese correo.")
 
             if not errores:
-                usuario = User(nombre=nombre, email=email)
+                usuario = User(nombre=nombre, email=email, is_confirmed=False)
                 usuario.set_password(password)
                 db.session.add(usuario)
                 try:
@@ -72,15 +79,46 @@ def register_routes(app):
                     db.session.rollback()
                     errores.append("Ya existe una cuenta con ese correo.")
                 else:
-                    login_user(usuario)
-                    flash(f"¡Bienvenida/o, {usuario.nombre}! Tu cuenta fue creada.", "success")
-                    return redirect(url_for("index"))
+                    # Enviar correo de confirmación
+                    try:
+                        enviar_correo_confirmacion(usuario.email, usuario.nombre)
+                        flash(
+                            f"¡Cuenta creada con éxito, {usuario.nombre}! Revisa tu correo para activar tu cuenta antes de iniciar sesión.",
+                            "info",
+                        )
+                    except Exception:
+                        flash(
+                            "Tu cuenta fue creada, pero ocurrió un problema al enviar el correo de verificación.",
+                            "warning",
+                        )
+
+                    # ❌ SE QUITÓ: login_user(usuario)
+                    # Redirige a la pantalla de login en lugar de iniciar sesión
+                    return redirect(url_for("login"))
 
             for e in errores:
                 flash(e, "error")
-            return render_template("register.html", nombre=nombre, email=email), 400
+            return render_template("auth.html", modo="register", nombre=nombre, email=email), 400
 
-        return render_template("register.html")
+        return render_template("auth.html", modo="register")
+
+    @app.route("/confirmar/<token>")
+    def confirmar_cuenta(token):
+        email = verificar_token(token, salt="email-confirm-salt", max_age=86400)  # 24 horas
+        if not email:
+            flash("El enlace de confirmación es inválido o ha expirado.", "error")
+            return redirect(url_for("login"))
+
+        usuario = db.session.scalar(select(User).filter_by(email=email))
+        if usuario:
+            if usuario.is_confirmed:
+                flash("Tu cuenta ya había sido confirmada previamente.", "info")
+            else:
+                usuario.is_confirmed = True
+                db.session.commit()
+                flash("¡Tu cuenta ha sido activada con éxito!", "success")
+
+        return redirect(url_for("index"))
 
     @app.route("/login", methods=["GET", "POST"])
     def login():
@@ -96,13 +134,62 @@ def register_routes(app):
 
             if usuario is None or not usuario.check_password(password):
                 flash("Correo o contraseña incorrectos.", "error")
-                return render_template("login.html", email=email, next_url=next_url), 401
+                return render_template("auth.html", modo="login", email=email, next_url=next_url), 401
+
+            # Validación de cuenta confirmada
+            if not usuario.is_confirmed:
+                flash("Por favor, confirma tu correo electrónico antes de iniciar sesión.", "warning")
+                return render_template("auth.html", modo="login", email=email, next_url=next_url), 403
 
             login_user(usuario)
             flash(f"Hola de nuevo, {usuario.nombre}.", "success")
             return redirect(next_url if _url_segura(next_url) else url_for("index"))
 
-        return render_template("login.html", next_url=next_url)
+        return render_template("auth.html", modo="login", next_url=next_url)
+    
+    @app.route("/olvide-password", methods=["GET", "POST"])
+    def olvide_password():
+        if request.method == "POST":
+            email = request.form.get("email", "").strip().lower()
+            usuario = db.session.scalar(select(User).filter_by(email=email))
+            if usuario:
+                try:
+                    enviar_correo_recuperacion(usuario.email, usuario.nombre)
+                except Exception:
+                    flash("Ocurrió un error al intentar enviar el correo de recuperación.", "error")
+                    return redirect(url_for("olvide_password"))
+
+            flash(
+                "Si el correo está registrado, recibirás un enlace de recuperación en tu bandeja de entrada.",
+                "info",
+            )
+            return redirect(url_for("login"))
+
+        return render_template("olvide_password.html")
+
+    @app.route("/reset-password/<token>", methods=["GET", "POST"])
+    def resetear_password(token):
+        email = verificar_token(token, salt="password-reset-salt", max_age=900)  # 15 minutos
+        if not email:
+            flash("El enlace para restablecer la contraseña es inválido o ha expirado.", "error")
+            return redirect(url_for("login"))
+
+        if request.method == "POST":
+            password = request.form.get("password", "")
+            confirmar = request.form.get("confirmar", "")
+
+            if len(password) < 8 or password != confirmar:
+                flash("Las contraseñas deben tener al menos 8 caracteres y coincidir.", "error")
+                return render_template("reset_password.html", token=token)
+
+            usuario = db.session.scalar(select(User).filter_by(email=email))
+            if usuario:
+                usuario.set_password(password)
+                db.session.commit()
+                flash("Tu contraseña ha sido actualizada correctamente.", "success")
+                return redirect(url_for("login"))
+
+        return render_template("reset_password.html", token=token)
 
     @app.route("/logout", methods=["POST"])
     @login_required
@@ -112,30 +199,77 @@ def register_routes(app):
         flash("Cerraste sesión correctamente.", "success")
         return redirect(url_for("index"))
 
+    # ---------- PERFIL DE USUARIO Y CONFIGURACIÓN ----------
+    @app.route("/perfil", methods=["GET", "POST"])
+    @login_required
+    def perfil():
+        if request.method == "POST":
+            nombre = request.form.get("nombre", "").strip()
+            color_ojos = request.form.get("color_ojos", "").strip()
+            color_cabello = request.form.get("color_cabello", "").strip()
+            biografia = request.form.get("biografia", "").strip()
+
+            if 2 <= len(nombre) <= 80:
+                current_user.nombre = nombre
+                current_user.color_ojos = color_ojos
+                current_user.color_cabello = color_cabello
+                current_user.biografia = biografia
+
+                db.session.commit()
+                flash("Perfil actualizado correctamente.", "success")
+                return redirect(url_for("perfil"))
+            else:
+                flash("El nombre debe tener entre 2 y 80 caracteres.", "error")
+
+        return render_template("perfil.html")
+
     # ---------- TEST DE COLORIMETRÍA ----------
     @app.route("/test", methods=["GET", "POST"])
     def test():
         if request.method == "POST":
             try:
+                # 1. Diagnóstico rápido de respuestas
                 resultado = clasificar(request.form)
+                # Guardar en sesión para procesar con la IA en la pantalla de carga
+                session["pendiente_ia"] = resultado
+                return render_template("procesando.html")
             except RespuestasInvalidas as e:
                 flash(str(e), "error")
                 return redirect(url_for("test"))
 
-            session["ultimo_resultado"] = resultado
-            if current_user.is_authenticated:
-                db.session.add(
-                    TestResult(
-                        user_id=current_user.id,
-                        respuestas=resultado["respuestas"],
-                        subtono=resultado["subtono"],
-                        estacion=resultado["estacion"],
-                    )
-                )
-                db.session.commit()
-            return redirect(url_for("resultado"))
-
         return render_template("test.html")
+
+    @app.route("/api/generar-diagnostico", methods=["POST"])
+    def generar_diagnostico_api():
+        datos_pendientes = session.get("pendiente_ia")
+        if not datos_pendientes:
+            return jsonify({"error": "No hay un test pendiente por procesar"}), 400
+
+        # 2. Generación en tiempo real con Gemini IA
+        recomendacion_ia = generar_recomendacion_colorimetria(
+            datos_pendientes["estacion"],
+            datos_pendientes["subtono"],
+            datos_pendientes["respuestas"]
+        )
+        datos_pendientes["recomendacion_ia"] = recomendacion_ia
+
+        # 3. Guardar el resultado final en la sesión
+        session["ultimo_resultado"] = datos_pendientes
+        session.pop("pendiente_ia", None)
+
+        # 4. Guardar en base de datos si el usuario inició sesión
+        if current_user.is_authenticated:
+            db.session.add(
+                TestResult(
+                    user_id=current_user.id,
+                    respuestas=datos_pendientes["respuestas"],
+                    subtono=datos_pendientes["subtono"],
+                    estacion=datos_pendientes["estacion"],
+                )
+            )
+            db.session.commit()
+
+        return jsonify({"success": True})
 
     @app.route("/resultado")
     def resultado():
@@ -148,7 +282,41 @@ def register_routes(app):
             estacion=datos["estacion"],
             descripcion=datos["descripcion"],
             paleta=datos["paleta"],
+            recomendacion_ia=datos.get("recomendacion_ia", ""),
         )
+
+    # ---------- API CHAT FLOTANTE DE IA ----------
+    @app.route("/api/chat-ia", methods=["POST"])
+    def chat_ia():
+        data = request.get_json() or {}
+        pregunta = data.get("pregunta", "").strip()
+
+        if not pregunta:
+            return jsonify({"error": "La pregunta no puede estar vacía"}), 400
+
+        # Límite de 3 consultas para usuarios invitados / no logueados
+        if not current_user.is_authenticated:
+            preguntas_realizadas = session.get("preguntas_ia_count", 0)
+
+            if preguntas_realizadas >= LIMITE_PREGUNTAS_INVITADO:
+                return jsonify({
+                    "limite_alcanzado": True,
+                    "mensaje": f"Has alcanzado el límite de {LIMITE_PREGUNTAS_INVITADO} consultas gratuitas. ¡Inicia sesión para chatear sin restricciones!"
+                }), 403
+
+            session["preguntas_ia_count"] = preguntas_realizadas + 1
+
+        respuesta = responder_chat_estilista(pregunta)
+
+        preguntas_restantes = None
+        if not current_user.is_authenticated:
+            preguntas_restantes = LIMITE_PREGUNTAS_INVITADO - session["preguntas_ia_count"]
+
+        return jsonify({
+            "respuesta": respuesta,
+            "preguntas_restantes": preguntas_restantes,
+            "limite_alcanzado": False
+        })
 
     # ---------- HISTORIAL ----------
     @app.route("/historial")
