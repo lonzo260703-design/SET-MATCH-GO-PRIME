@@ -1,136 +1,277 @@
 {% extends "base.html" %}
-{% block title %}Analizando Perfil | SET-MATCH-GO!{% endblock %}
+{% block title %}Analizando Perfil | SET-MATCH-GO! Stylist Engine{% endblock %}
 
 {% block content %}
 <main class="ai-processing-wrapper">
-  <div class="ai-card">
+  <!-- CANVAS DE FONDO CON PARTÍCULAS Y CUADRADOS NEUTROS ALEATORIOS -->
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="ai-dashboard-container">
     
-    <!-- ESFERA O ORBE ANIMADO DE IA -->
-    <div class="ai-orb-container">
-      <div class="ai-orb-ring ring-1"></div>
-      <div class="ai-orb-ring ring-2"></div>
-      <div class="ai-orb-core">
-        <span class="ai-sparkle">✨</span>
+    <!-- COLUMNA IZQUIERDA: CANVAS DE ENJAMBRE DE PARTÍCULAS -->
+    <section class="ai-card-main">
+      
+      <!-- NÚCLEO DE PARTÍCULAS ALEATORIAS (CANVAS) -->
+      <div class="ai-particle-container">
+        <canvas id="particleCanvas" width="220" height="220"></canvas>
+        <div class="core-sparkle-center">✦</div>
       </div>
-    </div>
 
-    <!-- ENCABEZADO Y ESTADO -->
-    <span class="ai-badge">Motor de Inteligencia Artificial</span>
-    <h2 class="ai-title">Analizando tu Colorimetría</h2>
-    
-    <div class="ai-status-box">
-      <p id="aiStatusText" class="ai-status-text">
-        Iniciando escaneo de atributos cromáticos...
-      </p>
-    </div>
+      <!-- BADGES E INFORMACIÓN -->
+      <div class="badge-wrapper">
+        <span class="ai-badge-futuristic">
+          <span class="badge-dot"></span> Stylist Engine v3.8
+        </span>
+        <span id="geminiModelBadge" class="gemini-badge">
+          <span class="gemini-sparkle-icon">✦</span> <span id="modelNameText">gemini-3.5-flash-lite</span>
+        </span>
+      </div>
 
-    <!-- BARRA DE PROGRESO DE ALTA PRECISIÓN -->
-    <div class="progress-track">
-      <div id="aiProgressBar" class="progress-fill"></div>
-    </div>
+      <h2 class="ai-title">Analizando tu Colorimetría</h2>
+      
+      <div class="ai-status-box">
+        <p id="aiStatusText" class="ai-status-text">
+          Iniciando escaneo de atributos cromáticos...
+        </p>
+      </div>
 
-    <div class="progress-footer">
-      <span id="progressPercent">0%</span>
-      <span>SET-MATCH-GO! Stylist AI</span>
-    </div>
+      <div class="progress-track">
+        <div id="aiProgressBar" class="progress-fill"></div>
+      </div>
+
+      <div class="progress-footer">
+        <span id="progressPercent" class="percent-counter">0%</span>
+        <span class="brand-subtext">SET-MATCH-GO! AI Core</span>
+      </div>
+    </section>
+
+    <!-- COLUMNA DERECHA: CONSOLA TERMINAL Y RAZONAMIENTO -->
+    <section class="ai-card-details">
+      <div class="details-header">
+        <div class="terminal-dots">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <span class="details-title">TERMINAL DE RAZONAMIENTO IA</span>
+        <span class="live-indicator"><span class="pulse-dot"></span> STREAMING</span>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <span class="metric-label">Modelo LLM</span>
+          <span id="metricModel" class="metric-value highlight">Iniciando...</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Tokens / Contexto</span>
+          <span id="metricTokens" class="metric-value">0 tks</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Latencia Real</span>
+          <span id="metricLatency" class="metric-value">0 ms</span>
+        </div>
+      </div>
+
+      <div class="thinking-steps" id="thinkingStepsContainer">
+        <div class="step-item active" id="step-0">
+          <div class="step-status-indicator"></div>
+          <div class="step-content">
+            <div class="step-header-line">
+              <strong>1. Lectura de respuestas del test</strong>
+              <span class="step-badge">INPUT</span>
+            </div>
+            <p>Mapeando tono de piel, vena wrist-test y contraste natural...</p>
+          </div>
+        </div>
+
+        <div class="step-item" id="step-1">
+          <div class="step-status-indicator"></div>
+          <div class="step-content">
+            <div class="step-header-line">
+              <strong>2. Cálculo de temperatura y subtono</strong>
+              <span class="step-badge">MATH</span>
+            </div>
+            <p>Evaluando matriz de luminancia y subtonos fríos vs. cálidos...</p>
+          </div>
+        </div>
+
+        <div class="step-item" id="step-2">
+          <div class="step-icon-loader"></div>
+          <div class="step-content">
+            <div class="step-header-line">
+              <strong>3. Inferencia con modelo Gemini</strong>
+              <span class="step-badge ai-chip">LLM</span>
+            </div>
+            <p>Sintetizando paleta armónica con el motor de reglas de moda...</p>
+          </div>
+        </div>
+
+        <div class="step-item" id="step-3">
+          <div class="step-status-indicator"></div>
+          <div class="step-content">
+            <div class="step-header-line">
+              <strong>4. Curaduría de outfit y estilos</strong>
+              <span class="step-badge">STYLIST</span>
+            </div>
+            <p>Seleccionando prendas clave, contrastes y código de vestuario...</p>
+          </div>
+        </div>
+
+        <div class="step-item" id="step-4">
+          <div class="step-status-indicator"></div>
+          <div class="step-content">
+            <div class="step-header-line">
+              <strong>5. Estructuración del diagnóstico</strong>
+              <span class="step-badge">OUTPUT</span>
+            </div>
+            <p>Formateando respuesta final y enviando a interfaz de usuario...</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
   </div>
 </main>
 
 <style>
+  /* FONDO CLARO CON CONTENEDOR PRINCIPAL */
   .ai-processing-wrapper {
-    min-height: 75vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 30px 20px;
-    background: radial-gradient(circle at center, #f8fafc 0%, #e2e8f0 100%);
-  }
-
-  .ai-card {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 24px;
-    padding: 45px 35px;
-    max-width: 480px;
-    width: 100%;
-    text-align: center;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
-
-  /* ORBE Y ANILLOS ANIMADOS DE IA */
-  .ai-orb-container {
     position: relative;
-    width: 110px;
-    height: 110px;
-    margin: 0 auto 30px auto;
+    min-height: 88vh;
     display: flex;
-    align-items: center;
     justify-content: center;
-  }
-
-  .ai-orb-core {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #e74c3c 0%, #2c3e50 100%);
-    display: flex;
     align-items: center;
-    justify-content: center;
-    box-shadow: 0 10px 25px rgba(231, 76, 60, 0.35);
-    z-index: 2;
-    animation: orbPulse 2.5s infinite ease-in-out;
+    padding: 40px 20px;
+    background: #f8fafc;
+    color: #1e293b;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
 
-  .ai-sparkle {
-    font-size: 2rem;
-    animation: sparkleSpin 4s infinite linear;
-  }
-
-  .ai-orb-ring {
+  /* CANVAS DEL FONDO GENERAL */
+  #bgCanvas {
     position: absolute;
-    border-radius: 50%;
-    border: 2px solid transparent;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     z-index: 1;
+    pointer-events: none;
   }
 
-  .ring-1 {
-    width: 90px;
-    height: 90px;
-    border-top-color: #e74c3c;
-    border-bottom-color: rgba(231, 76, 60, 0.2);
-    animation: spinRight 3s infinite linear;
+  .ai-dashboard-container {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+    max-width: 1040px;
+    width: 100%;
   }
 
-  .ring-2 {
-    width: 110px;
-    height: 110px;
-    border-left-color: #2c3e50;
-    border-right-color: rgba(44, 62, 80, 0.2);
-    animation: spinLeft 4.5s infinite linear;
+  @media (min-width: 880px) {
+    .ai-dashboard-container {
+      grid-template-columns: 1fr 1.2fr;
+    }
   }
 
-  /* TEXTO Y INSIGNIA */
-  .ai-badge {
-    display: inline-block;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
+  /* TARJETAS CON ESTILO LIGHT GLASSMORPHISM */
+  .ai-card-main, .ai-card-details {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 28px;
+    padding: 38px 30px;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+
+  .ai-card-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+  }
+
+  /* NÚCLEO DE PARTÍCULAS */
+  .ai-particle-container {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #particleCanvas {
+    width: 220px;
+    height: 220px;
+  }
+
+  .core-sparkle-center {
+    position: absolute;
+    font-size: 2.2rem;
     color: #e74c3c;
-    background: rgba(231, 76, 60, 0.08);
-    padding: 6px 14px;
-    border-radius: 20px;
+    pointer-events: none;
+    text-shadow: 0 0 12px rgba(231, 76, 60, 0.5);
+    animation: pulseCenter 2.5s infinite ease-in-out;
+  }
+
+  /* BADGES */
+  .badge-wrapper {
+    display: flex;
+    gap: 8px;
     margin-bottom: 12px;
   }
 
-  .ai-title {
-    color: #2c3e50;
-    font-size: 1.45rem;
+  .ai-badge-futuristic {
+    font-size: 0.72rem;
     font-weight: 700;
-    margin: 0 0 18px 0;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.08);
+    border: 1px solid rgba(231, 76, 60, 0.2);
+    padding: 5px 14px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    background: #e74c3c;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #e74c3c;
+    animation: livePulse 1.2s infinite ease-in-out;
+  }
+
+  .gemini-badge {
+    opacity: 0;
+    transform: scale(0.85);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #2563eb;
+    background: #dbeafe;
+    border: 1px solid #93c5fd;
+    padding: 5px 12px;
+    border-radius: 20px;
+    transition: all 0.4s ease;
+  }
+
+  .gemini-badge.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .ai-title {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 10px 0;
   }
 
   .ai-status-box {
@@ -138,117 +279,470 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
   }
 
   .ai-status-text {
-    color: #555555;
+    color: #475569;
     font-size: 0.92rem;
     font-weight: 500;
-    line-height: 1.5;
     margin: 0;
-    transition: opacity 0.4s ease, transform 0.4s ease;
   }
 
   /* BARRA DE PROGRESO */
   .progress-track {
     width: 100%;
-    height: 8px;
+    height: 10px;
     background: #e2e8f0;
     border-radius: 10px;
     overflow: hidden;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
 
   .progress-fill {
     width: 0%;
     height: 100%;
-    background: linear-gradient(90deg, #2c3e50 0%, #e74c3c 100%);
-    border-radius: 10px;
-    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(90deg, #1e293b 0%, #e74c3c 100%);
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.4);
+    transition: width 0.6s ease;
   }
 
   .progress-footer {
     display: flex;
     justify-content: space-between;
-    font-size: 0.75rem;
-    color: #888888;
-    font-weight: 600;
+    width: 100%;
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 700;
   }
 
-  /* KEYFRAMES DE ANIMACIONES */
-  @keyframes orbPulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 10px 25px rgba(231, 76, 60, 0.35); }
-    50% { transform: scale(1.06); box-shadow: 0 15px 35px rgba(231, 76, 60, 0.5); }
+  .percent-counter {
+    color: #e74c3c;
   }
 
-  @keyframes spinRight {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+  /* TERMINAL DERECHA CLARA */
+  .details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 18px;
   }
 
-  @keyframes spinLeft {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(-360deg); }
+  .terminal-dots {
+    display: flex;
+    gap: 6px;
   }
 
-  @keyframes sparkleSpin {
-    0%, 100% { transform: rotate(0deg) scale(1); }
-    50% { transform: rotate(15deg) scale(1.15); }
+  .terminal-dots .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .dot.red { background: #ef4444; }
+  .dot.yellow { background: #f59e0b; }
+  .dot.green { background: #10b981; }
+
+  .details-title {
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #64748b;
+  }
+
+  .live-indicator {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #16a34a;
+    background: #dcfce7;
+    padding: 3px 10px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pulse-dot {
+    width: 6px;
+    height: 6px;
+    background: #16a34a;
+    border-radius: 50%;
+    animation: livePulse 1.2s infinite ease-in-out;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .metric-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+
+  .metric-label {
+    display: block;
+    font-size: 0.62rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+
+  .metric-value {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .metric-value.highlight {
+    color: #2563eb;
+  }
+
+  .thinking-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
+    opacity: 0.4;
+    transition: all 0.3s ease;
+  }
+
+  .step-item.active {
+    opacity: 1;
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  }
+
+  .step-item.completed {
+    opacity: 0.85;
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+  }
+
+  .step-status-indicator {
+    width: 100px;
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    background: #cbd5e1;
+    margin-top: 5px;
+  }
+
+  .step-item.active .step-status-indicator {
+    background: #e74c3c;
+    box-shadow: 0 0 6px #e74c3c;
+  }
+
+  .step-item.completed .step-status-indicator {
+    background: #16a34a;
+    box-shadow: 0 0 6px #16a34a;
+  }
+
+  .step-header-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+  }
+
+  .step-header-line strong {
+    font-size: 0.83rem;
+    color: #1e293b;
+  }
+
+  .step-badge {
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+
+  .step-badge.ai-chip {
+    color: #2563eb;
+    background: #dbeafe;
+  }
+
+  .step-content p {
+    font-size: 0.74rem;
+    color: #64748b;
+    margin: 0;
+  }
+
+  @keyframes pulseCenter {
+    0%, 100% { transform: scale(1); opacity: 0.85; }
+    50% { transform: scale(1.15); opacity: 1; }
+  }
+
+  @keyframes livePulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
   }
 </style>
 
 <script>
+  // RENDERIZADOR DEL FONDO CON PARTÍCULAS Y CUADRADOS NEUTROS ALEATORIOS
+  (function initBackgroundCanvas() {
+    const canvas = document.getElementById('bgCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const neutralParticles = [];
+    const count = 45;
+    // Paleta neutra (grises claros, medios, grafito translúcido)
+    const colors = [
+      'rgba(148, 163, 184, 0.25)',
+      'rgba(203, 213, 225, 0.35)',
+      'rgba(100, 116, 139, 0.2)',
+      'rgba(226, 232, 240, 0.4)',
+      'rgba(71, 85, 105, 0.15)'
+    ];
+
+    class NeutralParticle {
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 8 + 3;
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = (Math.random() - 0.5) * 0.4;
+        this.shape = Math.random() > 0.4 ? 'square' : 'circle';
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+        this.angle = Math.random() * Math.PI * 2;
+        this.vRot = (Math.random() - 0.5) * 0.01;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.angle += this.vRot;
+
+        if (this.x < -20 || this.x > canvas.width + 20 || this.y < -20 || this.y > canvas.height + 20) {
+          this.reset();
+        }
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.fillStyle = this.color;
+
+        if (this.shape === 'square') {
+          ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    for (let i = 0; i < count; i++) {
+      neutralParticles.push(new NeutralParticle());
+    }
+
+    function renderBg() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      neutralParticles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(renderBg);
+    }
+    renderBg();
+  })();
+
+  // RENDERIZADOR DEL ENJAMBRE DE PARTÍCULAS CIRCULAR CENTRAL
+  (function initParticleSphere() {
+    const canvas = document.getElementById('particleCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const baseRadius = 75;
+    const particleCount = 75;
+    const particles = [];
+
+    const colors = ['#e74c3c', '#ff7675', '#2563eb', '#38bdf8', '#0f172a', '#f43f5e'];
+
+    class Particle {
+      constructor() {
+        this.angle = Math.random() * Math.PI * 2;
+        this.radiusOffset = (Math.random() - 0.5) * 24;
+        this.speed = 0.008 + Math.random() * 0.015;
+        this.size = Math.random() * 5 + 2;
+        this.shape = Math.random() > 0.5 ? 'circle' : 'square';
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+        this.pulse = Math.random() * Math.PI;
+      }
+
+      update() {
+        this.angle += this.speed;
+        this.pulse += 0.04;
+      }
+
+      draw() {
+        const currentRadius = baseRadius + this.radiusOffset + Math.sin(this.pulse) * 6;
+        const x = centerX + Math.cos(this.angle) * currentRadius;
+        const y = centerY + Math.sin(this.angle) * currentRadius;
+
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = this.color;
+
+        ctx.beginPath();
+        if (this.shape === 'circle') {
+          ctx.arc(x, y, this.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillRect(x - this.size / 2, y - this.size / 2, this.size, this.size);
+        }
+      }
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      const grad = ctx.createRadialGradient(centerX, centerY, 10, centerX, centerY, baseRadius);
+      grad.addColorStop(0, 'rgba(231, 76, 60, 0.08)');
+      grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, baseRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  })();
+
+  // LÓGICA DE PROCESAMIENTO Y REDIRECCIÓN FLUIDA
   document.addEventListener("DOMContentLoaded", function () {
     const statusEl = document.getElementById('aiStatusText');
     const progressEl = document.getElementById('aiProgressBar');
     const percentEl = document.getElementById('progressPercent');
+    const geminiBadge = document.getElementById('geminiModelBadge');
+    const modelNameText = document.getElementById('modelNameText');
+
+    const metricModel = document.getElementById('metricModel');
+    const metricTokens = document.getElementById('metricTokens');
+    const metricLatency = document.getElementById('metricLatency');
+
+    const modelosGemini = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"];
 
     const etapas = [
-      { texto: "Iniciando escaneo de atributos cromáticos...", porcentaje: 15 },
-      { texto: "Evaluando la temperatura de piel y contraste...", porcentaje: 35 },
-      { texto: "Consultando motor de IA de SET-MATCH-GO!...", porcentaje: 60 },
-      { texto: "Sintetizando paleta armónica y sugerencias de outfit...", porcentaje: 85 },
-      { texto: "¡Diagnóstico y asesoría completados!", porcentaje: 100 }
+      { texto: "Iniciando escaneo de atributos cromáticos...", porcentaje: 20, tokens: "140 tks", mostrarModelo: false },
+      { texto: "Evaluando la temperatura de piel y contraste...", porcentaje: 40, tokens: "290 tks", mostrarModelo: false },
+      { texto: "Sintetizando diagnóstico con Stylist Engine...", porcentaje: 65, tokens: "480 tks", mostrarModelo: true },
+      { texto: "Generando paleta armónica y sugerencias de outfit...", porcentaje: 85, tokens: "650 tks", mostrarModelo: true },
+      { texto: "¡Diagnóstico y asesoría completados!", porcentaje: 100, tokens: "780 tks", mostrarModelo: false }
     ];
 
     let pasoActual = 0;
-    
-    // Configuración del ritmo de la animación (intervalos de ~800ms por etapa)
-    const intervalTime = 850; 
+    const intervalTime = 1400; 
+    let startTime = Date.now();
 
-    // Disparar la generación de la IA en segundo plano
     const apiPromise = fetch('/api/generar-diagnostico', { method: 'POST' })
       .then(r => r.json())
       .catch(err => console.error("Aviso Gemini:", err));
 
-    // Animación fluida paso a paso
     const timer = setInterval(() => {
-      pasoActual++;
-      
-      if (pasoActual < etapas.length - 1) {
-        statusEl.style.opacity = 0;
-        setTimeout(() => {
-          statusEl.textContent = etapas[pasoActual].texto;
-          statusEl.style.opacity = 1;
-        }, 150);
+      const prevStep = document.getElementById(`step-${pasoActual}`);
+      if (prevStep) {
+        prevStep.classList.remove('active');
+        prevStep.classList.add('completed');
+      }
 
-        const pct = etapas[pasoActual].porcentaje;
-        progressEl.style.width = pct + '%';
-        percentEl.textContent = pct + '%';
+      pasoActual++;
+
+      if (pasoActual < etapas.length - 1) {
+        const etapa = etapas[pasoActual];
+
+        const currentStep = document.getElementById(`step-${pasoActual}`);
+        if (currentStep) {
+          currentStep.classList.add('active');
+        }
+
+        statusEl.textContent = etapa.texto;
+        progressEl.style.width = etapa.porcentaje + '%';
+        percentEl.textContent = etapa.porcentaje + '%';
+
+        metricTokens.textContent = etapa.tokens;
+        metricLatency.textContent = (Date.now() - startTime) + ' ms';
+
+        if (etapa.mostrarModelo) {
+          const mod = modelosGemini[Math.floor(Math.random() * modelosGemini.length)];
+          modelNameText.textContent = mod;
+          metricModel.textContent = "Flash-Lite";
+          geminiBadge.classList.add('visible');
+        } else {
+          metricModel.textContent = "Analizando...";
+          geminiBadge.classList.remove('visible');
+        }
+
       } else {
-        // En la última etapa, esperamos a que la promesa de la API se complete
         clearInterval(timer);
+        geminiBadge.classList.remove('visible');
         
+        for (let i = 0; i < etapas.length; i++) {
+          const step = document.getElementById(`step-${i}`);
+          if (step) {
+            step.classList.remove('active');
+            step.classList.add('completed');
+          }
+        }
+
         apiPromise.then(() => {
           progressEl.style.width = '100%';
           percentEl.textContent = '100%';
           statusEl.textContent = etapas[etapas.length - 1].texto;
+          metricModel.textContent = "Listo";
 
-          // Breve pausa para mostrar la barra llena al 100% antes de redirigir
           setTimeout(() => {
             window.location.href = "{{ url_for('resultado') }}";
-          }, 600);
+          }, 800);
         });
       }
     }, intervalTime);

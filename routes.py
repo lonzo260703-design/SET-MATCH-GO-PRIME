@@ -292,6 +292,7 @@ def register_routes(app):
         )
 
     @app.route("/api/generar-diagnostico", methods=["POST"])
+    @csrf.exempt  # Desactiva la verificación CSRF para esta petición asíncrona
     def generar_diagnostico_api():
         datos_pendientes = session.get("pendiente_ia")
         if not datos_pendientes:

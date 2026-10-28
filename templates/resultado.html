@@ -2,6 +2,9 @@
 {% block title %}Tu Diagnóstico de Colorimetría | SET-MATCH-GO!{% endblock %}
 
 {% block content %}
+<!-- CDN de Marked.js para formatear Markdown a HTML nativo -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
 <main class="resultado-section">
   <div class="resultado-container">
     
@@ -27,8 +30,10 @@
         </div>
 
         <div class="card-body-ia">
-          <div class="texto-recomendacion">
-            {{ recomendacion_ia | replace('\n', '<br>') | safe }}
+          <!-- El contenedor donde se parseará el Markdown a HTML -->
+          <div id="texto-recomendacion" class="texto-recomendacion">
+            <!-- Fallback inicial por Jinja mientras carga JavaScript -->
+            {{ recomendacion_ia }}
           </div>
         </div>
 
@@ -86,6 +91,17 @@
 
   </div>
 </main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const contenedor = document.getElementById('texto-recomendacion');
+    if (contenedor && typeof marked !== 'undefined') {
+      const rawMarkdown = contenedor.textContent || contenedor.innerText;
+      // Convierte el Markdown en HTML estético eliminando los asteriscos y numerales
+      contenedor.innerHTML = marked.parse(rawMarkdown.trim());
+    }
+  });
+</script>
 
 <style>
   /* ESTILOS GLOBALES DE LA VISTA RESULTADO */
@@ -203,10 +219,45 @@
     flex-grow: 1;
   }
 
+  /* ESTILOS PARA EL TEXTO PARSEADO DE LA IA */
   .texto-recomendacion {
     color: #475569;
     font-size: 0.95rem;
     line-height: 1.7;
+  }
+
+  .texto-recomendacion h1,
+  .texto-recomendacion h2,
+  .texto-recomendacion h3,
+  .texto-recomendacion h4 {
+    color: #1e293b;
+    font-weight: 700;
+    margin-top: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .texto-recomendacion h3 {
+    font-size: 1.05rem;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 4px;
+  }
+
+  .texto-recomendacion p {
+    margin-bottom: 0.8rem;
+  }
+
+  .texto-recomendacion ul, 
+  .texto-recomendacion ol {
+    padding-left: 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .texto-recomendacion li {
+    margin-bottom: 0.3rem;
+  }
+
+  .texto-recomendacion strong {
+    color: #1e293b;
   }
 
   .card-footer-ia {
