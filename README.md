@@ -30,21 +30,3 @@
 * **Servidor de Producción:** Gunicorn.
 
 ---
-
-## Desarrollo Local
-
-Sigue estos pasos para ejecutar el proyecto localmente:
-
-### 1. Clonar el repositorio e instalar dependencias
-
-```bash
-# Clonar repositorio
-git clone [https://github.com/tu-usuario/set-match-go.git](https://github.com/tu-usuario/set-match-go.git)
-cd set-match-go
-
-# Crear y activar entorno virtual
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Instalar dependencias de desarrollo
-pip install -r requirements-dev.txt
