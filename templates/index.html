@@ -1,30 +1,386 @@
 {% extends "base.html" %}
+{% block title %}Inicio | SET-MATCH-GO!{% endblock %}
 
 {% block content %}
-<div class="hero-container">
-  <!-- Tarjeta 1 -->
-  <div class="card-column">
-    <div class="card-icon">🎨</div>
-    <h3>Test de Colorimetría</h3>
-    <p>Descubre qué paleta de colores resalta tu tono de piel y potencia tu estilo personal en pocos pasos.</p>
-    <a href="{{ url_for('test') }}" class="btn-card primary">Hacer el Test</a>
+<div class="hero-slider-container">
+  
+  <!-- SLIDER DE FONDO DINÁMICO (FIJO DETRÁS) -->
+  <div class="slider-track" id="sliderTrack">
+    
+    <!-- FONDO 1: PRIMAVERA -->
+    <div class="slide-item slide-spring">
+      <span class="season-indicator">🌸 ESTACIÓN PRIMAVERA</span>
+    </div>
+
+    <!-- FONDO 2: VERANO -->
+    <div class="slide-item slide-summer">
+      <span class="season-indicator">☀️ ESTACIÓN VERANO</span>
+    </div>
+
+    <!-- FONDO 3: OTOÑO -->
+    <div class="slide-item slide-autumn">
+      <span class="season-indicator">🍂 ESTACIÓN OTOÑO</span>
+    </div>
+
+    <!-- FONDO 4: INVIERNO -->
+    <div class="slide-item slide-winter">
+      <span class="season-indicator">❄️ ESTACIÓN INVIERNO</span>
+    </div>
+
   </div>
 
-  <!-- Tarjeta 2 -->
-  <div class="card-column featured">
-    <span class="badge">Popular</span>
-    <div class="card-icon">👗</div>
-    <h3>Colecciones & Outfits</h3>
-    <p>Explora combinaciones de ropa diseñadas según la teoría del color y encuentra tu look ideal.</p>
-    <a href="#" class="btn-card accent">Ver Colecciones</a>
+  <!-- SUPERPOSICIÓN DE TARJETAS -->
+  <div class="cards-overlay">
+    <div class="cards-grid">
+      
+      <!-- TARJETA 1: TEST DE COLORIMETRÍA -->
+      <div class="feature-card">
+        <div class="card-icon-wrapper">
+          <span class="card-icon">🎨</span>
+        </div>
+        <h3>Test de Colorimetría</h3>
+        <p>Descubre qué paleta de colores resalta tu tono de piel y potencia tu estilo personal en pocos pasos.</p>
+        <div class="card-action">
+          <a href="{{ url_for('test') }}" class="card-btn btn-dark">HACER EL TEST</a>
+        </div>
+      </div>
+
+      <!-- TARJETA 2: MI GUARDARROPA -->
+      <div class="feature-card popular">
+        <span class="badge-popular">POPULAR</span>
+        <div class="card-icon-wrapper">
+          <span class="card-icon">👕</span>
+        </div>
+        <h3>Mi Guardarropa</h3>
+        <p>Organiza tu ropa, sube tus prendas preferidas y combínalas fácilmente según tu paleta de color.</p>
+        <div class="card-action">
+          {% if current_user.is_authenticated %}
+            <a href="{{ url_for('guardarropa') }}" class="card-btn btn-dark">MI GUARDARROPA</a>
+          {% else %}
+            <a href="{{ url_for('login', next=url_for('guardarropa')) }}" class="card-btn btn-outline">INICIAR SESIÓN</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- TARJETA 3: RED SOCIAL DE ESTILO -->
+      <div class="feature-card">
+        <div class="card-icon-wrapper">
+          <span class="card-icon">📱</span>
+        </div>
+        <h3>Red Social de Estilo</h3>
+        <p>Conecta con otros usuarios, comparte tus outfits y descubre combinaciones reales según la teoría del color.</p>
+        <div class="card-action">
+          {% if current_user.is_authenticated %}
+            <a href="#" class="card-btn btn-dark">EXPLORAR FEED</a>
+          {% else %}
+            <a href="{{ url_for('login') }}" class="card-btn btn-outline">INICIAR SESIÓN</a>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
   </div>
 
-  <!-- Tarjeta 3 -->
-  <div class="card-column">
-    <div class="card-icon">📖</div>
-    <h3>Teoría del Color</h3>
-    <p>Aprende las reglas de armonía cromática, contraste y cómo combinar prendas como un experto.</p>
-    <a href="#" class="btn-card outline">Aprender Más</a>
+  <!-- INDICADORES FIJOS -->
+  <div class="slider-dots">
+    <span class="dot active" onclick="goToSlide(0)"></span>
+    <span class="dot" onclick="goToSlide(1)"></span>
+    <span class="dot" onclick="goToSlide(2)"></span>
+    <span class="dot" onclick="goToSlide(3)"></span>
   </div>
+
 </div>
+
+<style>
+  body {
+    background-color: #223243 !important;
+    overflow-x: hidden;
+  }
+
+  /* CONTENEDOR SLIDER CON Z-INDEX BAJO PARA PERMITIR DESPLEGABLES */
+  .hero-slider-container {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 100vw;
+    height: calc(100vh - 70px);
+    overflow: hidden;
+    background: #111827;
+    z-index: 1 !important; /* Capa baja para no tapar los menús flotantes */
+  }
+
+  .slider-track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    width: 400%;
+    height: 100%;
+    transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+    z-index: 1;
+  }
+
+  .slide-item {
+    width: 100vw;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+  }
+
+  /* FONDO CON IMÁGENES Y GRADIENTES */
+  .slide-spring {
+    background-image: linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.75)), 
+                      url('https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1600&q=80');
+  }
+  .slide-summer {
+    background-image: linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.75)), 
+                      url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80');
+  }
+  .slide-autumn {
+    background-image: linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.75)), 
+                      url('https://images.unsplash.com/photo-1507187632231-5beb21a654a2?auto=format&fit=crop&w=1600&q=80');
+  }
+  .slide-winter {
+    background-image: linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.75)), 
+                      url('https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=80');
+  }
+
+  .season-indicator {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 6px 16px;
+    border-radius: 20px;
+    letter-spacing: 1.5px;
+    z-index: 2;
+  }
+
+  /* --- MODO ESCRITORIO: SIN SCROLL, 3 TARJETAS ALINEADAS --- */
+  .cards-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 2 !important; /* Mantener por debajo de la navbar */
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .cards-grid {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    gap: 20px;
+    max-width: 1120px;
+    width: 100%;
+  }
+
+  .feature-card {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    background: rgba(34, 50, 67, 0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    padding: 28px 20px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    transition: transform 0.3s ease, opacity 0.3s ease, background 0.25s ease;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-5px);
+    background: rgba(34, 50, 67, 0.98);
+  }
+
+  .feature-card.popular {
+    border: 2px solid #e74c3c;
+  }
+
+  .badge-popular {
+    position: absolute;
+    top: -12px;
+    background: #e74c3c;
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 4px 14px;
+    border-radius: 20px;
+    letter-spacing: 1.5px;
+  }
+
+  .card-icon-wrapper {
+    width: 52px;
+    height: 52px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+
+  .card-icon {
+    font-size: 1.5rem;
+  }
+
+  .feature-card h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 10px 0;
+  }
+
+  .feature-card p {
+    font-size: 0.82rem;
+    color: #cbd5e1;
+    line-height: 1.45;
+    margin: 0 0 20px 0;
+    flex-grow: 1;
+  }
+
+  .card-action {
+    width: 100%;
+    margin-top: auto;
+  }
+
+  .card-btn {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-align: center;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  .btn-dark {
+    background: #ffffff;
+    color: #223243;
+    border: none;
+  }
+
+  .btn-dark:hover {
+    background: #e2e8f0;
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: #ffffff;
+    border: 1.5px solid #ffffff;
+  }
+
+  .btn-outline:hover {
+    background: #ffffff;
+    color: #223243;
+  }
+
+  .slider-dots {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .dot.active {
+    width: 28px;
+    border-radius: 8px;
+    background: #ffffff;
+  }
+
+  /* --- MODO MÓVIL (<= 900px): SCROLL + FADE EFFECT EN TARJETAS --- */
+  @media (max-width: 900px) {
+    .cards-overlay {
+      align-items: flex-start;
+      padding: 65px 20px 60px 20px;
+      overflow-y: auto; /* Activar scroll solo en móvil */
+      
+      /* Máscara de degradado CSS para desvanecer tarjetas arriba y abajo al hacer scroll */
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 12%,
+        black 88%,
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 12%,
+        black 88%,
+        transparent 100%
+      );
+    }
+
+    .cards-grid {
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      max-width: 420px;
+    }
+
+    .feature-card {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  let currentSlide = 0;
+  const totalSlides = 4;
+  const sliderTrack = document.getElementById('sliderTrack');
+  const dots = document.querySelectorAll('.dot');
+
+  function updateSlider() {
+    sliderTrack.style.transform = `translateX(-${currentSlide * 25}%)`;
+    dots.forEach((dot, idx) => {
+      dot.classList.toggle('active', idx === currentSlide);
+    });
+  }
+
+  function nextSlide() {
+    currentSlide = (currentSlide + 1) % totalSlides;
+    updateSlider();
+  }
+
+  function goToSlide(index) {
+    currentSlide = index;
+    updateSlider();
+  }
+
+  setInterval(nextSlide, 5000);
+</script>
 {% endblock %}

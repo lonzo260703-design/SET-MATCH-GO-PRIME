@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Mi Guardarropa | SET-MATCH-GO!{% endblock %}
+
+{% block content %}
+<div class="wardrobe-wrapper">
+  <div class="wardrobe-container">
+    
+    <div class="wardrobe-header">
+      <h2>👔 Mi Guardarropa Digital</h2>
+      <p>Sube y gestiona tus prendas favoritas para coordinar tus combinaciones cromáticas.</p>
+    </div>
+
+    <!-- FORMULARIO DE SUBIDA DE ROPA -->
+    <div class="upload-card">
+      <h3>Añadir Nueva Prenda</h3>
+      <form action="{{ url_for('subir_prenda') }}" method="POST" enctype="multipart/form-data" class="upload-form">
+        <!-- Token de protección CSRF -->
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-grid">
+          <div class="input-group">
+            <label>Nombre de la prenda</label>
+            <input type="text" name="nombre" placeholder="Ej. Camisa Lino Terracota" required>
+          </div>
+          
+          <div class="input-group">
+            <label>Categoría</label>
+            <select name="categoria">
+              <option value="Superior">Prenda Superior (Camisas, Tops)</option>
+              <option value="Inferior">Prenda Inferior (Pantalones, Faldas)</option>
+              <option value="Abrigo">Abrigos & Chaquetas</option>
+              <option value="Calzado">Calzado</option>
+              <option value="Accesorios">Accesorios</option>
+            </select>
+          </div>
+
+          <div class="input-group full-width">
+            <label>Imagen de la prenda</label>
+            <input type="file" name="foto" accept="image/*" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit">Subir a Mi Guardarropa</button>
+      </form>
+    </div>
+
+    <!-- MOSTRARIO DE PRENDAS -->
+    <div class="wardrobe-grid">
+      {% if prendas %}
+        {% for prenda in prendas %}
+        <div class="cloth-card">
+          <div class="cloth-img-wrapper">
+            <img src="{{ url_for('static', filename='uploads/guardarropa/' ~ prenda.imagen) }}" alt="{{ prenda.nombre }}">
+          </div>
+          <div class="cloth-info">
+            <span class="category-tag">{{ prenda.categoria }}</span>
+            <h4>{{ prenda.nombre }}</h4>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <p>Aún no has guardado prendas en tu guardarropa. ¡Añade tu primera prenda arriba!</p>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .wardrobe-wrapper {
+    min-height: 85vh;
+    padding: 40px 20px;
+    background: #f8fafc;
+  }
+  .wardrobe-container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .wardrobe-header h2 {
+    font-size: 1.8rem;
+    color: #1e293b;
+    margin-bottom: 6px;
+  }
+  .wardrobe-header p {
+    color: #64748b;
+    margin-bottom: 25px;
+  }
+  .upload-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    margin-bottom: 35px;
+  }
+  .upload-card h3 {
+    margin-top: 0;
+    margin-bottom: 18px;
+    font-size: 1.2rem;
+    color: #0f172a;
+  }
+  .upload-form .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .input-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 6px;
+  }
+  .input-group input, .input-group select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    outline: none;
+    font-family: inherit;
+  }
+  .input-group input[type="file"] {
+    background: #f1f5f9;
+    padding: 8px;
+    cursor: pointer;
+  }
+  .btn-submit {
+    background: #e74c3c;
+    color: #ffffff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-submit:hover {
+    background: #c0392b;
+  }
+  .wardrobe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  .cloth-card {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .cloth-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  }
+  .cloth-img-wrapper {
+    height: 200px;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .cloth-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .cloth-info {
+    padding: 14px;
+  }
+  .category-tag {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #e74c3c;
+    background: rgba(231,76,60,0.1);
+    padding: 3px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+  }
+  .cloth-info h4 {
+    margin: 8px 0 0 0;
+    font-size: 0.95rem;
+    color: #1e293b;
+  }
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px 20px;
+    background: #ffffff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 14px;
+    color: #64748b;
+  }
+</style>
+{% endblock %}

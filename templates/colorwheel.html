@@ -1,25 +1,27 @@
 {% extends "base.html" %}
 {% block title %}Rueda de Armonías & Probador — SET-MATCH-GO!{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/colorwheel.css') }}">
-{% endblock %}
 
 {% block content %}
+<!-- CANVAS DE PARTICULAS FLOTANTES DE FONDO -->
+<canvas id="bgParticlesCanvas"></canvas>
+
 <main class="cw-wrapper">
 
-  <!-- Encabezado -->
+  <!-- ENCABEZADO PRINCIPAL -->
   <div class="cw-header">
     <h1>Rueda de Armonías & Probador</h1>
-    <p>Explora combinaciones cromáticas y visualízalas en tiempo real sobre las prendas</p>
+    <p>Explora combinaciones cromáticas y visualízalas en tiempo real sobre la silueta del outfit</p>
   </div>
 
-  <!-- Barra Flotante de Valores Superior -->
+  <!-- BARRA FLOTANTE SUPERIOR INTEGRADORA (COLOR + SPECS + CALL TO ACTION TEST) -->
   <div class="cw-top-bar">
     <div class="cw-active-color">
       <span class="cw-color-preview-circle" id="topColorBadge"></span>
       <span class="cw-color-hex-title" id="topHex">#1816D1</span>
     </div>
+
     <div class="cw-specs-divider"></div>
+
     <div class="cw-specs-grid">
       <div class="cw-spec-item">
         <span class="cw-spec-label">RGB</span>
@@ -30,28 +32,38 @@
         <span class="cw-spec-value" id="topHsl">241°, 81%, 45%</span>
       </div>
     </div>
+
+    <div class="cw-specs-divider"></div>
+
+    <!-- BOTÓN DEL TEST DE COLORIMETRÍA DENTRO DE LA BARRA SUPERIOR -->
+    <a href="{{ url_for('test') }}" class="cw-top-test-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+      </svg>
+      <span>Realizar Test de Colorimetría</span>
+    </a>
   </div>
 
-  <!-- Dashboard Principal -->
+  <!-- DASHBOARD DE 3 COLUMNAS -->
   <div class="cw-dashboard">
 
-    <!-- Columna 1: Canvas Círculo Cromático -->
-    <div class="cw-card cw-canvas-card">
+    <!-- COLUMNA 1: CÍRCULO CROMÁTICO -->
+    <div class="cw-card">
       <div class="cw-canvas-wrapper">
-        <canvas id="colorWheelCanvas" width="290" height="340"></canvas>
+        <canvas id="colorWheelCanvas" width="260" height="300"></canvas>
       </div>
       <p class="cw-hint">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10" />
           <line x1="12" y1="16" x2="12" y2="12" />
           <line x1="12" y1="8" x2="12.01" y2="8" />
         </svg>
-        Haz clic en la rueda para el tono y en la barra inferior para el brillo.
+        Selecciona un tono en el círculo y ajusta el brillo en la barra inferior.
       </p>
     </div>
 
-    <!-- Columna 2: Modo de Armonía + Paleta Resultante -->
-    <div class="cw-card cw-controls-card">
+    <!-- COLUMNA 2: MODOS DE ARMONÍA -->
+    <div class="cw-card">
       <div class="cw-section-title">Modo de Armonía</div>
 
       <div class="cw-segmented-control">
@@ -61,111 +73,99 @@
         <button type="button" class="cw-segment-btn" data-mode="monochromatic">Monocromático</button>
       </div>
 
-      <div class="cw-section-title" style="margin-top: 12px;">Paleta Resultante</div>
+      <div class="cw-section-title" style="margin-top: 18px;">Paleta Resultante</div>
 
       <div id="paletteResultsCards" class="cw-palette-stack">
         <!-- Bloques dinámicos -->
       </div>
     </div>
 
-    <!-- Columna 3: Probador de Outfits Grande e Ilustrado -->
-    <div class="cw-card cw-mannequin-card">
+    <!-- COLUMNA 3: PROBADOR VIRTUAL Y MANIQUÍ ESTILIZADO DE BOUTIQUE -->
+    <div class="cw-card">
       <div class="cw-mannequin-header">
         <span class="cw-section-title">Vista de Outfit</span>
         <div class="cw-gender-toggle">
-          <button type="button" class="cw-gender-btn active" id="btnFemale">Mujer</button>
-          <button type="button" class="cw-gender-btn" id="btnMale">Hombre</button>
+          <button type="button" class="cw-gender-btn active" id="btnFemale">Damas</button>
+          <button type="button" class="cw-gender-btn" id="btnMale">Caballeros</button>
         </div>
       </div>
 
-      <!-- Ilustración Vectorial SVG de Alta Definición -->
       <div class="cw-outfit-preview">
 
-        <!-- FEMENINO: ILUSTRACIÓN DE MODA MODERNA -->
-        <svg id="svgFemale" class="cw-avatar-svg" viewBox="0 0 200 380" fill="none">
-          <!-- Sombra inferior -->
-          <ellipse cx="100" cy="365" rx="42" ry="6" fill="#E5E7EB" />
+        <!-- MANIQUÍ FEMENINO ESTILIZADO -->
+        <svg id="svgFemale" class="cw-avatar-svg" viewBox="0 0 200 350" fill="none">
+          <!-- Sombra de pie de base -->
+          <ellipse cx="100" cy="338" rx="40" ry="5" fill="#E2E8F0" />
 
-          <!-- 1. BASE DE CUERPO Y EXTREMIDADES (Piel) -->
-          <!-- Brazos caídos con caída natural -->
-          <path d="M68 85 Q56 135 52 175" stroke="#E2A988" stroke-width="8" stroke-linecap="round" />
-          <path d="M132 85 Q144 135 148 175" stroke="#E2A988" stroke-width="8" stroke-linecap="round" />
+          <!-- Stand/Pedestal de Maniquí -->
+          <line x1="100" y1="280" x2="100" y2="338" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" />
+          <ellipse cx="100" cy="338" rx="20" ry="4" fill="#CBD5E1" />
 
-          <!-- Piernas estilizadas -->
-          <path d="M88 220 L86 348" stroke="#E2A988" stroke-width="9" stroke-linecap="round" />
-          <path d="M112 220 L114 348" stroke="#E2A988" stroke-width="9" stroke-linecap="round" />
+          <!-- Busto / Maniquí Neutro -->
+          <path d="M88 40 C88 28, 112 28, 112 40 L110 58 L90 58 Z" fill="#E2E8F0" />
+          <!-- Percha superior -->
+          <path d="M100 25 C100 18, 106 18, 106 23" stroke="#64748B" stroke-width="2.5" fill="none" stroke-linecap="round" />
 
-          <!-- Cuello y Cabeza -->
-          <path d="M93 54 L107 54 L105 72 L95 72 Z" fill="#E2A988" />
-          <ellipse cx="100" cy="40" rx="15" ry="18" fill="#E2A988" />
+          <!-- PRENDA SUPERIOR: Blusa / Top -->
+          <g id="fTopGroup">
+            <path id="fTop" d="M72 58 Q100 68 128 58 Q140 78 144 98 L130 110 L122 96 L120 152 L80 152 L78 96 L70 110 L56 98 Q60 78 72 58 Z" fill="#1816D1" />
+            <path d="M86 58 Q100 75 114 58" stroke="#FFFFFF" stroke-width="2" fill="none" opacity="0.6" />
+            <path d="M80 152 Q100 145 120 152 L120 148 Q100 141 80 148 Z" fill="rgba(0,0,0,0.15)" />
+          </g>
 
-          <!-- Cabello femenino estilizado de frente -->
-          <path
-            d="M85 30 C85 12, 115 12, 115 30 C120 40, 122 55, 118 78 C112 62, 110 45, 100 42 C90 45, 88 62, 82 78 C78 55, 80 40, 85 30 Z"
-            fill="#2D2422" />
+          <!-- PRENDA INFERIOR: Falda / Palazzo -->
+          <g id="fBottomGroup">
+            <path id="fBottom" d="M80 152 L120 152 Q136 210 148 252 Q100 260 52 252 Q64 210 80 152 Z" fill="#CFD116" />
+            <rect x="78" y="150" width="44" height="5" fill="#0F172A" rx="1.5" />
+            <path d="M52 252 Q100 260 148 252 Q140 245 100 252 Q60 245 52 252 Z" fill="rgba(0,0,0,0.2)" />
+          </g>
 
-          <!-- 2. PRENDAS DINÁMICAS FEMENINAS -->
-          <!-- Blusa estilizada -->
-          <path id="fTop"
-            d="M78 72 Q100 80 122 72 Q138 82 144 98 L130 110 L122 100 L120 155 L80 155 L78 100 L70 110 L56 98 Q62 82 78 72 Z"
-            fill="#1816D1" stroke="#1D242B" stroke-width="2" stroke-linejoin="round" />
-          <path d="M88 72 Q100 82 112 72" stroke="#FFFFFF" stroke-width="1.8" opacity="0.6" fill="none" />
-          <!-- Cuello -->
-
-          <!-- Falda / Prenda Inferior -->
-          <path id="fBottom" d="M80 155 L120 155 Q135 205 145 240 Q100 246 55 240 Q65 205 80 155 Z" fill="#CFD116"
-            stroke="#1D242B" stroke-width="2" stroke-linejoin="round" />
-          <rect x="80" y="153" width="40" height="5" fill="#1D242B" rx="1.5" /> <!-- Cinturilla -->
-
-          <!-- Zapatillas de tacón -->
-          <path id="fShoes"
-            d="M79 344 C84 338 92 344 94 352 L94 358 L78 358 Z M106 352 C108 344 116 338 121 344 L122 358 L106 358 Z"
-            fill="#111827" />
+          <!-- CALZADO Y BASE -->
+          <g id="fShoesGroup">
+            <path id="fShoes" d="M78 285 C83 278 91 284 93 292 L93 298 L77 298 Z M107 292 C109 284 117 278 122 284 L123 298 L107 298 Z" fill="#0F172A" />
+            <!-- Tacones estilizados -->
+            <rect x="78" y="298" width="3" height="12" fill="#0F172A" />
+            <rect x="119" y="298" width="3" height="12" fill="#0F172A" />
+          </g>
         </svg>
 
+        <!-- MANIQUÍ MASCULINO ESTILIZADO -->
+        <svg id="svgMale" class="cw-avatar-svg hidden" viewBox="0 0 200 350" fill="none">
+          <!-- Sombra de pie de base -->
+          <ellipse cx="100" cy="338" rx="42" ry="5" fill="#E2E8F0" />
 
-        <!-- MASCULINO: ILUSTRACIÓN DE MODA MODERNA -->
-        <svg id="svgMale" class="cw-avatar-svg hidden" viewBox="0 0 200 380" fill="none">
-          <!-- Sombra inferior -->
-          <ellipse cx="100" cy="365" rx="46" ry="6" fill="#E5E7EB" />
+          <!-- Stand/Pedestal de Maniquí -->
+          <line x1="100" y1="285" x2="100" y2="338" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" />
+          <ellipse cx="100" cy="338" rx="20" ry="4" fill="#CBD5E1" />
 
-          <!-- 1. BASE DE CUERPO Y EXTREMIDADES (Piel) -->
-          <!-- Brazos masculinos -->
-          <path d="M64 85 Q52 138 48 178" stroke="#D89A76" stroke-width="9" stroke-linecap="round" />
-          <path d="M136 85 Q148 138 152 178" stroke="#D89A76" stroke-width="9" stroke-linecap="round" />
+          <!-- Busto Neutro -->
+          <path d="M86 38 C86 26, 114 26, 114 38 L110 56 L90 56 Z" fill="#E2E8F0" />
+          <path d="M100 23 C100 16, 106 16, 106 21" stroke="#64748B" stroke-width="2.5" fill="none" stroke-linecap="round" />
 
-          <!-- Cuello y Cabeza -->
-          <path d="M92 52 L108 52 L106 70 L94 70 Z" fill="#D89A76" />
-          <ellipse cx="100" cy="38" rx="16" ry="19" fill="#D89A76" />
+          <!-- PRENDA SUPERIOR: Camisa Polo -->
+          <g id="mTopGroup">
+            <path id="mTop" d="M68 56 Q100 65 132 56 Q146 72 154 94 L138 106 L128 94 L128 160 L72 160 L72 94 L62 106 L46 94 Q54 72 68 56 Z" fill="#1816D1" />
+            <path d="M86 56 L100 74 L114 56" stroke="#FFFFFF" stroke-width="2" fill="none" opacity="0.8" />
+            <path d="M72 160 Q100 152 128 160 L128 154 Q100 146 72 154 Z" fill="rgba(0,0,0,0.15)" />
+          </g>
 
-          <!-- Cabello masculino corte moderno -->
-          <path d="M84 28 C86 12, 114 12, 116 28 C116 20, 84 20, 84 28 Z" fill="#2B303A" />
+          <!-- PRENDA INFERIOR: Pantalón Chino -->
+          <g id="mBottomGroup">
+            <path id="mBottom" d="M72 160 L128 160 Q131 225 135 288 L110 288 Q103 220 100 195 Q97 220 90 288 L65 288 Q69 225 72 160 Z" fill="#CFD116" />
+            <line x1="100" y1="164" x2="100" y2="198" stroke="rgba(0,0,0,0.25)" stroke-width="1.5" />
+          </g>
 
-          <!-- 2. PRENDAS DINÁMICAS MASCULINAS -->
-          <!-- Playera / Camisa -->
-          <path id="mTop"
-            d="M72 70 Q100 78 128 70 Q144 80 152 98 L138 110 L128 100 L128 168 L72 168 L72 100 L62 110 L48 98 Q56 80 72 70 Z"
-            fill="#1816D1" stroke="#1D242B" stroke-width="2" stroke-linejoin="round" />
-          <path d="M88 70 L100 84 L112 70" stroke="#FFFFFF" stroke-width="1.8" opacity="0.6" fill="none" />
-          <!-- Escote V -->
-
-          <!-- Pantalón Chino / Straight Fit -->
-          <path id="mBottom"
-            d="M72 168 L128 168 Q131 255 134 346 L110 346 Q103 260 100 215 Q97 260 90 346 L66 346 Q69 255 72 168 Z"
-            fill="#CFD116" stroke="#1D242B" stroke-width="2" stroke-linejoin="round" />
-          <line x1="100" y1="172" x2="100" y2="210" stroke="#1D242B" stroke-width="1.5" opacity="0.3" />
-          <!-- Costura tiro -->
-
-          <!-- Tenis Casuales con suela blanca -->
-          <path id="mShoes" d="M60 346 L90 346 L92 360 L56 360 Z M110 346 L140 346 L144 360 L108 360 Z"
-            fill="#111827" />
-          <rect x="56" y="356" width="36" height="4" fill="#FFFFFF" rx="1" />
-          <rect x="108" y="356" width="36" height="4" fill="#FFFFFF" rx="1" />
+          <!-- CALZADO -->
+          <g id="mShoesGroup">
+            <path id="mShoes" d="M58 288 L88 288 L90 304 L54 304 Z M110 288 L140 288 L144 304 L108 304 Z" fill="#0F172A" />
+            <rect x="54" y="300" width="36" height="4" fill="#FFFFFF" rx="1" />
+            <rect x="108" y="300" width="36" height="4" fill="#FFFFFF" rx="1" />
+          </g>
         </svg>
 
       </div>
 
-      <!-- Leyenda de Colores -->
+      <!-- LEYENDA DE COLORES -->
       <div class="cw-outfit-legend">
         <div class="legend-item"><span class="legend-dot" id="dotTop"></span> Prenda Superior</div>
         <div class="legend-item"><span class="legend-dot" id="dotBottom"></span> Prenda Inferior</div>
@@ -173,37 +173,379 @@
       </div>
     </div>
 
-    <!-- Coloca este bloque justo después de que cierra </div> de .cw-dashboard -->
-    <div class="cw-action-banner">
-      <p class="cw-action-title">¿Quieres saber qué paleta favorece tu tono de piel?</p>
-      <p class="cw-action-sub">Realiza nuestro test interactivo y descubre tus colores ideales según tu estación
-        personal.</p>
-      <a href="{{ url_for('test') }}" class="cw-btn-test">
-        Realizar Test de Colorimetría
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
-      </a>
-    </div>
-
   </div>
+
 </main>
+
+<style>
+  /* FONDO Y CANVAS DE PARTICULAS */
+  #bgParticlesCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .cw-wrapper {
+    position: relative;
+    z-index: 2;
+    max-width: 1250px;
+    margin: 80px auto 20px auto;
+    padding: 0 20px;
+  }
+
+  .cw-header {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #ffffff;
+  }
+
+  .cw-header h1 {
+    font-size: 2.1rem;
+    font-weight: 800;
+    margin: 0 0 6px 0;
+  }
+
+  .cw-header p {
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  /* BARRA FLOTANTE SUPERIOR EN TARJETA BLANCA INTEGRADORA */
+  .cw-top-bar {
+    background: #ffffff;
+    color: #1e293b;
+    border-radius: 16px;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    gap: 15px;
+  }
+
+  .cw-active-color {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .cw-color-preview-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+
+  .cw-color-hex-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+  }
+
+  .cw-specs-divider {
+    width: 1px;
+    height: 30px;
+    background: #e2e8f0;
+  }
+
+  .cw-specs-grid {
+    display: flex;
+    gap: 25px;
+  }
+
+  .cw-spec-item {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cw-spec-label {
+    font-size: 0.68rem;
+    color: #64748b;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .cw-spec-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  /* BOTÓN DEL TEST EN BARRA SUPERIOR */
+  .cw-top-test-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #e74c3c;
+    color: #ffffff;
+    padding: 8px 18px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 0.82rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  }
+
+  .cw-top-test-btn:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
+  }
+
+  /* DASHBOARD DE 3 COLUMNAS COMPACTO */
+  .cw-dashboard {
+    display: grid;
+    grid-template-columns: 310px 1fr 330px;
+    gap: 20px;
+  }
+
+  .cw-card {
+    background: #ffffff;
+    color: #1e293b;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cw-canvas-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .cw-hint {
+    font-size: 0.76rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    line-height: 1.35;
+  }
+
+  .cw-section-title {
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #0f172a;
+    margin-bottom: 10px;
+  }
+
+  .cw-segmented-control {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    background: #f1f5f9;
+    padding: 5px;
+    border-radius: 10px;
+  }
+
+  .cw-segment-btn {
+    padding: 8px;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-weight: 700;
+    font-size: 0.78rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .cw-segment-btn.active {
+    background: #223243;
+    color: #ffffff;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .cw-palette-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+    flex-grow: 1;
+  }
+
+  .cw-palette-card {
+    height: 68px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.05rem;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+  }
+
+  .cw-palette-card:hover {
+    transform: scale(1.02);
+  }
+
+  /* MANIQUÍ Y PROBADOR */
+  .cw-mannequin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .cw-gender-toggle {
+    display: flex;
+    gap: 4px;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 16px;
+  }
+
+  .cw-gender-btn {
+    padding: 5px 12px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-weight: 700;
+    font-size: 0.72rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .cw-gender-btn.active {
+    background: #e74c3c;
+    color: #ffffff;
+  }
+
+  .cw-outfit-preview {
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #e2e8f0;
+    min-height: 310px;
+  }
+
+  .cw-avatar-svg {
+    width: 100%;
+    height: 310px;
+  }
+
+  .cw-avatar-svg.hidden {
+    display: none;
+  }
+
+  .cw-outfit-legend {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    color: #64748b;
+    font-weight: 700;
+  }
+
+  .legend-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 1px solid #cbd5e1;
+  }
+
+  @media (max-width: 1024px) {
+    .cw-dashboard {
+      grid-template-columns: 1fr;
+    }
+    .cw-top-bar {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }
+</style>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+
+    /* 1. PARTICULAS FLOTANTES DE FONDO */
+    const bgCanvas = document.getElementById("bgParticlesCanvas");
+    const bgCtx = bgCanvas.getContext("2d");
+
+    function resizeBgCanvas() {
+      bgCanvas.width = window.innerWidth;
+      bgCanvas.height = window.innerHeight;
+    }
+    resizeBgCanvas();
+    window.addEventListener("resize", resizeBgCanvas);
+
+    const particles = [];
+    const numParticles = 40;
+
+    for (let i = 0; i < numParticles; i++) {
+      particles.push({
+        x: Math.random() * bgCanvas.width,
+        y: Math.random() * bgCanvas.height,
+        radius: Math.random() * 2.5 + 1,
+        speedX: (Math.random() - 0.5) * 0.5,
+        speedY: (Math.random() - 0.5) * 0.5,
+        alpha: Math.random() * 0.5 + 0.2
+      });
+    }
+
+    function animateParticles() {
+      bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+      particles.forEach(p => {
+        p.x += p.speedX;
+        p.y += p.speedY;
+
+        if (p.x < 0) p.x = bgCanvas.width;
+        if (p.x > bgCanvas.width) p.x = 0;
+        if (p.y < 0) p.y = bgCanvas.height;
+        if (p.y > bgCanvas.height) p.y = 0;
+
+        bgCtx.beginPath();
+        bgCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        bgCtx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+        bgCtx.fill();
+      });
+
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    /* 2. CÍRCULO CROMÁTICO Y PROBADOR */
     const canvas = document.getElementById("colorWheelCanvas");
     const ctx = canvas.getContext("2d");
 
     const wheelCenterX = canvas.width / 2;
-    const wheelCenterY = 130;
-    const wheelRadius = 120;
+    const wheelCenterY = 110;
+    const wheelRadius = 95;
 
-    const sliderX = 18;
-    const sliderY = 285;
-    const sliderWidth = canvas.width - 36;
-    const sliderHeight = 22;
+    const sliderX = 15;
+    const sliderY = 248;
+    const sliderWidth = canvas.width - 30;
+    const sliderHeight = 18;
     const sliderRadius = 6;
 
     let currentHue = 241;
@@ -289,11 +631,11 @@
         const y = wheelCenterY + dist * Math.sin(rad);
 
         ctx.beginPath();
-        ctx.arc(x, y, idx === 0 ? 7 : 5, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.arc(x, y, idx === 0 ? 6.5 : 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
         ctx.fill();
         ctx.strokeStyle = "#FFFFFF";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.8;
         ctx.stroke();
       });
     }
@@ -315,7 +657,7 @@
 
       ctx.beginPath();
       ctx.roundRect(sliderX, sliderY, sliderWidth, sliderHeight, sliderRadius);
-      ctx.strokeStyle = "#E5E7EB";
+      ctx.strokeStyle = "#CBD5E1";
       ctx.lineWidth = 1.2;
       ctx.stroke();
 
@@ -323,11 +665,11 @@
       const thumbY = sliderY + (sliderHeight / 2);
 
       ctx.beginPath();
-      ctx.arc(thumbX, thumbY, 7, 0, Math.PI * 2);
+      ctx.arc(thumbX, thumbY, 6.5, 0, Math.PI * 2);
       ctx.fillStyle = "#FFFFFF";
       ctx.fill();
-      ctx.strokeStyle = "#111111";
-      ctx.lineWidth = 1.8;
+      ctx.strokeStyle = "#0F172A";
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
 
@@ -377,7 +719,7 @@
         const isLight = colors[i].l > 0.65;
         card.style.color = isLight ? "#111111" : "#FFFFFF";
 
-        card.innerHTML = `<span class="cw-card-hex">${colorHex.replace("#", "")}</span>`;
+        card.innerHTML = `<span>${colorHex.replace("#", "")}</span>`;
         cardsContainer.appendChild(card);
       });
 

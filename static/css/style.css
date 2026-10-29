@@ -1,4 +1,6 @@
-/* Reset básico */
+/* ==========================================
+   1. RESET Y CONFIGURACIÓN BASE
+   ========================================== */
 * {
   margin: 0;
   padding: 0;
@@ -7,25 +9,29 @@
 }
 
 body {
-  background-color: #f9fafb;
-  color: #000000;
+  background-color: #223243 !important;
+  color: #ffffff;
   overflow-x: hidden;
 }
 
-/* BARRA DE NAVEGACIÓN SUPERIOR (NAVBAR) */
+/* ==========================================
+   2. BARRA DE NAVEGACIÓN (NAVBAR)
+   ========================================== */
 .navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 70px;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 70px !important;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 40px;
-  z-index: 100;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e5e5;
+  z-index: 1000 !important;
+  background-color: #223243 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  overflow: visible !important; /* Permite que los menús flotantes se muestren */
 }
 
 .nav-brand {
@@ -34,22 +40,25 @@ body {
   font-weight: 800;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: #000;
+  color: #ffffff !important;
   text-decoration: none;
   white-space: nowrap;
 }
 
-.nav-center, .nav-right {
+.nav-center,
+.nav-right {
   display: flex;
   align-items: center;
   gap: 30px;
   list-style: none;
+  overflow: visible !important;
 }
 
-/* ESTILOS DE ENLACES BASE */
-.nav-center a, .nav-right a {
+/* Enlaces base de la barra */
+.nav-center a,
+.nav-right a {
   text-decoration: none;
-  color: #000;
+  color: #ffffff !important;
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -60,36 +69,210 @@ body {
   transition: all 0.2s ease;
 }
 
-/* HOVER EN BARRA SUPERIOR */
-.nav-center a:hover, .nav-right a:not(.btn-test):hover {
-  background-color: #f0f0f0;
-  color: #000;
+.nav-center a:hover,
+.nav-right a:not(.btn-test):hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff !important;
 }
 
+/* Botón destacado "Test Colorimetría" */
 .btn-test {
-  border: 1px solid #000;
+  border: 1px solid #ffffff !important;
+  color: #ffffff !important;
   padding: 8px 16px;
   font-weight: 600;
   transition: background 0.2s, color 0.2s;
 }
 
 .btn-test:hover {
-  background: #000 !important;
-  color: #fff !important;
+  background: #ffffff !important;
+  color: #223243 !important;
 }
 
-/* BOTÓN HAMBURGUESA */
+/* ==========================================
+   3. MEGA MENÚ DESPLEGABLE (DESKTOP)
+   ========================================== */
+.nav-item.dropdown {
+  position: relative;
+  overflow: visible !important;
+}
+
+.dropdown-toggle .arrow {
+  font-size: 10px;
+  margin-left: 4px;
+  transition: transform 0.2s ease;
+}
+
+.mega-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  width: 680px;
+  background: #ffffff !important;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+  padding: 24px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.25s ease-in-out;
+  z-index: 99999 !important; /* Capa máxima para no ser tapado */
+}
+
+/* Mostrar menú al pasar el cursor */
+li.nav-item.dropdown:hover > .mega-menu,
+.nav-item.dropdown:hover .mega-menu {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: translateX(-50%) translateY(0) !important;
+}
+
+.nav-item.dropdown:hover .arrow {
+  transform: rotate(180deg);
+}
+
+.mega-menu-content {
+  display: flex;
+  gap: 24px;
+}
+
+.menu-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.menu-column h4 {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #888888 !important;
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+.menu-column a {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px !important;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.2s ease;
+  color: #333333 !important;
+}
+
+.menu-column a:hover {
+  background: #f5f5f5 !important;
+  color: #e74c3c !important;
+}
+
+.menu-column strong {
+  display: block;
+  font-size: 13px;
+  color: #000000 !important;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.menu-column p {
+  font-size: 11px;
+  color: #666666 !important;
+  margin: 0;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+
+/* Indicadores de color en el menú */
+.palette-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.palette-dot.spring { background: linear-gradient(135deg, #fbd38d, #f6ad55); }
+.palette-dot.autumn { background: linear-gradient(135deg, #dd6b20, #9b2c2c); }
+.palette-dot.summer { background: linear-gradient(135deg, #90cdf4, #fbb6ce); }
+.palette-dot.winter { background: linear-gradient(135deg, #3182ce, #805ad5); }
+
+/* Caja destacada */
+.featured-box {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px dashed #e5e5e5;
+  justify-content: space-between;
+}
+
+.btn-mega {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #000000 !important;
+  padding: 0 !important;
+  margin-top: 8px;
+}
+
+.btn-mega:hover {
+  background: transparent !important;
+  text-decoration: underline;
+}
+
+/* ==========================================
+   4. REDES SOCIALES
+   ========================================== */
+.social-links-grid {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+  width: 100%;
+}
+
+.social-btn {
+  flex: 1;
+  text-align: center;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.social-btn.instagram {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  color: #ffffff !important;
+}
+
+.social-btn.tiktok {
+  background: #000000;
+  color: #ffffff !important;
+}
+
+.social-btn:hover {
+  opacity: 0.88;
+}
+
+/* ==========================================
+   5. BOTÓN MÓVIL Y MENÚ HAMBURGUESA
+   ========================================== */
 .menu-toggle {
   display: none;
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 26px;
   cursor: pointer;
-  color: #000;
+  color: #ffffff !important;
   padding: 5px;
+  outline: none;
 }
 
-/* MENÚ DESPLEGABLE MÓVIL */
 .mobile-dropdown {
   display: none;
   position: fixed;
@@ -99,7 +282,7 @@ body {
   background: #ffffff;
   border-bottom: 1px solid #e5e5e5;
   padding: 20px 0;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
   z-index: 99;
 }
 
@@ -125,7 +308,7 @@ body {
   width: 100%;
   padding: 14px 0;
   text-decoration: none;
-  color: #555555;
+  color: #333333 !important;
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -136,11 +319,10 @@ body {
 .mobile-dropdown a:hover,
 .mobile-dropdown a:active {
   background-color: #f2f2f2;
-  color: #000000;
+  color: #e74c3c !important;
   font-weight: 700;
 }
 
-/* CAPA DIFUMINADA DE FONDO (OVERLAY) */
 .menu-overlay {
   position: fixed;
   top: 70px;
@@ -161,253 +343,20 @@ body {
   pointer-events: auto;
 }
 
-/* CONTENEDOR DE TARJETAS (HERO CONTAINER ADAPTADO) */
-.hero-container {
-  width: 100%;
-  max-width: 1200px;
-  min-height: calc(100vh - 70px);
-  margin: 0 auto;
-  padding: 120px 20px 60px 20px;
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-  gap: 24px;
-}
-
-/* ESTILOS DE LAS TARJETAS */
-.card-column {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 40px 24px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  border: 1px solid #e5e5e5;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  position: relative;
-}
-
-.card-column:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-}
-
-.card-column.featured {
-  border: 2px solid #000000;
-}
-
-.badge {
-  position: absolute;
-  top: -12px;
-  background: #000000;
-  color: #ffffff;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 10px;
-  letter-spacing: 1px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.card-icon {
-  font-size: 40px;
-  margin-bottom: 16px;
-}
-
-.card-column h3 {
-  font-size: 20px;
-  color: #000000;
-  margin-bottom: 12px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-.card-column p {
-  color: #666666;
-  font-size: 14px;
-  line-height: 1.6;
-  margin-bottom: 28px;
-  flex-grow: 1;
-}
-
-.btn-card {
-  display: inline-block;
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-size: 11px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  width: 100%;
-}
-
-.btn-card.primary,
-.btn-card.accent {
-  background-color: #000000;
-  color: #ffffff;
-}
-
-.btn-card.outline {
-  background-color: transparent;
-  color: #000000;
-  border: 1px solid #000000;
-}
-
-.btn-card:hover {
-  opacity: 0.85;
-}
-
-/* RESPONSIVE DESIGN */
+/* ==========================================
+   6. RESPONSIVE DESIGN (<= 900px)
+   ========================================== */
 @media (max-width: 900px) {
   .navbar {
     padding: 0 20px;
   }
 
-  .nav-center, .nav-right {
-    display: none;
+  .nav-center,
+  .nav-right {
+    display: none !important;
   }
 
   .menu-toggle {
-    display: block;
+    display: block !important;
   }
-
-  .hero-container {
-    flex-direction: column;
-    padding-top: 90px;
-  }
-
-  .card-column {
-    width: 100%;
-  }
-
-.nav-item.dropdown {
-  position: relative;
-}
-
-.dropdown-toggle .arrow {
-  font-size: 10px;
-  margin-left: 4px;
-  transition: transform 0.2s ease;
-}
-
-/* Mostrar menú al pasar el cursor */
-.nav-item.dropdown:hover .mega-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.nav-item.dropdown:hover .arrow {
-  transform: rotate(180deg);
-}
-
-/* Estructura del Mega Menu */
-.mega-menu {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%) translateY(10px);
-  width: 680px;
-  background: #ffffff;
-  border: 1px solid #e5e5e5;
-  border-radius: 12px;
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1);
-  padding: 24px;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.25s ease-in-out;
-  z-index: 200;
-}
-
-.mega-menu-content {
-  display: flex;
-  gap: 24px;
-}
-
-.menu-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.menu-column h4 {
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: #888888;
-  margin-bottom: 4px;
-  font-weight: 700;
-}
-
-.menu-column a {
-  display: flex !important;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 10px !important;
-  border-radius: 8px;
-  text-decoration: none;
-  transition: background 0.2s ease;
-}
-
-.menu-column a:hover {
-  background: #f5f5f5 !important;
-}
-
-.menu-column strong {
-  display: block;
-  font-size: 13px;
-  color: #000000;
-  text-transform: none;
-  letter-spacing: 0;
-}
-
-.menu-column p {
-  font-size: 11px;
-  color: #666666;
-  margin: 0;
-  text-transform: none;
-  letter-spacing: 0;
-  line-height: 1.3;
-}
-
-/* Indicadores de color por estación */
-.palette-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.palette-dot.spring { background: linear-gradient(135deg, #fbd38d, #f6ad55); }
-.palette-dot.autumn { background: linear-gradient(135deg, #dd6b20, #9b2c2c); }
-.palette-dot.summer { background: linear-gradient(135deg, #90cdf4, #fbb6ce); }
-.palette-dot.winter { background: linear-gradient(135deg, #3182ce, #805ad5); }
-
-/* Caja Destacada dentro del menú */
-.featured-box {
-  background: #f9fafb;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px dashed #e5e5e5;
-  justify-content: space-between;
-}
-
-.btn-mega {
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  color: #000000 !important;
-  padding: 0 !important;
-  margin-top: 8px;
-}
-
-.btn-mega:hover {
-  background: transparent !important;
-  text-decoration: underline;
-}
 }

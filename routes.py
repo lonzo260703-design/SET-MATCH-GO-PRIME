@@ -1,15 +1,17 @@
+import os
 import re
+from datetime import datetime
 from urllib.parse import urljoin, urlparse
 
-from flask import flash, jsonify, redirect, render_template, request, session, url_for
+from flask import current_app, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
+from werkzeug.utils import secure_filename
 
 from colorimetria import PERFILES, RespuestasInvalidas, clasificar
-from extensions import db
-from extensions import csrf  # O la forma en que instancies csrf_protect en tu app
-from models import TestResult, User
+from extensions import csrf, db
+from models import Guardarropa, TestResult, User
 from services.email_service import (
     enviar_correo_confirmacion,
     enviar_correo_recuperacion,
@@ -19,6 +21,12 @@ from services.gemini_service import generar_recomendacion_colorimetria, responde
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 LIMITE_PREGUNTAS_INVITADO = 3
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+
+
+def allowed_file(filename):
+    """Verifica que el archivo tenga una extensión permitida para el guardarropa."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def _url_segura(destino):
@@ -144,25 +152,37 @@ def register_routes(app):
 
         return render_template("auth.html", modo="login", next_url=next_url)
 
-    @app.route("/olvide-password", methods=["GET", "POST"])
-    def olvide_password():
-        if request.method == "POST":
-            email = request.form.get("email", "").strip().lower()
-            usuario = db.session.scalar(select(User).filter_by(email=email))
-            if usuario:
-                try:
-                    enviar_correo_recuperacion(usuario.email, usuario.nombre)
-                except Exception:
-                    flash("Ocurrió un error al intentar enviar el correo de recuperación.", "error")
-                    return redirect(url_for("olvide_password"))
+    # ---------- RECUPERACIÓN DE CONTRASEÑA ----------
+    @app.route("/forgot-password", methods=["GET", "POST"])
+    def forgot_password():
+        if current_user.is_authenticated:
+            return redirect(url_for("index"))
 
+        if request.method == "POST":
+            identity = request.form.get("identity", "").strip()
+
+            if identity:
+                # Busca por correo electrónico o por nombre de usuario
+                usuario = db.session.scalar(
+                    select(User).filter(
+                        or_(User.email == identity.lower(), User.nombre == identity)
+                    )
+                )
+
+                if usuario:
+                    try:
+                        enviar_correo_recuperacion(usuario.email, usuario.nombre)
+                    except Exception as e:
+                        current_app.logger.error(f"Error al enviar correo de recuperación: {e}")
+
+            # Respuesta uniforme por seguridad para evitar enumeración de usuarios
             flash(
-                "Si el correo está registrado, recibirás un enlace de recuperación en tu bandeja de entrada.",
+                "Si la cuenta existe en nuestro sistema, recibirás un enlace de recuperación en tu correo electrónico.",
                 "info",
             )
             return redirect(url_for("login"))
 
-        return render_template("olvide_password.html")
+        return render_template("forgot_password.html")
 
     @app.route("/reset-password/<token>", methods=["GET", "POST"])
     def resetear_password(token):
@@ -225,14 +245,9 @@ def register_routes(app):
     def test():
         if request.method == "POST":
             try:
-                # 1. Procesar respuestas reales del formulario p1..p7 con colorimetria.py
                 resultado = clasificar(request.form)
-                
-                # 2. Guardar el diagnóstico inmediatamente en la sesión
                 session["ultimo_resultado"] = resultado
                 session.modified = True
-                
-                # 3. Mostrar la pantalla con la animación del orbe
                 return render_template("procesando.html")
             except RespuestasInvalidas as e:
                 flash(str(e), "error")
@@ -247,7 +262,6 @@ def register_routes(app):
             flash("Primero realiza el test de colorimetría.", "info")
             return redirect(url_for("test"))
 
-        # Si aún no hemos generado la recomendación personalizada con Gemini IA, la creamos aquí
         if "recomendacion_ia" not in datos:
             try:
                 recomendacion_ia = generar_recomendacion_colorimetria(
@@ -263,11 +277,9 @@ def register_routes(app):
                     "Te recomendamos favorecer las prendas que potencien el contraste y la temperatura natural de tu rostro."
                 )
 
-            # Persistir los datos completos en la sesión
             session["ultimo_resultado"] = datos
             session.modified = True
 
-            # Si el usuario inició sesión, guardar en el historial de la base de datos
             if current_user.is_authenticated:
                 try:
                     db.session.add(
@@ -279,7 +291,7 @@ def register_routes(app):
                         )
                     )
                     db.session.commit()
-                except Exception as e:
+                except Exception:
                     db.session.rollback()
 
         return render_template(
@@ -292,13 +304,12 @@ def register_routes(app):
         )
 
     @app.route("/api/generar-diagnostico", methods=["POST"])
-    @csrf.exempt  # Desactiva la verificación CSRF para esta petición asíncrona
+    @csrf.exempt
     def generar_diagnostico_api():
         datos_pendientes = session.get("pendiente_ia")
         if not datos_pendientes:
             return jsonify({"success": False, "error": "No hay test pendiente"}), 400
 
-        # Llamar a Gemini IA en segundo plano mientras corre el orbe
         try:
             recomendacion = generar_recomendacion_colorimetria(
                 datos_pendientes.get("estacion", "Verano"),
@@ -313,12 +324,10 @@ def register_routes(app):
                 "rosa cuarzo y lavanda. Combínalos con acentos neutros en gris marengo o blanco roto."
             )
 
-        # Mover los datos a la sesión final
         session["ultimo_resultado"] = datos_pendientes
         session.pop("pendiente_ia", None)
         session.modified = True
 
-        # Guardar en base de datos si el usuario inició sesión
         if current_user.is_authenticated:
             try:
                 db.session.add(
@@ -330,14 +339,14 @@ def register_routes(app):
                     )
                 )
                 db.session.commit()
-            except Exception as e:
+            except Exception:
                 db.session.rollback()
 
         return jsonify({"success": True})
 
     # ---------- API CHAT FLOTANTE DE IA ----------
     @app.route("/api/chat-ia", methods=["POST"])
-    @csrf.exempt  # <--- EVITA EL REDIRECCIONAMIENTO 302
+    @csrf.exempt
     def chat_ia():
         data = request.get_json() or {}
         pregunta = data.get("pregunta", "").strip()
@@ -367,7 +376,7 @@ def register_routes(app):
             "preguntas_restantes": preguntas_restantes,
             "limite_alcanzado": False
         })
-    
+
     # ---------- HISTORIAL ----------
     @app.route("/historial")
     @login_required
@@ -386,3 +395,53 @@ def register_routes(app):
             db.session.commit()
             flash("Registro eliminado del historial.", "success")
         return redirect(url_for("historial"))
+
+    # ---------- GUARDARROPA ----------
+    @app.route('/guardarropa')
+    @login_required
+    def guardarropa():
+        prendas = Guardarropa.query.filter_by(usuario_id=current_user.id).order_by(Guardarropa.fecha_creacion.desc()).all()
+        return render_template('guardarropa.html', prendas=prendas)
+
+    @app.route('/guardarropa/subir', methods=['POST'])
+    @login_required
+    def subir_prenda():
+        if 'foto' not in request.files:
+            flash('No se seleccionó ningún archivo.', 'error')
+            return redirect(url_for('guardarropa'))
+
+        file = request.files['foto']
+        nombre = request.form.get('nombre', '').strip()
+        categoria = request.form.get('categoria', 'Superior')
+
+        if not file or file.filename == '':
+            flash('Debes seleccionar una imagen.', 'error')
+            return redirect(url_for('guardarropa'))
+
+        if not nombre:
+            flash('Debes ingresar un nombre para la prenda.', 'error')
+            return redirect(url_for('guardarropa'))
+
+        if file and allowed_file(file.filename):
+            filename = secure_filename(f"{current_user.id}_{int(datetime.utcnow().timestamp())}_{file.filename}")
+
+            upload_dir = current_app.config['UPLOAD_FOLDER']
+            os.makedirs(upload_dir, exist_ok=True)
+
+            file_path = os.path.join(upload_dir, filename)
+            file.save(file_path)
+
+            nueva_prenda = Guardarropa(
+                usuario_id=current_user.id,
+                nombre=nombre,
+                categoria=categoria,
+                imagen=filename
+            )
+            db.session.add(nueva_prenda)
+            db.session.commit()
+
+            flash('¡Prenda guardada en tu guardarropa!', 'success')
+        else:
+            flash('Formato no permitido. Usa imágenes PNG, JPG, JPEG o WEBP.', 'error')
+
+        return redirect(url_for('guardarropa'))

@@ -1,5 +1,4 @@
 import os
-
 import click
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_wtf.csrf import CSRFError
@@ -13,13 +12,18 @@ def create_app(config_name=None):
     app = Flask(__name__)
     app.config.from_object(config_by_name[config_name])
 
+    # Configuración de carpeta para imágenes del guardarropa
+    app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'uploads', 'guardarropa')
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Límite máximo de 16MB por archivo
+
     if config_name == "production" and app.config.get("SECRET_KEY") == DEFAULT_SECRET:
         raise RuntimeError("Define la variable de entorno SECRET_KEY en producción.")
 
+    # Inicialización de extensiones
     db.init_app(app)
     csrf.init_app(app)
     login_manager.init_app(app)
-    mail.init_app(app)  # <--- Vinculación de Flask-Mail
+    mail.init_app(app)
     
     login_manager.login_view = "login"
     login_manager.login_message = "Inicia sesión para acceder a esa página."
@@ -37,11 +41,10 @@ def create_app(config_name=None):
     @app.errorhandler(CSRFError)
     def csrf_error(e):
         flash("Tu sesión del formulario expiró o el token no es válido. Inténtalo de nuevo.", "error")
-        # Redirige a la página desde donde venía el usuario, o al inicio si no se detecta referrer
         return redirect(request.referrer or url_for("index"))
 
+    # Registro de rutas de la aplicación
     from routes import register_routes
-
     register_routes(app)
 
     @app.cli.command("init-db")

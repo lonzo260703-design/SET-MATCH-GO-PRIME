@@ -8,44 +8,101 @@
     scroll-behavior: smooth;
   }
 
+  body {
+    background-color: #111827 !important;
+  }
+
+  /* SLIDER DE FONDO DE IMÁGENES DE ESTACIONES (FIJO ATRÁS) */
+  .collections-bg-slider {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 100vw;
+    height: calc(100vh - 70px);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .bg-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+  }
+
+  .bg-slide.active {
+    opacity: 1;
+  }
+
+  .bg-spring {
+    background-image: linear-gradient(rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.88)),
+                      url('https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1600&q=80');
+  }
+  .bg-summer {
+    background-image: linear-gradient(rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.88)),
+                      url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80');
+  }
+  .bg-autumn {
+    background-image: linear-gradient(rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.88)),
+                      url('https://images.unsplash.com/photo-1507187632231-5beb21a654a2?auto=format&fit=crop&w=1600&q=80');
+  }
+  .bg-winter {
+    background-image: linear-gradient(rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.88)),
+                      url('https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=80');
+  }
+
+  /* HERO HEADER ESTILO CYBER */
   .collections-hero {
-    background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+    position: relative;
+    z-index: 5;
+    background: rgba(34, 50, 67, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     color: #ffffff;
-    padding: 50px 20px;
+    padding: 40px 20px 30px 20px;
     text-align: center;
-    border-radius: 0 0 20px 20px;
+    margin-top: 70px;
     margin-bottom: 30px;
   }
 
   .collections-hero h1 {
     margin: 0 0 10px 0;
     font-size: 2.2rem;
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: 0.5px;
   }
 
   .collections-hero p {
     margin: 0;
-    font-size: 1.05rem;
-    color: #ecf0f1;
-    opacity: 0.9;
+    font-size: 1rem;
+    color: #cbd5e1;
   }
 
+  /* CONTENEDOR DE CADA TEMPORADA (GLASSMORPHISM EN COLOR #223243) */
   .season-container {
-    background: #ffffff;
-    border-radius: 16px;
+    position: relative;
+    z-index: 5;
+    background: rgba(34, 50, 67, 0.88);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
     padding: 30px;
     margin-bottom: 45px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-    border: 1px solid #eef2f5;
-    scroll-margin-top: 80px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    scroll-margin-top: 90px;
   }
 
   .season-header-title {
     font-size: 1.5rem;
-    font-weight: 700;
-    color: #2c3e50;
-    border-bottom: 3px solid #e74c3c;
-    padding-bottom: 10px;
+    font-weight: 800;
+    color: #ffffff;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+    padding-bottom: 12px;
     margin-bottom: 25px;
     display: flex;
     align-items: center;
@@ -64,11 +121,12 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background-color: #2c3e50;
+    background-color: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: #ffffff;
     font-size: 0.85rem;
     font-weight: 700;
-    padding: 8px 16px;
+    padding: 8px 18px;
     border-radius: 20px;
     margin-bottom: 20px;
     text-transform: uppercase;
@@ -76,9 +134,11 @@
   }
 
   .gender-badge.damas {
-    background-color: #c0392b;
+    background-color: rgba(231, 76, 60, 0.85);
+    border: 1px solid #e74c3c;
   }
 
+  /* GRILLA Y TARJETAS DE PRODUCTO DE TAMAÑO HOMOGÉNEO */
   .clothes-grid-page {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -86,26 +146,32 @@
   }
 
   .clothing-card-page {
-    background: #ffffff;
-    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.65);
+    border-radius: 14px;
     overflow: hidden;
-    border: 1px solid #eaeaea;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
     display: flex;
     flex-direction: column;
   }
 
   .clothing-card-page:hover {
     transform: translateY(-6px);
-    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+    border-color: rgba(255, 255, 255, 0.3);
   }
 
   .clothing-img-page {
     width: 100%;
     height: 220px;
     object-fit: cover;
-    background-color: #f1f5f9;
+    background-color: #1e293b;
+    transition: transform 0.3s ease;
+  }
+
+  .clothing-card-page:hover .clothing-img-page {
+    transform: scale(1.04);
   }
 
   .clothing-info-page {
@@ -114,34 +180,38 @@
     flex-direction: column;
     gap: 5px;
     flex-grow: 1;
+    background: rgba(34, 50, 67, 0.4);
   }
 
   .clothing-name-page {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #1a1a1a;
+    color: #ffffff;
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .clothing-details-page {
     font-size: 0.82rem;
-    color: #666666;
+    color: #cbd5e1;
     margin: 0;
   }
 
   .clothing-tag-page {
     display: inline-block;
     font-size: 0.72rem;
-    font-weight: 600;
-    color: #e74c3c;
-    background: #fdf0ed;
+    font-weight: 700;
+    color: #ffffff;
+    background: rgba(231, 76, 60, 0.85);
     padding: 3px 8px;
     border-radius: 4px;
     align-self: flex-start;
     margin-top: 6px;
   }
 
-  /* INDICADOR / PUNTOS DE NAVEGACIÓN LATERAL (SCROLLSPY) */
+  /* PUNTOS DE NAVEGACIÓN LATERAL (SCROLLSPY) */
   .side-dots-nav {
     position: fixed;
     right: 20px;
@@ -150,12 +220,13 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    z-index: 1500;
-    background: rgba(255, 255, 255, 0.85);
+    z-index: 1000;
+    background: rgba(34, 50, 67, 0.85);
     padding: 14px 10px;
     border-radius: 30px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
   }
 
   .dot-item {
@@ -169,9 +240,9 @@
   .dot {
     width: 14px;
     height: 14px;
-    border: 2px solid #7f8c8d;
+    border: 2px solid rgba(255, 255, 255, 0.4);
     border-radius: 50%;
-    background-color: #ffffff;
+    background-color: transparent;
     transition: all 0.3s ease;
     cursor: pointer;
   }
@@ -179,18 +250,18 @@
   .dot-label {
     position: absolute;
     right: 28px;
-    background: #2c3e50;
-    color: #ffffff;
+    background: #ffffff;
+    color: #223243;
     padding: 4px 10px;
     border-radius: 6px;
     font-size: 0.78rem;
-    font-weight: 600;
+    font-weight: 800;
     white-space: nowrap;
     opacity: 0;
     visibility: hidden;
     transition: all 0.25s ease;
     pointer-events: none;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
 
   .dot-item:hover .dot-label {
@@ -200,14 +271,14 @@
   }
 
   .dot-item:hover .dot {
-    border-color: #e74c3c;
+    border-color: #ffffff;
     transform: scale(1.2);
   }
 
   .dot-item.active .dot {
-    background-color: #e74c3c;
-    border-color: #e74c3c;
-    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.25);
+    background-color: #ffffff;
+    border-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25);
     transform: scale(1.25);
   }
 
@@ -242,6 +313,14 @@
 {% endblock %}
 
 {% block content %}
+<!-- SLIDER DE FONDO DE IMÁGENES ESTACIONALES -->
+<div class="collections-bg-slider" id="collectionsBgSlider">
+  <div class="bg-slide bg-spring active"></div>
+  <div class="bg-slide bg-summer"></div>
+  <div class="bg-slide bg-autumn"></div>
+  <div class="bg-slide bg-winter"></div>
+</div>
+
 <!-- INDICADOR Y NAVEGACIÓN FLOTANTE POR PUNTOS -->
 <div class="side-dots-nav" id="sideDotsNav">
   <a href="#primavera" class="dot-item" data-section="primavera">
@@ -988,16 +1067,24 @@
 </div>
 
 <script>
-  /* LÓGICA DE DETECCIÓN Y ACTIVACIÓN DE PUNTOS LATERALES (SCROLLSPY) */
+  /* LÓGICA DE DETECCIÓN, SCROLLSPY Y CAMBIO DE FONDO SEGÚN SCROLL */
   document.addEventListener('DOMContentLoaded', () => {
     const sections = document.querySelectorAll('.season-container');
     const dotItems = document.querySelectorAll('.dot-item');
+    const bgSlides = document.querySelectorAll('.bg-slide');
 
-    function changeActiveDot() {
-      let currentSectionId = '';
+    const seasonBgMap = {
+      'primavera': 0,
+      'verano': 1,
+      'otono': 2,
+      'invierno': 3
+    };
+
+    function changeActiveSection() {
+      let currentSectionId = 'primavera';
 
       sections.forEach(section => {
-        const sectionTop = section.offsetTop - 120;
+        const sectionTop = section.offsetTop - 140;
         const sectionHeight = section.offsetHeight;
 
         if (window.scrollY >= sectionTop && window.scrollY < sectionTop + sectionHeight) {
@@ -1005,16 +1092,24 @@
         }
       });
 
+      // Actualizar Puntos de Navegación Lateral
       dotItems.forEach(item => {
         item.classList.remove('active');
         if (item.getAttribute('data-section') === currentSectionId) {
           item.classList.add('active');
         }
       });
+
+      // Actualizar Fondo de Imagen Dinámico
+      const slideIndex = seasonBgMap[currentSectionId];
+      if (slideIndex !== undefined && bgSlides[slideIndex]) {
+        bgSlides.forEach(slide => slide.classList.remove('active'));
+        bgSlides[slideIndex].classList.add('active');
+      }
     }
 
-    window.addEventListener('scroll', changeActiveDot);
-    changeActiveDot();
+    window.addEventListener('scroll', changeActiveSection);
+    changeActiveSection();
   });
 </script>
 {% endblock %}
