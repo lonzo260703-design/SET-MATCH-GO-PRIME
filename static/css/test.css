@@ -23,12 +23,13 @@
 
 .test-header p {
   font-size: 13px;
-  color: #666;
+  color: #cbd5e1; /* el fondo de la página es oscuro */
   letter-spacing: 1px;
 }
 
 .question-card {
   background: #fafafa;
+  color: #1e293b;
   border: 1px solid #e5e5e5;
   padding: 30px;
   margin-bottom: 25px;
@@ -55,6 +56,7 @@
   gap: 12px;
   padding: 14px;
   background: #ffffff;
+  color: #1e293b; /* el body es blanco: sin esto el texto queda invisible */
   border: 1px solid #e5e5e5;
   cursor: pointer;
   font-size: 12px;
@@ -65,6 +67,7 @@
 .option-label:hover {
   border-color: #000;
   background: #f0f0f0;
+  color: #000;
 }
 
 .option-label input[type="radio"] {

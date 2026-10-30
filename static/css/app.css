@@ -158,12 +158,12 @@
 .result-note {
   text-align: center;
   font-size: 12px;
-  color: #666;
+  color: #cbd5e1; /* se muestra sobre el fondo oscuro de la página */
   letter-spacing: 1px;
   margin: 10px 0 20px;
 }
 
-.result-note a { color: #000; font-weight: 600; }
+.result-note a { color: #ffffff; font-weight: 600; text-decoration: underline; }
 
 .history-item {
   display: flex;
@@ -171,13 +171,14 @@
   align-items: center;
   gap: 20px;
   background: #fafafa;
+  color: #1e293b; /* tarjeta clara: fija el color del texto */
   border: 1px solid #e5e5e5;
   padding: 20px 24px;
   margin-bottom: 15px;
 }
 
 .history-title { font-size: 13px; font-weight: 700; letter-spacing: 1px; }
-.history-date  { font-size: 11px; color: #777; letter-spacing: 1px; margin-top: 4px; }
+.history-date  { font-size: 11px; color: #64748b; letter-spacing: 1px; margin-top: 4px; }
 
 .history-palette { display: flex; gap: 8px; }
 
