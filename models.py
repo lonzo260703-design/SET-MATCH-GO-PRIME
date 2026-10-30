@@ -71,3 +71,25 @@ class Guardarropa(db.Model):
 
     # Relación con el usuario
     usuario = db.relationship('User', backref=db.backref('prendas', lazy='dynamic', cascade='all, delete-orphan'))
+
+
+class Publicacion(db.Model):
+    """Outfit publicado en la comunidad, con la colorimetría de su autor al momento de publicar."""
+    __tablename__ = "publicaciones"
+
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    imagen_url = db.Column(db.String(500), nullable=False)
+    imagen_id = db.Column(db.String(255), nullable=False)  # id en Cloudinary (o ruta local en desarrollo)
+    descripcion = db.Column(db.String(500), nullable=True)
+    estacion = db.Column(db.String(80), nullable=False)
+    subtono = db.Column(db.String(10), nullable=False)
+    paleta = db.Column(JSON_TYPE, nullable=False, default=list)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+
+    usuario = db.relationship(
+        "User", backref=db.backref("publicaciones", lazy="dynamic", cascade="all, delete-orphan")
+    )
+

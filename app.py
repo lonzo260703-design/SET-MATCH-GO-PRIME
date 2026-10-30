@@ -14,6 +14,7 @@ def create_app(config_name=None):
 
     # Configuración de carpeta para imágenes del guardarropa
     app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'uploads', 'guardarropa')
+    app.config['COMUNIDAD_UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'uploads', 'comunidad')
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Límite máximo de 16MB por archivo
 
     if config_name == "production" and app.config.get("SECRET_KEY") == DEFAULT_SECRET:

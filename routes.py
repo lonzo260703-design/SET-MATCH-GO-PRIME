@@ -9,9 +9,9 @@ from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from colorimetria import PERFILES, RespuestasInvalidas, clasificar
+from colorimetria import PERFILES, RespuestasInvalidas, clasificar, paleta_de_estacion
 from extensions import db, limiter
-from models import Guardarropa, TestResult, User
+from models import Guardarropa, Publicacion, TestResult, User
 from services.email_service import (
     enviar_correo_confirmacion,
     enviar_correo_recuperacion,
@@ -20,27 +20,13 @@ from services.email_service import (
     verificar_token_reset,
 )
 from services.gemini_service import generar_recomendacion_colorimetria, responder_chat_estilista
+from services.imagen_service import eliminar_imagen, subir_imagen, tipo_imagen
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 LIMITE_PREGUNTAS_INVITADO = 3
 MAX_PREGUNTA = 500
+MAX_DESCRIPCION = 500
 CATEGORIAS = {'Superior', 'Inferior', 'Abrigo', 'Calzado', 'Accesorios'}
-FIRMAS_IMAGEN = (
-    (b"\x89PNG\r\n\x1a\n", "png"),
-    (b"\xff\xd8\xff", "jpg"),
-)
-
-
-def tipo_imagen(stream):
-    """Detecta PNG/JPEG/WEBP por su contenido (no por el nombre que declara el usuario)."""
-    cabecera = stream.read(12)
-    stream.seek(0)
-    for firma, ext in FIRMAS_IMAGEN:
-        if cabecera.startswith(firma):
-            return ext
-    if cabecera[:4] == b"RIFF" and cabecera[8:12] == b"WEBP":
-        return "webp"
-    return None
 
 
 def _url_segura(destino):
@@ -472,3 +458,84 @@ def register_routes(app):
             pass
         flash("Prenda eliminada.", "success")
         return redirect(url_for("guardarropa"))
+
+    # ---------- COMUNIDAD (RED SOCIAL DE ESTILO) ----------
+    @app.route("/comunidad")
+    def comunidad():
+        pagina = request.args.get("pagina", 1, type=int)
+        publicaciones = db.paginate(
+            select(Publicacion).order_by(Publicacion.created_at.desc(), Publicacion.id.desc()),
+            page=pagina,
+            per_page=9,
+            error_out=False,
+        )
+        ultimo_resultado = current_user.resultados.first() if current_user.is_authenticated else None
+        return render_template(
+            "comunidad.html", publicaciones=publicaciones, ultimo_resultado=ultimo_resultado
+        )
+
+    @app.route("/comunidad/publicar", methods=["POST"])
+    @login_required
+    @limiter.limit("10 per hour")
+    def publicar_outfit():
+        ultimo = current_user.resultados.first()
+        if not ultimo:
+            flash("Haz primero el test de colorimetría para poder publicar tu outfit.", "info")
+            return redirect(url_for("test"))
+
+        archivo = request.files.get("foto")
+        descripcion = request.form.get("descripcion", "").strip()[:MAX_DESCRIPCION]
+
+        if not archivo or archivo.filename == "":
+            flash("Selecciona la foto de tu outfit.", "error")
+            return redirect(url_for("comunidad"))
+
+        ext = tipo_imagen(archivo.stream)
+        if not ext:
+            flash("El archivo no es una imagen válida (PNG, JPG o WEBP).", "error")
+            return redirect(url_for("comunidad"))
+
+        try:
+            url, imagen_id = subir_imagen(archivo.stream, ext, "comunidad")
+        except Exception as e:
+            current_app.logger.error(f"Error al subir imagen de comunidad: {e}")
+            flash("No pudimos subir tu foto. Inténtalo de nuevo en un momento.", "error")
+            return redirect(url_for("comunidad"))
+
+        try:
+            db.session.add(
+                Publicacion(
+                    usuario_id=current_user.id,
+                    imagen_url=url,
+                    imagen_id=imagen_id,
+                    descripcion=descripcion or None,
+                    estacion=ultimo.estacion,
+                    subtono=ultimo.subtono,
+                    paleta=paleta_de_estacion(ultimo.estacion),
+                )
+            )
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            eliminar_imagen(imagen_id)
+            flash("No pudimos guardar tu publicación. Inténtalo de nuevo.", "error")
+            return redirect(url_for("comunidad"))
+
+        flash("¡Tu outfit ya está en la comunidad!", "success")
+        return redirect(url_for("comunidad"))
+
+    @app.route("/comunidad/eliminar/<int:id>", methods=["POST"])
+    @login_required
+    def eliminar_publicacion(id):
+        publicacion = db.session.scalar(select(Publicacion).filter_by(id=id, usuario_id=current_user.id))
+        if not publicacion:
+            flash("Publicación no encontrada.", "error")
+            return redirect(url_for("comunidad"))
+
+        imagen_id = publicacion.imagen_id
+        db.session.delete(publicacion)
+        db.session.commit()
+        eliminar_imagen(imagen_id)
+        flash("Publicación eliminada.", "success")
+        return redirect(url_for("comunidad"))
+
