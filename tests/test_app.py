@@ -282,3 +282,33 @@ def test_cabeceras_de_seguridad(client):
     r = client.get("/")
     assert r.headers["X-Content-Type-Options"] == "nosniff"
     assert r.headers["X-Frame-Options"] == "SAMEORIGIN"
+
+
+# ---------- confirmación de correo ----------
+def test_fallo_de_correo_avisa_y_permite_reenviar(client, app, monkeypatch):
+    import routes
+
+    def falla(*a, **k):
+        raise RuntimeError("SMTP caído")
+
+    monkeypatch.setattr(routes, "enviar_correo_confirmacion", falla)
+    r = client.post(
+        "/registro",
+        data={"nombre": "Ana", "email": "ana@example.com", "password": "secreta123", "confirmar": "secreta123"},
+        follow_redirects=True,
+    )
+    assert "Reenviar correo".encode() in r.data or b"Reenviar" in r.data
+    r = client.post("/login", data={"email": "ana@example.com", "password": "secreta123"})
+    assert r.status_code == 403 and "Reenviar correo de confirmación".encode() in r.data
+
+
+def test_reenviar_confirmacion_respuesta_uniforme(client, app, monkeypatch):
+    import routes
+
+    enviados = []
+    monkeypatch.setattr(routes, "enviar_correo_confirmacion", lambda e, n: enviados.append(e))
+    crear_usuario(app, "pendiente@example.com", confirmado=False)
+    crear_usuario(app, "listo@example.com")
+    for correo in ("pendiente@example.com", "listo@example.com", "noexiste@example.com"):
+        assert client.post("/reenviar-confirmacion", data={"email": correo}).status_code == 302
+    assert enviados == ["pendiente@example.com"]

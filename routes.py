@@ -139,17 +139,26 @@ def register_routes(app):
                     db.session.rollback()
                     errores.append("Ya existe una cuenta con ese correo.")
                 else:
-                    try:
-                        enviar_correo_confirmacion(usuario.email, usuario.nombre)
-                        flash(
-                            f"¡Cuenta creada con éxito, {usuario.nombre}! Revisa tu correo para activar tu cuenta antes de iniciar sesión.",
-                            "info",
-                        )
-                    except Exception:
-                        flash(
-                            "Tu cuenta fue creada, pero ocurrió un problema al enviar el correo de verificación.",
-                            "warning",
-                        )
+                    if current_app.debug and not current_app.config.get("MAIL_USERNAME"):
+                        # Desarrollo sin SMTP configurado: se confirma la cuenta para poder probar
+                        usuario.is_confirmed = True
+                        db.session.commit()
+                        current_app.logger.warning("MAIL_USERNAME no configurado: cuenta confirmada automáticamente (solo desarrollo).")
+                        flash(f"¡Cuenta creada, {usuario.nombre}! (modo desarrollo: ya puedes iniciar sesión)", "info")
+                    else:
+                        try:
+                            enviar_correo_confirmacion(usuario.email, usuario.nombre)
+                            flash(
+                                f"¡Cuenta creada con éxito, {usuario.nombre}! Revisa tu correo (y la carpeta de spam) para activar tu cuenta antes de iniciar sesión.",
+                                "info",
+                            )
+                        except Exception as e:
+                            current_app.logger.error(f"No se pudo enviar el correo de confirmación a {usuario.email}: {e}")
+                            flash(
+                                "Tu cuenta fue creada, pero no pudimos enviar el correo de verificación. "
+                                "Intenta iniciar sesión y usa «Reenviar correo de confirmación».",
+                                "warning",
+                            )
 
                     return redirect(url_for("login"))
 
@@ -196,13 +205,27 @@ def register_routes(app):
 
             if not usuario.is_confirmed:
                 flash("Por favor, confirma tu correo electrónico antes de iniciar sesión.", "warning")
-                return render_template("auth.html", modo="login", email=email, next_url=next_url), 403
+                return render_template("auth.html", modo="login", email=email, next_url=next_url, sin_confirmar=True), 403
 
             login_user(usuario)
             flash(f"Hola de nuevo, {usuario.nombre}.", "success")
             return redirect(next_url if _url_segura(next_url) else url_for("index"))
 
         return render_template("auth.html", modo="login", next_url=next_url)
+
+    @app.route("/reenviar-confirmacion", methods=["POST"])
+    @limiter.limit("5 per hour")
+    def reenviar_confirmacion():
+        email = request.form.get("email", "").strip().lower()
+        usuario = db.session.scalar(select(User).filter_by(email=email)) if email else None
+        if usuario and not usuario.is_confirmed:
+            try:
+                enviar_correo_confirmacion(usuario.email, usuario.nombre)
+            except Exception as e:
+                current_app.logger.error(f"No se pudo reenviar la confirmación a {usuario.email}: {e}")
+        # Respuesta uniforme para no revelar qué correos existen
+        flash("Si la cuenta existe y está pendiente, te enviamos un nuevo correo de confirmación.", "info")
+        return redirect(url_for("login"))
 
     # ---------- RECUPERACIÓN DE CONTRASEÑA ----------
     @app.route("/forgot-password", methods=["GET", "POST"])

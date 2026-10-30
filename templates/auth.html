@@ -404,6 +404,14 @@
 
           <button type="submit" class="btn-auth-submit">Ingresar</button>
         </form>
+
+        {% if sin_confirmar %}
+        <form action="{{ url_for('reenviar_confirmacion') }}" method="POST" style="margin-top: 14px; text-align: center;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+          <input type="hidden" name="email" value="{{ email if email else '' }}">
+          <button type="submit" class="btn-auth-submit" style="background: transparent; color: inherit; border: 1px solid currentColor;">Reenviar correo de confirmación</button>
+        </form>
+        {% endif %}
       </div>
 
       <!-- LADO DERECHO: CREAR CUENTA -->
@@ -575,4 +583,4 @@
     }, 5500);
   });
 </script>
-{% endblock %}
+{% endblock %}
