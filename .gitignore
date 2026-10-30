@@ -9,3 +9,8 @@ instance/
 .venv/
 venv/
 __pycache__/
+
+# Imágenes subidas por usuarios
+static/uploads/
+*.pyc
+.pytest_cache/

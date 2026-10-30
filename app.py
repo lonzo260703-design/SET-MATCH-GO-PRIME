@@ -4,7 +4,7 @@ from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_wtf.csrf import CSRFError
 
 from config import DEFAULT_SECRET, config_by_name
-from extensions import csrf, db, login_manager, mail
+from extensions import csrf, db, limiter, login_manager, mail
 
 
 def create_app(config_name=None):
@@ -24,6 +24,26 @@ def create_app(config_name=None):
     csrf.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
+    limiter.init_app(app)
+
+    if app.config.get("PROXY_FIX"):
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+    @app.after_request
+    def cabeceras_seguridad(resp):
+        resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+        resp.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+        resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        return resp
+
+    @app.errorhandler(429)
+    def demasiadas_solicitudes(e):
+        from flask import jsonify
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "Demasiadas solicitudes. Intenta más tarde."}), 429
+        flash("Demasiados intentos. Espera unos minutos e inténtalo de nuevo.", "error")
+        return redirect(request.referrer or url_for("index")), 303
     
     login_manager.login_view = "login"
     login_manager.login_message = "Inicia sesión para acceder a esa página."

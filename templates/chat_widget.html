@@ -68,7 +68,10 @@
     try {
       const res = await fetch('/api/chat-ia', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        },
         body: JSON.stringify({ pregunta: pregunta })
       });
 
@@ -92,6 +95,10 @@
       messagesBox.scrollTop = messagesBox.scrollHeight;
     } catch (e) {
       console.error(e);
+      const err = document.createElement('div');
+      err.style.cssText = "background: #fde8e8; color: #9b1c1c; padding: 10px 14px; border-radius: 10px; max-width: 85%; align-self: flex-start;";
+      err.textContent = 'No pude responder ahora. Inténtalo de nuevo.';
+      messagesBox.appendChild(err);
     }
   }
 </script>

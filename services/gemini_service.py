@@ -3,6 +3,14 @@ import time
 from google import genai
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+# Configurable: GEMINI_MODELS="modelo1,modelo2" (se prueban en orden)
+MODELOS = [
+    m.strip()
+    for m in os.environ.get(
+        "GEMINI_MODELS", "gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-3.8-flash"
+    ).split(",")
+    if m.strip()
+]
 
 
 def _obtener_cliente():
@@ -42,11 +50,7 @@ def _generar_respuesta_fallback(pregunta):
 
 def _generar_con_retry(client, prompt):
     # Modelos de texto con límites combinados (5 RPM y 15 RPM)
-    modelos = [
-        "gemini-3.5-flash-lite",
-        "gemini-3.1-flash-lite",
-        "gemini-3.8-flash"
-    ]
+    modelos = MODELOS
 
     for model in modelos:
         print(f"[Gemini Service]: Probando modelo '{model}'...")
@@ -95,14 +99,20 @@ Ofrece un diagnóstico breve (máximo 180 palabras) en formato Markdown con:
     )
 
 
-def responder_chat_estilista(pregunta):
+def responder_chat_estilista(pregunta, contexto=None):
     client = _obtener_cliente()
     if not client:
         return _generar_respuesta_fallback(pregunta)
 
+    contexto_txt = ""
+    if contexto:
+        contexto_txt = (
+            f"Contexto de la usuaria/o: su resultado de colorimetría es {contexto.get('estacion', '')} "
+            f"(subtono {contexto.get('subtono', '')}). Personaliza el consejo a esa paleta.\n"
+        )
     prompt = f"""
 Eres la Estilista Virtual oficial de SET-MATCH-GO!, experta en moda y teoría del color.
-Responde a la siguiente consulta de manera clara, amable y concisa (máximo 3 oraciones):
+{contexto_txt}Responde a la siguiente consulta de manera clara, amable y concisa (máximo 3 oraciones):
 
 "{pregunta}"
 """

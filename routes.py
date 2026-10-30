@@ -1,32 +1,46 @@
 import os
 import re
-from datetime import datetime
+import uuid
+from datetime import datetime, timezone
 from urllib.parse import urljoin, urlparse
 
 from flask import current_app, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from werkzeug.utils import secure_filename
 
 from colorimetria import PERFILES, RespuestasInvalidas, clasificar
-from extensions import csrf, db
+from extensions import db, limiter
 from models import Guardarropa, TestResult, User
 from services.email_service import (
     enviar_correo_confirmacion,
     enviar_correo_recuperacion,
+    huella_password,
     verificar_token,
+    verificar_token_reset,
 )
 from services.gemini_service import generar_recomendacion_colorimetria, responder_chat_estilista
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 LIMITE_PREGUNTAS_INVITADO = 3
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+MAX_PREGUNTA = 500
+CATEGORIAS = {'Superior', 'Inferior', 'Abrigo', 'Calzado', 'Accesorios'}
+FIRMAS_IMAGEN = (
+    (b"\x89PNG\r\n\x1a\n", "png"),
+    (b"\xff\xd8\xff", "jpg"),
+)
 
 
-def allowed_file(filename):
-    """Verifica que el archivo tenga una extensión permitida para el guardarropa."""
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def tipo_imagen(stream):
+    """Detecta PNG/JPEG/WEBP por su contenido (no por el nombre que declara el usuario)."""
+    cabecera = stream.read(12)
+    stream.seek(0)
+    for firma, ext in FIRMAS_IMAGEN:
+        if cabecera.startswith(firma):
+            return ext
+    if cabecera[:4] == b"RIFF" and cabecera[8:12] == b"WEBP":
+        return "webp"
+    return None
 
 
 def _url_segura(destino):
@@ -36,6 +50,42 @@ def _url_segura(destino):
     base = urlparse(request.host_url)
     objetivo = urlparse(urljoin(request.host_url, destino))
     return objetivo.scheme in ("http", "https") and base.netloc == objetivo.netloc
+
+
+def _completar_diagnostico(datos):
+    """Genera la recomendación de IA (con respaldo local), la guarda en sesión y, si hay
+    usuario autenticado, persiste el resultado. Idempotente: si ya existe, no repite."""
+    if "recomendacion_ia" in datos:
+        return datos
+
+    try:
+        datos["recomendacion_ia"] = generar_recomendacion_colorimetria(
+            datos.get("estacion", ""), datos.get("subtono", ""), datos.get("respuestas", {})
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error llamando a Gemini IA: {e}")
+        datos["recomendacion_ia"] = (
+            "Tu paleta ha sido procesada exitosamente. Te recomendamos favorecer las prendas "
+            "que potencien el contraste y la temperatura natural de tu rostro."
+        )
+
+    session["ultimo_resultado"] = datos
+    session.modified = True
+
+    if current_user.is_authenticated:
+        try:
+            db.session.add(
+                TestResult(
+                    user_id=current_user.id,
+                    respuestas=datos.get("respuestas", {}),
+                    subtono=datos.get("subtono", ""),
+                    estacion=datos.get("estacion", ""),
+                )
+            )
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+    return datos
 
 
 def register_routes(app):
@@ -56,6 +106,7 @@ def register_routes(app):
 
     # ---------- AUTENTICACIÓN Y RECUPERACIÓN ----------
     @app.route("/registro", methods=["GET", "POST"])
+    @limiter.limit("10 per hour", methods=["POST"])
     def register():
         if current_user.is_authenticated:
             return redirect(url_for("index"))
@@ -127,6 +178,7 @@ def register_routes(app):
         return redirect(url_for("index"))
 
     @app.route("/login", methods=["GET", "POST"])
+    @limiter.limit("10 per 15 minutes", methods=["POST"])
     def login():
         if current_user.is_authenticated:
             return redirect(url_for("index"))
@@ -154,6 +206,7 @@ def register_routes(app):
 
     # ---------- RECUPERACIÓN DE CONTRASEÑA ----------
     @app.route("/forgot-password", methods=["GET", "POST"])
+    @limiter.limit("5 per hour", methods=["POST"])
     def forgot_password():
         if current_user.is_authenticated:
             return redirect(url_for("index"))
@@ -162,16 +215,12 @@ def register_routes(app):
             identity = request.form.get("identity", "").strip()
 
             if identity:
-                # Busca por correo electrónico o por nombre de usuario
-                usuario = db.session.scalar(
-                    select(User).filter(
-                        or_(User.email == identity.lower(), User.nombre == identity)
-                    )
-                )
+                # Solo por correo: el nombre no es único y permitiría mandar correos a terceros
+                usuario = db.session.scalar(select(User).filter_by(email=identity.lower()))
 
                 if usuario:
                     try:
-                        enviar_correo_recuperacion(usuario.email, usuario.nombre)
+                        enviar_correo_recuperacion(usuario)
                     except Exception as e:
                         current_app.logger.error(f"Error al enviar correo de recuperación: {e}")
 
@@ -185,10 +234,12 @@ def register_routes(app):
         return render_template("forgot_password.html")
 
     @app.route("/reset-password/<token>", methods=["GET", "POST"])
+    @limiter.limit("10 per hour", methods=["POST"])
     def resetear_password(token):
-        email = verificar_token(token, salt="password-reset-salt", max_age=900)
-        if not email:
-            flash("El enlace para restablecer la contraseña es inválido o ha expirado.", "error")
+        email, huella = verificar_token_reset(token)
+        usuario = db.session.scalar(select(User).filter_by(email=email)) if email else None
+        if not usuario or huella != huella_password(usuario):
+            flash("El enlace para restablecer la contraseña es inválido, ya se usó o ha expirado.", "error")
             return redirect(url_for("login"))
 
         if request.method == "POST":
@@ -197,14 +248,12 @@ def register_routes(app):
 
             if len(password) < 8 or password != confirmar:
                 flash("Las contraseñas deben tener al menos 8 caracteres y coincidir.", "error")
-                return render_template("reset_password.html", token=token)
+                return render_template("reset_password.html", token=token), 400
 
-            usuario = db.session.scalar(select(User).filter_by(email=email))
-            if usuario:
-                usuario.set_password(password)
-                db.session.commit()
-                flash("Tu contraseña ha sido actualizada correctamente.", "success")
-                return redirect(url_for("login"))
+            usuario.set_password(password)  # cambia la huella: el enlace ya no sirve
+            db.session.commit()
+            flash("Tu contraseña ha sido actualizada correctamente.", "success")
+            return redirect(url_for("login"))
 
         return render_template("reset_password.html", token=token)
 
@@ -262,37 +311,7 @@ def register_routes(app):
             flash("Primero realiza el test de colorimetría.", "info")
             return redirect(url_for("test"))
 
-        if "recomendacion_ia" not in datos:
-            try:
-                recomendacion_ia = generar_recomendacion_colorimetria(
-                    datos.get("estacion", "Verano"),
-                    datos.get("subtono", "frio"),
-                    datos.get("respuestas", {})
-                )
-                datos["recomendacion_ia"] = recomendacion_ia
-            except Exception as e:
-                print(f"Error llamando a Gemini IA: {e}")
-                datos["recomendacion_ia"] = (
-                    "Tu paleta ha sido procesada exitosamente. "
-                    "Te recomendamos favorecer las prendas que potencien el contraste y la temperatura natural de tu rostro."
-                )
-
-            session["ultimo_resultado"] = datos
-            session.modified = True
-
-            if current_user.is_authenticated:
-                try:
-                    db.session.add(
-                        TestResult(
-                            user_id=current_user.id,
-                            respuestas=datos.get("respuestas", {}),
-                            subtono=datos.get("subtono", ""),
-                            estacion=datos.get("estacion", ""),
-                        )
-                    )
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
+        datos = _completar_diagnostico(datos)
 
         return render_template(
             "resultado.html",
@@ -304,52 +323,20 @@ def register_routes(app):
         )
 
     @app.route("/api/generar-diagnostico", methods=["POST"])
-    @csrf.exempt
     def generar_diagnostico_api():
-        datos_pendientes = session.get("pendiente_ia")
-        if not datos_pendientes:
+        datos = session.get("ultimo_resultado")
+        if not datos:
             return jsonify({"success": False, "error": "No hay test pendiente"}), 400
 
-        try:
-            recomendacion = generar_recomendacion_colorimetria(
-                datos_pendientes.get("estacion", "Verano"),
-                datos_pendientes.get("subtono", "Frío"),
-                datos_pendientes.get("respuestas", {})
-            )
-            datos_pendientes["recomendacion_ia"] = recomendacion
-        except Exception as e:
-            print(f"Error generando con Gemini: {e}")
-            datos_pendientes["recomendacion_ia"] = (
-                "Para tu paleta de Verano Frío, prioriza tonos pasteles deslavados como azul sereno, "
-                "rosa cuarzo y lavanda. Combínalos con acentos neutros en gris marengo o blanco roto."
-            )
-
-        session["ultimo_resultado"] = datos_pendientes
-        session.pop("pendiente_ia", None)
-        session.modified = True
-
-        if current_user.is_authenticated:
-            try:
-                db.session.add(
-                    TestResult(
-                        user_id=current_user.id,
-                        respuestas=datos_pendientes.get("respuestas", {}),
-                        subtono=datos_pendientes.get("subtono", ""),
-                        estacion=datos_pendientes.get("estacion", ""),
-                    )
-                )
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-
+        _completar_diagnostico(datos)
         return jsonify({"success": True})
 
     # ---------- API CHAT FLOTANTE DE IA ----------
     @app.route("/api/chat-ia", methods=["POST"])
-    @csrf.exempt
+    @limiter.limit(lambda: "30 per hour" if current_user.is_authenticated else "10 per day")
     def chat_ia():
-        data = request.get_json() or {}
-        pregunta = data.get("pregunta", "").strip()
+        data = request.get_json(silent=True) or {}
+        pregunta = str(data.get("pregunta", "")).strip()[:MAX_PREGUNTA]
 
         if not pregunta:
             return jsonify({"error": "La pregunta no puede estar vacía"}), 400
@@ -365,7 +352,7 @@ def register_routes(app):
 
             session["preguntas_ia_count"] = preguntas_realizadas + 1
 
-        respuesta = responder_chat_estilista(pregunta)
+        respuesta = responder_chat_estilista(pregunta, session.get("ultimo_resultado"))
 
         preguntas_restantes = None
         if not current_user.is_authenticated:
@@ -422,19 +409,18 @@ def register_routes(app):
             flash('Debes ingresar un nombre para la prenda.', 'error')
             return redirect(url_for('guardarropa'))
 
-        if file and allowed_file(file.filename):
-            filename = secure_filename(f"{current_user.id}_{int(datetime.utcnow().timestamp())}_{file.filename}")
+        ext = tipo_imagen(file.stream)
+        if ext:
+            filename = f"{current_user.id}_{int(datetime.now(timezone.utc).timestamp())}_{uuid.uuid4().hex[:8]}.{ext}"
 
             upload_dir = current_app.config['UPLOAD_FOLDER']
             os.makedirs(upload_dir, exist_ok=True)
-
-            file_path = os.path.join(upload_dir, filename)
-            file.save(file_path)
+            file.save(os.path.join(upload_dir, filename))
 
             nueva_prenda = Guardarropa(
                 usuario_id=current_user.id,
-                nombre=nombre,
-                categoria=categoria,
+                nombre=nombre[:100],
+                categoria=categoria if categoria in CATEGORIAS else 'Superior',
                 imagen=filename
             )
             db.session.add(nueva_prenda)
@@ -442,6 +428,24 @@ def register_routes(app):
 
             flash('¡Prenda guardada en tu guardarropa!', 'success')
         else:
-            flash('Formato no permitido. Usa imágenes PNG, JPG, JPEG o WEBP.', 'error')
+            flash('El archivo no es una imagen válida (PNG, JPG o WEBP).', 'error')
 
         return redirect(url_for('guardarropa'))
+
+    @app.route("/guardarropa/eliminar/<int:id>", methods=["POST"])
+    @login_required
+    def eliminar_prenda(id):
+        prenda = db.session.scalar(select(Guardarropa).filter_by(id=id, usuario_id=current_user.id))
+        if not prenda:
+            flash("Prenda no encontrada.", "error")
+            return redirect(url_for("guardarropa"))
+
+        ruta = os.path.join(current_app.config["UPLOAD_FOLDER"], prenda.imagen)
+        db.session.delete(prenda)
+        db.session.commit()
+        try:
+            os.remove(ruta)
+        except OSError:
+            pass
+        flash("Prenda eliminada.", "success")
+        return redirect(url_for("guardarropa"))

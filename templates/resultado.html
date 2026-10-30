@@ -3,7 +3,8 @@
 
 {% block content %}
 <!-- CDN de Marked.js para formatear Markdown a HTML nativo -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 
 <main class="resultado-section">
   <div class="resultado-container">
@@ -98,7 +99,8 @@
     if (contenedor && typeof marked !== 'undefined') {
       const rawMarkdown = contenedor.textContent || contenedor.innerText;
       // Convierte el Markdown en HTML estético eliminando los asteriscos y numerales
-      contenedor.innerHTML = marked.parse(rawMarkdown.trim());
+      const html = marked.parse(rawMarkdown.trim());
+      contenedor.innerHTML = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(html) : '';
     }
   });
 </script>

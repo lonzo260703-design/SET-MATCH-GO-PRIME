@@ -63,8 +63,8 @@
           <span id="metricModel" class="metric-value highlight">Iniciando...</span>
         </div>
         <div class="metric-box">
-          <span class="metric-label">Tokens / Contexto</span>
-          <span id="metricTokens" class="metric-value">0 tks</span>
+          <span class="metric-label">Preguntas analizadas</span>
+          <span id="metricTokens" class="metric-value">0 / 7</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Latencia Real</span>
@@ -673,18 +673,21 @@
     const modelosGemini = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"];
 
     const etapas = [
-      { texto: "Iniciando escaneo de atributos cromáticos...", porcentaje: 20, tokens: "140 tks", mostrarModelo: false },
-      { texto: "Evaluando la temperatura de piel y contraste...", porcentaje: 40, tokens: "290 tks", mostrarModelo: false },
-      { texto: "Sintetizando diagnóstico con Stylist Engine...", porcentaje: 65, tokens: "480 tks", mostrarModelo: true },
-      { texto: "Generando paleta armónica y sugerencias de outfit...", porcentaje: 85, tokens: "650 tks", mostrarModelo: true },
-      { texto: "¡Diagnóstico y asesoría completados!", porcentaje: 100, tokens: "780 tks", mostrarModelo: false }
+      { texto: "Iniciando escaneo de atributos cromáticos...", porcentaje: 20, tokens: "2 / 7", mostrarModelo: false },
+      { texto: "Evaluando la temperatura de piel y contraste...", porcentaje: 40, tokens: "4 / 7", mostrarModelo: false },
+      { texto: "Sintetizando diagnóstico con Stylist Engine...", porcentaje: 65, tokens: "6 / 7", mostrarModelo: true },
+      { texto: "Generando paleta armónica y sugerencias de outfit...", porcentaje: 85, tokens: "7 / 7", mostrarModelo: true },
+      { texto: "¡Diagnóstico y asesoría completados!", porcentaje: 100, tokens: "7 / 7", mostrarModelo: false }
     ];
 
     let pasoActual = 0;
     const intervalTime = 1400; 
     let startTime = Date.now();
 
-    const apiPromise = fetch('/api/generar-diagnostico', { method: 'POST' })
+    const apiPromise = fetch('/api/generar-diagnostico', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content }
+    })
       .then(r => r.json())
       .catch(err => console.error("Aviso Gemini:", err));
 

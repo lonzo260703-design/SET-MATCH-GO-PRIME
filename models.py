@@ -4,7 +4,6 @@ from flask_login import UserMixin
 from sqlalchemy.dialects.postgresql import JSONB
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from datetime import datetime
 from extensions import db
 
 # JSONB en PostgreSQL, JSON genérico en SQLite (desarrollo / pruebas)
@@ -64,11 +63,11 @@ class Guardarropa(db.Model):
     __tablename__ = 'guardarropa'
 
     id = db.Column(db.Integer, primary_key=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False) # Si tu tabla de usuarios se llama diferente a 'users', ajusta esta relación
+    usuario_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     nombre = db.Column(db.String(100), nullable=False)
     categoria = db.Column(db.String(50), nullable=False)
     imagen = db.Column(db.String(255), nullable=False)
-    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_creacion = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
 
     # Relación con el usuario
-    usuario = db.relationship('User', backref=db.backref('prendas', lazy='dynamic'))
+    usuario = db.relationship('User', backref=db.backref('prendas', lazy='dynamic', cascade='all, delete-orphan'))

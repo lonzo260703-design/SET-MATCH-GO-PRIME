@@ -1,7 +1,10 @@
 # services/email_service.py
 from flask import current_app, render_template_string, url_for
 from flask_mail import Message
+import hashlib
+
 from itsdangerous import URLSafeTimedSerializer
+from markupsafe import escape
 from extensions import mail
 
 def generar_token(email, salt):
@@ -16,7 +19,28 @@ def verificar_token(token, salt, max_age=86400):
     except Exception:
         return None
 
+def huella_password(usuario):
+    """Huella del hash actual: al cambiar la contraseña el token de reset deja de servir."""
+    return hashlib.sha256(usuario.password_hash.encode()).hexdigest()[:16]
+
+
+def generar_token_reset(usuario):
+    serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    return serializer.dumps([usuario.email, huella_password(usuario)], salt="password-reset-salt")
+
+
+def verificar_token_reset(token, max_age=900):
+    """Devuelve (email, huella) o (None, None)."""
+    serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    try:
+        email, huella = serializer.loads(token, salt="password-reset-salt", max_age=max_age)
+        return email, huella
+    except Exception:
+        return None, None
+
+
 def enviar_correo_confirmacion(user_email, user_nombre):
+    user_nombre = escape(user_nombre)
     token = generar_token(user_email, salt="email-confirm-salt")
     url_confirmacion = url_for("confirmar_cuenta", token=token, _external=True)
 
@@ -33,8 +57,10 @@ def enviar_correo_confirmacion(user_email, user_nombre):
     """
     mail.send(msg)
 
-def enviar_correo_recuperacion(user_email, user_nombre):
-    token = generar_token(user_email, salt="password-reset-salt")
+def enviar_correo_recuperacion(usuario):
+    user_email, user_nombre = usuario.email, usuario.nombre
+    token = generar_token_reset(usuario)
+    user_nombre = escape(user_nombre)
     url_reset = url_for("resetear_password", token=token, _external=True)
 
     msg = Message("Restablecer Contraseña — SET-MATCH-GO!", recipients=[user_email])

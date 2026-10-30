@@ -21,6 +21,8 @@ class BaseConfig:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     AUTO_CREATE_DB = False
+    # En producción con varios workers usa Redis: LIMITER_STORAGE_URI=redis://...
+    RATELIMIT_STORAGE_URI = os.getenv("LIMITER_STORAGE_URI", "memory://")
 
     # CONFIGURACIÓN SMTP (FLASK-MAIL)
     MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
@@ -42,10 +44,12 @@ class TestingConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     SQLALCHEMY_ENGINE_OPTIONS = {}
     WTF_CSRF_ENABLED = False
+    RATELIMIT_ENABLED = False
     AUTO_CREATE_DB = True
 
 
 class ProductionConfig(BaseConfig):
+    PROXY_FIX = True  # Render está detrás de un proxy: respeta X-Forwarded-For
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
 
