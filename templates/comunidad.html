@@ -71,6 +71,46 @@
       {% if p.descripcion %}
       <p class="com-desc">{{ p.descripcion }}</p>
       {% endif %}
+
+      {% if p.id in en_revision %}
+      <p class="com-review">⚠️ En revisión: esta publicación recibió varios reportes y solo tú puedes verla.</p>
+      {% endif %}
+
+      <div class="com-actions">
+        {% set total = likes_por_pub.get(p.id, 0) %}
+        {% if current_user.is_authenticated %}
+        <button type="button" class="com-like{% if p.id in mis_likes %} is-liked{% endif %}"
+                data-url="{{ url_for('toggle_like', id=p.id) }}"
+                aria-pressed="{{ 'true' if p.id in mis_likes else 'false' }}" aria-label="Me gusta">
+          <span class="com-heart">{{ '♥' if p.id in mis_likes else '♡' }}</span>
+          <span class="com-like-count">{{ total }}</span>
+        </button>
+        {% else %}
+        <a class="com-like" href="{{ url_for('login', next=url_for('comunidad')) }}" title="Inicia sesión para dar like">
+          <span class="com-heart">♡</span> <span class="com-like-count">{{ total }}</span>
+        </a>
+        {% endif %}
+
+        {% if current_user.is_authenticated and current_user.id != p.usuario_id %}
+          {% if p.id in mis_reportes %}
+          <span class="com-muted">Reportada</span>
+          {% else %}
+          <details class="com-report">
+            <summary>Reportar</summary>
+            <form action="{{ url_for('reportar_publicacion', id=p.id) }}" method="POST">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <select name="motivo" required>
+                <option value="" disabled selected>Motivo...</option>
+                {% for clave, texto in motivos.items() %}
+                <option value="{{ clave }}">{{ texto }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit">Enviar</button>
+            </form>
+          </details>
+          {% endif %}
+        {% endif %}
+      </div>
     </div>
   </article>
   {% else %}
@@ -153,6 +193,31 @@
   .com-dot { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.15); }
   .com-desc { margin: 12px 0 0; font-size: 14px; line-height: 1.5; color: #334155; white-space: pre-line; overflow-wrap: anywhere; }
 
+  .com-review {
+    margin: 12px 0 0; padding: 8px 12px; border-radius: 8px; font-size: 13px;
+    background: #fef3c7; color: #92400e;
+  }
+  .com-actions { display: flex; align-items: center; gap: 16px; margin-top: 14px; flex-wrap: wrap; }
+  .com-like {
+    display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px solid #e2e8f0;
+    border-radius: 20px; padding: 5px 14px; font-size: 14px; color: #475569; cursor: pointer;
+    text-decoration: none; font-family: inherit;
+  }
+  .com-like:hover { border-color: #c0392b; color: #c0392b; }
+  .com-like.is-liked { color: #c0392b; border-color: #c0392b; background: rgba(231, 76, 60, 0.08); }
+  .com-heart { font-size: 17px; line-height: 1; }
+  .com-report { position: relative; font-size: 13px; }
+  .com-report summary { cursor: pointer; color: #64748b; list-style: none; }
+  .com-report summary::-webkit-details-marker { display: none; }
+  .com-report summary:hover { color: #c0392b; }
+  .com-report form { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .com-report select {
+    padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #1e293b; font: inherit;
+  }
+  .com-report button {
+    background: #c0392b; color: #ffffff; border: none; padding: 6px 14px; border-radius: 8px;
+    font: inherit; font-weight: 700; cursor: pointer;
+  }
   .com-empty {
     text-align: center; padding: 40px 20px; border: 1px dashed #64748b; border-radius: 14px; color: #cbd5e1;
   }
@@ -164,6 +229,35 @@
     .com-publish { padding: 16px; }
   }
 </style>
+
+<script>
+  // Like sin recargar la página
+  (function () {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    document.querySelectorAll('button.com-like').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        if (btn.disabled) return;
+        btn.disabled = true;
+        try {
+          const res = await fetch(btn.dataset.url, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': meta ? meta.content : '', 'Accept': 'application/json' },
+          });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+          btn.classList.toggle('is-liked', data.liked);
+          btn.setAttribute('aria-pressed', data.liked ? 'true' : 'false');
+          btn.querySelector('.com-heart').textContent = data.liked ? '♥' : '♡';
+          btn.querySelector('.com-like-count').textContent = data.total;
+        } catch (e) {
+          console.error(e);
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+  })();
+</script>
 
 <script>
   (function () {

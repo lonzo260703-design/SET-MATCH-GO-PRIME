@@ -6,12 +6,12 @@ from urllib.parse import urljoin, urlparse
 
 from flask import current_app, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from colorimetria import PERFILES, RespuestasInvalidas, clasificar, paleta_de_estacion
 from extensions import db, limiter
-from models import Guardarropa, Publicacion, TestResult, User
+from models import Guardarropa, Like, Publicacion, Reporte, TestResult, User
 from services.email_service import (
     enviar_correo_confirmacion,
     enviar_correo_recuperacion,
@@ -26,6 +26,13 @@ EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 LIMITE_PREGUNTAS_INVITADO = 3
 MAX_PREGUNTA = 500
 MAX_DESCRIPCION = 500
+UMBRAL_REPORTES = 3  # reportes de personas distintas para ocultar una publicación del feed
+MOTIVOS_REPORTE = {
+    "inapropiado": "Contenido inapropiado",
+    "spam": "Spam",
+    "no_outfit": "No es un outfit",
+    "otro": "Otro",
+}
 CATEGORIAS = {'Superior', 'Inferior', 'Abrigo', 'Calzado', 'Accesorios'}
 
 
@@ -460,18 +467,73 @@ def register_routes(app):
         return redirect(url_for("guardarropa"))
 
     # ---------- COMUNIDAD (RED SOCIAL DE ESTILO) ----------
+    def _ids_ocultos():
+        """Publicaciones con reportes de al menos UMBRAL_REPORTES personas distintas."""
+        return (
+            select(Reporte.publicacion_id)
+            .group_by(Reporte.publicacion_id)
+            .having(func.count(Reporte.usuario_id) >= UMBRAL_REPORTES)
+        )
+
     @app.route("/comunidad")
     def comunidad():
         pagina = request.args.get("pagina", 1, type=int)
+        consulta = select(Publicacion)
+        if current_user.is_authenticated:
+            # Las publicaciones ocultas por reportes solo las ve su autora o autor
+            consulta = consulta.where(
+                Publicacion.id.not_in(_ids_ocultos()) | (Publicacion.usuario_id == current_user.id)
+            )
+        else:
+            consulta = consulta.where(Publicacion.id.not_in(_ids_ocultos()))
         publicaciones = db.paginate(
-            select(Publicacion).order_by(Publicacion.created_at.desc(), Publicacion.id.desc()),
+            consulta.order_by(Publicacion.created_at.desc(), Publicacion.id.desc()),
             page=pagina,
             per_page=9,
             error_out=False,
         )
+
+        ids = [p.id for p in publicaciones.items]
+        likes_por_pub, mis_likes, mis_reportes, en_revision = {}, set(), set(), set()
+        if ids:
+            likes_por_pub = dict(
+                db.session.execute(
+                    select(Like.publicacion_id, func.count(Like.id))
+                    .where(Like.publicacion_id.in_(ids))
+                    .group_by(Like.publicacion_id)
+                ).all()
+            )
+            en_revision = set(
+                db.session.scalars(select(Reporte.publicacion_id).where(Reporte.publicacion_id.in_(ids))
+                                   .group_by(Reporte.publicacion_id)
+                                   .having(func.count(Reporte.usuario_id) >= UMBRAL_REPORTES)).all()
+            )
+            if current_user.is_authenticated:
+                mis_likes = set(
+                    db.session.scalars(
+                        select(Like.publicacion_id).where(
+                            Like.usuario_id == current_user.id, Like.publicacion_id.in_(ids)
+                        )
+                    ).all()
+                )
+                mis_reportes = set(
+                    db.session.scalars(
+                        select(Reporte.publicacion_id).where(
+                            Reporte.usuario_id == current_user.id, Reporte.publicacion_id.in_(ids)
+                        )
+                    ).all()
+                )
+
         ultimo_resultado = current_user.resultados.first() if current_user.is_authenticated else None
         return render_template(
-            "comunidad.html", publicaciones=publicaciones, ultimo_resultado=ultimo_resultado
+            "comunidad.html",
+            publicaciones=publicaciones,
+            ultimo_resultado=ultimo_resultado,
+            likes_por_pub=likes_por_pub,
+            mis_likes=mis_likes,
+            mis_reportes=mis_reportes,
+            en_revision=en_revision,
+            motivos=MOTIVOS_REPORTE,
         )
 
     @app.route("/comunidad/publicar", methods=["POST"])
@@ -538,4 +600,50 @@ def register_routes(app):
         eliminar_imagen(imagen_id)
         flash("Publicación eliminada.", "success")
         return redirect(url_for("comunidad"))
+
+    @app.route("/comunidad/like/<int:id>", methods=["POST"])
+    @login_required
+    @limiter.limit("120 per hour")
+    def toggle_like(id):
+        publicacion = db.session.get(Publicacion, id)
+        if not publicacion:
+            return jsonify({"error": "Publicación no encontrada"}), 404
+
+        existente = db.session.scalar(select(Like).filter_by(publicacion_id=id, usuario_id=current_user.id))
+        if existente:
+            db.session.delete(existente)
+            le_gusta = False
+        else:
+            db.session.add(Like(publicacion_id=id, usuario_id=current_user.id))
+            le_gusta = True
+        try:
+            db.session.commit()
+        except IntegrityError:  # doble clic simultáneo: el like ya existía
+            db.session.rollback()
+            le_gusta = True
+
+        total = db.session.scalar(select(func.count(Like.id)).where(Like.publicacion_id == id))
+        return jsonify({"liked": le_gusta, "total": total})
+
+    @app.route("/comunidad/reportar/<int:id>", methods=["POST"])
+    @login_required
+    @limiter.limit("20 per hour")
+    def reportar_publicacion(id):
+        publicacion = db.session.get(Publicacion, id)
+        motivo = request.form.get("motivo", "")
+        if not publicacion:
+            flash("Publicación no encontrada.", "error")
+        elif publicacion.usuario_id == current_user.id:
+            flash("No puedes reportar tu propia publicación.", "error")
+        elif motivo not in MOTIVOS_REPORTE:
+            flash("Elige un motivo para el reporte.", "error")
+        else:
+            try:
+                db.session.add(Reporte(publicacion_id=id, usuario_id=current_user.id, motivo=motivo))
+                db.session.commit()
+                flash("Gracias, recibimos tu reporte.", "success")
+            except IntegrityError:
+                db.session.rollback()
+                flash("Ya habías reportado esta publicación.", "info")
+        return redirect(request.referrer if request.referrer and _url_segura(request.referrer) else url_for("comunidad"))
 
