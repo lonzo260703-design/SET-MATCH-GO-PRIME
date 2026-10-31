@@ -60,6 +60,14 @@ PERFILES = {
 }
 
 
+def paleta_de_estacion(texto_estacion):
+    """Devuelve la paleta de colores asociada al texto de estación guardado en un resultado."""
+    for perfil in PERFILES.values():
+        if perfil["estacion"] == texto_estacion:
+            return list(perfil["paleta"])
+    return []
+
+
 class RespuestasInvalidas(ValueError):
     """Faltan respuestas o contienen valores no permitidos."""
 

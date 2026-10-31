@@ -5,7 +5,7 @@ import pytest
 from app import create_app
 from colorimetria import RespuestasInvalidas, clasificar
 from extensions import db
-from models import Guardarropa, TestResult, User
+from models import Guardarropa, Publicacion, TestResult, User
 from services import gemini_service
 
 CALIDO = {"p1": "calido", "p2": "calido", "p3": "calido", "p4": "calido", "p5": "frio", "p6": "frio", "p7": "suave"}
@@ -23,6 +23,7 @@ def sin_gemini(monkeypatch):
 def app(tmp_path):
     app = create_app("testing")
     app.config["UPLOAD_FOLDER"] = str(tmp_path)
+    app.config["COMUNIDAD_UPLOAD_FOLDER"] = str(tmp_path / "comunidad")
     yield app
     with app.app_context():
         db.session.remove()
@@ -312,3 +313,99 @@ def test_reenviar_confirmacion_respuesta_uniforme(client, app, monkeypatch):
     for correo in ("pendiente@example.com", "listo@example.com", "noexiste@example.com"):
         assert client.post("/reenviar-confirmacion", data={"email": correo}).status_code == 302
     assert enviados == ["pendiente@example.com"]
+
+
+# ---------- comunidad ----------
+def publicar(client, nombre="outfit.png", contenido=PNG, descripcion="Look de oficina"):
+    return client.post(
+        "/comunidad/publicar",
+        data={"foto": (io.BytesIO(contenido), nombre), "descripcion": descripcion},
+        content_type="multipart/form-data",
+    )
+
+
+def usuario_con_test(client, app, email="ana@example.com"):
+    iniciar_sesion(client, app, email=email)
+    client.post("/test", data=CALIDO)
+    client.post("/api/generar-diagnostico")
+
+
+def test_feed_es_publico(client):
+    r = client.get("/comunidad")
+    assert r.status_code == 200 and "Aún no hay publicaciones".encode() in r.data
+
+
+def test_publicar_requiere_login(client):
+    r = publicar(client)
+    assert r.status_code == 302 and "/login" in r.headers["Location"]
+
+
+def test_publicar_requiere_haber_hecho_el_test(client, app):
+    iniciar_sesion(client, app)
+    r = publicar(client)
+    assert r.status_code == 302 and r.headers["Location"].endswith("/test")
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(Publicacion.id))) == 0
+
+
+def test_publicar_adjunta_colorimetria_y_aparece_en_el_feed(client, app):
+    usuario_con_test(client, app)
+    assert publicar(client).status_code == 302
+    with app.app_context():
+        p = db.session.scalar(db.select(Publicacion))
+        assert p.subtono == "calido" and "Primavera" in p.estacion
+        assert len(p.paleta) == 4 and p.descripcion == "Look de oficina"
+    html = client.get("/comunidad").data.decode()
+    assert "Look de oficina" in html and "Primavera" in html and "Ana" in html
+
+
+def test_publicar_rechaza_archivos_que_no_son_imagen(client, app):
+    usuario_con_test(client, app)
+    publicar(client, nombre="falso.png", contenido=b"<?php echo 1; ?>")
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(Publicacion.id))) == 0
+
+
+def test_descripcion_se_recorta_y_se_escapa(client, app):
+    usuario_con_test(client, app)
+    publicar(client, descripcion="<script>alert(1)</script>" + "a" * 900)
+    with app.app_context():
+        assert len(db.session.scalar(db.select(Publicacion)).descripcion) == 500
+    assert b"<script>alert(1)" not in client.get("/comunidad").data
+
+
+def test_eliminar_propia_publicacion_borra_la_imagen(client, app):
+    import os
+
+    usuario_con_test(client, app)
+    publicar(client)
+    carpeta = app.config["COMUNIDAD_UPLOAD_FOLDER"]
+    assert len(os.listdir(carpeta)) == 1
+    with app.app_context():
+        pid = db.session.scalar(db.select(Publicacion)).id
+    assert client.post(f"/comunidad/eliminar/{pid}").status_code == 302
+    with app.app_context():
+        assert db.session.scalar(db.select(Publicacion)) is None
+    assert os.listdir(carpeta) == []
+
+
+def test_no_se_puede_eliminar_publicacion_ajena(client, app):
+    usuario_con_test(client, app, email="ana@example.com")
+    publicar(client)
+    client.post("/logout")
+    iniciar_sesion(client, app, email="otra@example.com")
+    with app.app_context():
+        pid = db.session.scalar(db.select(Publicacion)).id
+    client.post(f"/comunidad/eliminar/{pid}")
+    with app.app_context():
+        assert db.session.scalar(db.select(Publicacion)) is not None
+
+
+def test_feed_pagina_de_9_en_9(client, app):
+    usuario_con_test(client, app)
+    for _ in range(10):
+        publicar(client)
+    assert b"P\xc3\xa1gina 1 de 2" in client.get("/comunidad").data
+    assert client.get("/comunidad?pagina=2").status_code == 200
+    assert client.get("/comunidad?pagina=99").status_code == 200
+

@@ -747,7 +747,23 @@
       display: block;
     }
 
-    @media (max-width: 900px) {
+    /* Barra compacta entre 1081px y 1360px; por debajo de 1080px se usa el menú hamburguesa: evita que el menú se desborde */
+    @media (min-width: 1081px) and (max-width: 1360px) {
+      .navbar {
+        padding: 0 16px !important;
+      }
+
+      .navbar a {
+        padding: 0 7px !important;
+        letter-spacing: 0.5px !important;
+      }
+
+      .nav-brand span {
+        font-size: 0.95rem;
+      }
+    }
+
+    @media (max-width: 1080px) {
       .nav-center,
       .nav-right {
         display: none !important;
@@ -771,6 +787,7 @@
 
     <ul class="nav-center">
       <li><a href="{{ url_for('index') }}">Inicio</a></li>
+      <li><a href="{{ url_for('comunidad') }}">Comunidad</a></li>
 
       <!-- DESPLEGABLE DE COLECCIONES SOLO TÍTULOS -->
       <li class="dropdown nav-item">
@@ -929,6 +946,12 @@
         <li>
           <a href="{{ url_for('index') }}" class="mobile-nav-link">
             <span>🏠 Inicio</span>
+          </a>
+        </li>
+
+        <li>
+          <a href="{{ url_for('comunidad') }}" class="mobile-nav-link">
+            <span>👗 Comunidad</span>
           </a>
         </li>
 

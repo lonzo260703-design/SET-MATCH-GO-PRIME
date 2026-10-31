@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}Comunidad | SET-MATCH-GO!{% endblock %}
+
+{% block content %}
+<main class="com-wrapper">
+  <header class="com-header">
+    <h1>Comunidad</h1>
+    <p>Comparte tu outfit y descubre cómo combinan su paleta otras personas.</p>
+  </header>
+
+  <!-- PUBLICAR -->
+  <section class="com-card com-publish">
+    {% if not current_user.is_authenticated %}
+      <h2>¿Quieres compartir tu outfit?</h2>
+      <p class="com-muted">Inicia sesión para publicar.</p>
+      <a class="com-btn" href="{{ url_for('login', next=url_for('comunidad')) }}">Iniciar sesión</a>
+    {% elif not ultimo_resultado %}
+      <h2>Primero descubre tu paleta</h2>
+      <p class="com-muted">Cada publicación muestra tu colorimetría. Haz el test para poder publicar.</p>
+      <a class="com-btn" href="{{ url_for('test') }}">Hacer el test</a>
+    {% else %}
+      <h2>Comparte tu outfit</h2>
+      <p class="com-muted">Se mostrará con tu paleta: <strong>{{ ultimo_resultado.estacion }}</strong></p>
+      <form action="{{ url_for('publicar_outfit') }}" method="POST" enctype="multipart/form-data" class="com-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label class="com-drop" for="foto">
+          <img id="vistaPrevia" alt="" hidden>
+          <span id="textoDrop">📷 Elegir foto (PNG, JPG o WEBP)</span>
+        </label>
+        <input type="file" id="foto" name="foto" accept="image/png,image/jpeg,image/webp" required hidden>
+
+        <label for="descripcion" class="com-label">Descripción (opcional)</label>
+        <textarea id="descripcion" name="descripcion" maxlength="500" rows="3"
+                  placeholder="Cuéntanos de qué se trata tu look..."></textarea>
+
+        <button type="submit" class="com-btn">Publicar outfit</button>
+      </form>
+    {% endif %}
+  </section>
+
+  <!-- FEED -->
+  {% for p in publicaciones.items %}
+  <article class="com-card com-post">
+    <div class="com-post-head">
+      <span class="com-avatar">{{ p.usuario.nombre[0] | upper }}</span>
+      <div class="com-post-meta">
+        <strong>{{ p.usuario.nombre }}</strong>
+        <span class="com-muted">{{ p.created_at.strftime('%d/%m/%Y') }}</span>
+      </div>
+      {% if current_user.is_authenticated and current_user.id == p.usuario_id %}
+      <form action="{{ url_for('eliminar_publicacion', id=p.id) }}" method="POST"
+            onsubmit="return confirm('¿Eliminar esta publicación?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="com-delete">Eliminar</button>
+      </form>
+      {% endif %}
+    </div>
+
+    <img class="com-photo" src="{{ p.imagen_url }}" alt="Outfit de {{ p.usuario.nombre }}" loading="lazy">
+
+    <div class="com-post-body">
+      <div class="com-palette-row">
+        <span class="com-season">{{ p.estacion }}</span>
+        <span class="com-dots">
+          {% for color in p.paleta %}
+          <span class="com-dot" style="background-color: {{ color }};" title="{{ color }}"></span>
+          {% endfor %}
+        </span>
+      </div>
+      {% if p.descripcion %}
+      <p class="com-desc">{{ p.descripcion }}</p>
+      {% endif %}
+    </div>
+  </article>
+  {% else %}
+  <div class="com-empty">Aún no hay publicaciones. ¡Sé la primera persona en compartir su outfit!</div>
+  {% endfor %}
+
+  <!-- PAGINACIÓN -->
+  {% if publicaciones.pages > 1 %}
+  <nav class="com-pager">
+    {% if publicaciones.has_prev %}
+      <a href="{{ url_for('comunidad', pagina=publicaciones.prev_num) }}">← Más recientes</a>
+    {% endif %}
+    <span>Página {{ publicaciones.page }} de {{ publicaciones.pages }}</span>
+    {% if publicaciones.has_next %}
+      <a href="{{ url_for('comunidad', pagina=publicaciones.next_num) }}">Anteriores →</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+</main>
+
+<style>
+  /* La página tiene fondo oscuro y texto blanco: las tarjetas claras fijan su propio color */
+  .com-wrapper { max-width: 640px; margin: 100px auto 60px; padding: 0 16px; }
+  .com-header { text-align: center; margin-bottom: 28px; }
+  .com-header h1 {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 28px; letter-spacing: 3px; text-transform: uppercase; margin: 0 0 10px;
+  }
+  .com-header p { color: #cbd5e1; font-size: 14px; margin: 0; }
+
+  .com-card {
+    background: #ffffff; color: #1e293b; border-radius: 14px;
+    margin-bottom: 22px; overflow: hidden; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  }
+  .com-muted { color: #64748b; font-size: 13px; }
+
+  .com-publish { padding: 22px; }
+  .com-publish h2 { margin: 0 0 6px; font-size: 18px; color: #1e293b; }
+  .com-form { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+  .com-label { font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 1px; }
+  .com-drop {
+    display: flex; align-items: center; justify-content: center; min-height: 120px;
+    border: 2px dashed #cbd5e1; border-radius: 12px; cursor: pointer; color: #475569;
+    background: #f8fafc; overflow: hidden; font-size: 14px;
+  }
+  .com-drop:hover { border-color: #c0392b; }
+  .com-drop img { width: 100%; max-height: 360px; object-fit: cover; display: block; }
+  .com-drop img[hidden], .com-drop span[hidden] { display: none; }
+  .com-form textarea {
+    width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #cbd5e1;
+    border-radius: 10px; font: inherit; color: #1e293b; background: #ffffff; resize: vertical;
+  }
+  .com-btn {
+    display: inline-block; align-self: flex-start; background: #c0392b; color: #ffffff;
+    border: none; padding: 11px 22px; border-radius: 8px; font-weight: 700; font-size: 14px;
+    cursor: pointer; text-decoration: none;
+  }
+  .com-btn:hover { background: #a93226; }
+
+  .com-post-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+  .com-avatar {
+    width: 40px; height: 40px; border-radius: 50%; background: #223243; color: #ffffff;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;
+  }
+  .com-post-meta { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; }
+  .com-delete {
+    background: none; border: 1px solid #e2e8f0; color: #64748b; padding: 4px 10px;
+    border-radius: 8px; font-size: 12px; cursor: pointer;
+  }
+  .com-delete:hover { color: #c0392b; border-color: #c0392b; }
+
+  .com-photo { width: 100%; max-height: 640px; object-fit: cover; display: block; background: #e2e8f0; }
+  .com-post-body { padding: 14px 16px 18px; }
+  .com-palette-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .com-season {
+    font-size: 12px; font-weight: 700; color: #c0392b; background: rgba(231, 76, 60, 0.1);
+    padding: 4px 10px; border-radius: 20px;
+  }
+  .com-dots { display: flex; gap: 6px; }
+  .com-dot { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.15); }
+  .com-desc { margin: 12px 0 0; font-size: 14px; line-height: 1.5; color: #334155; white-space: pre-line; overflow-wrap: anywhere; }
+
+  .com-empty {
+    text-align: center; padding: 40px 20px; border: 1px dashed #64748b; border-radius: 14px; color: #cbd5e1;
+  }
+  .com-pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: #cbd5e1; font-size: 13px; }
+  .com-pager a { color: #ffffff; font-weight: 700; text-decoration: underline; }
+
+  @media (max-width: 480px) {
+    .com-wrapper { margin-top: 84px; }
+    .com-publish { padding: 16px; }
+  }
+</style>
+
+<script>
+  (function () {
+    const input = document.getElementById('foto');
+    if (!input) return;
+    input.addEventListener('change', function () {
+      const archivo = input.files && input.files[0];
+      const img = document.getElementById('vistaPrevia');
+      const texto = document.getElementById('textoDrop');
+      if (!archivo) { img.hidden = true; texto.hidden = false; return; }
+      img.src = URL.createObjectURL(archivo);
+      img.hidden = false;
+      texto.hidden = true;
+    });
+  })();
+</script>
+{% endblock %}
