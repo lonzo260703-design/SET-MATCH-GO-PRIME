@@ -5,7 +5,7 @@ import pytest
 from app import create_app
 from colorimetria import RespuestasInvalidas, clasificar
 from extensions import db
-from models import Guardarropa, Publicacion, TestResult, User
+from models import Guardarropa, Like, Publicacion, Reporte, TestResult, User
 from services import gemini_service
 
 CALIDO = {"p1": "calido", "p2": "calido", "p3": "calido", "p4": "calido", "p5": "frio", "p6": "frio", "p7": "suave"}
@@ -408,4 +408,106 @@ def test_feed_pagina_de_9_en_9(client, app):
     assert b"P\xc3\xa1gina 1 de 2" in client.get("/comunidad").data
     assert client.get("/comunidad?pagina=2").status_code == 200
     assert client.get("/comunidad?pagina=99").status_code == 200
+
+
+# ---------- likes y reportes ----------
+def publicacion_de_ana(app, client):
+    """Ana (con test hecho) publica y devuelve el id de la publicación."""
+    usuario_con_test(client, app, email="ana@example.com")
+    publicar(client)
+    with app.app_context():
+        return db.session.scalar(db.select(Publicacion)).id
+
+
+def otra_persona(app, email):
+    c = app.test_client()
+    iniciar_sesion(c, app, email=email)
+    return c
+
+
+def test_like_requiere_login(client, app):
+    pid = publicacion_de_ana(app, client)
+    client.post("/logout")
+    r = client.post(f"/comunidad/like/{pid}")
+    assert r.status_code == 302 and "/login" in r.headers["Location"]
+
+
+def test_like_y_quitar_like(client, app):
+    pid = publicacion_de_ana(app, client)
+    luis = otra_persona(app, "luis@example.com")
+    r = luis.post(f"/comunidad/like/{pid}")
+    assert r.json == {"liked": True, "total": 1}
+    r = luis.post(f"/comunidad/like/{pid}")
+    assert r.json == {"liked": False, "total": 0}
+
+
+def test_los_likes_de_varias_personas_se_suman_y_no_se_duplican(client, app):
+    pid = publicacion_de_ana(app, client)
+    luis = otra_persona(app, "luis@example.com")
+    eva = otra_persona(app, "eva@example.com")
+    luis.post(f"/comunidad/like/{pid}")
+    assert eva.post(f"/comunidad/like/{pid}").json["total"] == 2
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(Like.id))) == 2
+    assert b'aria-pressed="true"' in luis.get("/comunidad").data
+
+
+def test_like_a_publicacion_inexistente(client, app):
+    iniciar_sesion(client, app)
+    assert client.post("/comunidad/like/9999").status_code == 404
+
+
+def test_reportar_una_vez_y_no_la_propia(client, app):
+    pid = publicacion_de_ana(app, client)
+    # la autora no puede reportarse a sí misma
+    client.post(f"/comunidad/reportar/{pid}", data={"motivo": "spam"})
+    luis = otra_persona(app, "luis@example.com")
+    luis.post(f"/comunidad/reportar/{pid}", data={"motivo": "spam"})
+    luis.post(f"/comunidad/reportar/{pid}", data={"motivo": "otro"})  # repetido
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(Reporte.id))) == 1
+
+
+def test_reporte_con_motivo_invalido_se_rechaza(client, app):
+    pid = publicacion_de_ana(app, client)
+    luis = otra_persona(app, "luis@example.com")
+    luis.post(f"/comunidad/reportar/{pid}", data={"motivo": "inventado"})
+    luis.post(f"/comunidad/reportar/{pid}", data={})
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(Reporte.id))) == 0
+
+
+def test_tres_reportes_ocultan_la_publicacion_menos_a_su_autora(client, app):
+    pid = publicacion_de_ana(app, client)
+    personas = [otra_persona(app, f"p{i}@example.com") for i in range(3)]
+    for i, c in enumerate(personas):
+        # con 2 reportes todavía se ve
+        if i == 2:
+            assert b"Look de oficina" in c.get("/comunidad").data
+        c.post(f"/comunidad/reportar/{pid}", data={"motivo": "spam"})
+    # ya no se ve para el resto ni para visitantes
+    assert b"Look de oficina" not in personas[0].get("/comunidad").data
+    assert b"Look de oficina" not in app.test_client().get("/comunidad").data
+    # su autora sí la ve, con aviso de revisión
+    html = client.get("/comunidad").data.decode()
+    assert "Look de oficina" in html and "En revisión" in html
+
+
+def test_eliminar_publicacion_borra_sus_likes_y_reportes(client, app):
+    pid = publicacion_de_ana(app, client)
+    luis = otra_persona(app, "luis@example.com")
+    luis.post(f"/comunidad/like/{pid}")
+    luis.post(f"/comunidad/reportar/{pid}", data={"motivo": "spam"})
+    client.post(f"/comunidad/eliminar/{pid}")
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(Like.id))) == 0
+        assert db.session.scalar(db.select(db.func.count(Reporte.id))) == 0
+
+
+def test_visitante_ve_contador_de_likes_pero_no_el_boton_de_reportar(client, app):
+    pid = publicacion_de_ana(app, client)
+    luis = otra_persona(app, "luis@example.com")
+    luis.post(f"/comunidad/like/{pid}")
+    html = app.test_client().get("/comunidad").data.decode()
+    assert 'class="com-like-count">1<' in html and "Reportar" not in html
 

@@ -93,3 +93,42 @@ class Publicacion(db.Model):
         "User", backref=db.backref("publicaciones", lazy="dynamic", cascade="all, delete-orphan")
     )
 
+
+class Like(db.Model):
+    """Un like por persona y publicación."""
+    __tablename__ = "likes"
+    __table_args__ = (db.UniqueConstraint("publicacion_id", "usuario_id", name="uq_like_publicacion_usuario"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    publicacion_id = db.Column(
+        db.Integer, db.ForeignKey("publicaciones.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    usuario_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+
+    publicacion = db.relationship(
+        "Publicacion", backref=db.backref("likes", lazy="dynamic", cascade="all, delete-orphan")
+    )
+
+
+class Reporte(db.Model):
+    """Reporte de una publicación. Una persona solo puede reportar una vez la misma publicación."""
+    __tablename__ = "reportes"
+    __table_args__ = (db.UniqueConstraint("publicacion_id", "usuario_id", name="uq_reporte_publicacion_usuario"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    publicacion_id = db.Column(
+        db.Integer, db.ForeignKey("publicaciones.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    usuario_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    motivo = db.Column(db.String(30), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+
+    publicacion = db.relationship(
+        "Publicacion", backref=db.backref("reportes", lazy="dynamic", cascade="all, delete-orphan")
+    )
+
