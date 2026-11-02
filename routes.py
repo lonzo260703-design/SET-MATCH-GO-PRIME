@@ -1,7 +1,4 @@
-import os
 import re
-import uuid
-from datetime import datetime, timezone
 from urllib.parse import urljoin, urlparse
 
 from flask import current_app, flash, jsonify, redirect, render_template, request, session, url_for
@@ -20,7 +17,7 @@ from services.email_service import (
     verificar_token_reset,
 )
 from services.gemini_service import generar_recomendacion_colorimetria, responder_chat_estilista
-from services.imagen_service import eliminar_imagen, subir_imagen, tipo_imagen
+from services.imagen_service import eliminar_imagen, id_desde_url, subir_imagen, tipo_imagen
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 LIMITE_PREGUNTAS_INVITADO = 3
@@ -426,25 +423,32 @@ def register_routes(app):
             return redirect(url_for('guardarropa'))
 
         ext = tipo_imagen(file.stream)
-        if ext:
-            filename = f"{current_user.id}_{int(datetime.now(timezone.utc).timestamp())}_{uuid.uuid4().hex[:8]}.{ext}"
-
-            upload_dir = current_app.config['UPLOAD_FOLDER']
-            os.makedirs(upload_dir, exist_ok=True)
-            file.save(os.path.join(upload_dir, filename))
-
-            nueva_prenda = Guardarropa(
-                usuario_id=current_user.id,
-                nombre=nombre[:100],
-                categoria=categoria if categoria in CATEGORIAS else 'Superior',
-                imagen=filename
-            )
-            db.session.add(nueva_prenda)
-            db.session.commit()
-
-            flash('¡Prenda guardada en tu guardarropa!', 'success')
-        else:
+        if not ext:
             flash('El archivo no es una imagen válida (PNG, JPG o WEBP).', 'error')
+            return redirect(url_for('guardarropa'))
+
+        try:
+            url, imagen_id = subir_imagen(file.stream, ext, "guardarropa")
+        except Exception as e:
+            current_app.logger.error(f"Error al subir imagen del guardarropa: {e}")
+            flash('No pudimos subir la foto. Inténtalo de nuevo en un momento.', 'error')
+            return redirect(url_for('guardarropa'))
+
+        try:
+            db.session.add(
+                Guardarropa(
+                    usuario_id=current_user.id,
+                    nombre=nombre[:100],
+                    categoria=categoria if categoria in CATEGORIAS else 'Superior',
+                    imagen=url,
+                )
+            )
+            db.session.commit()
+            flash('¡Prenda guardada en tu guardarropa!', 'success')
+        except Exception:
+            db.session.rollback()
+            eliminar_imagen(imagen_id)
+            flash('No pudimos guardar la prenda. Inténtalo de nuevo.', 'error')
 
         return redirect(url_for('guardarropa'))
 
@@ -456,13 +460,10 @@ def register_routes(app):
             flash("Prenda no encontrada.", "error")
             return redirect(url_for("guardarropa"))
 
-        ruta = os.path.join(current_app.config["UPLOAD_FOLDER"], prenda.imagen)
+        imagen_id = id_desde_url(prenda.imagen, "guardarropa")
         db.session.delete(prenda)
         db.session.commit()
-        try:
-            os.remove(ruta)
-        except OSError:
-            pass
+        eliminar_imagen(imagen_id)
         flash("Prenda eliminada.", "success")
         return redirect(url_for("guardarropa"))
 

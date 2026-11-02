@@ -4,6 +4,7 @@ Con CLOUDINARY_URL definida las imágenes se suben a Cloudinary (producción: el
 Render se borra en cada despliegue). Sin ella se guardan en static/uploads/ (solo desarrollo y pruebas).
 """
 import os
+import re
 import uuid
 
 from flask import current_app, url_for
@@ -13,6 +14,8 @@ FIRMAS_IMAGEN = (
     (b"\xff\xd8\xff", "jpg"),
 )
 PREFIJO_LOCAL = "local:"
+# Config que define la carpeta local (solo desarrollo y pruebas) de cada tipo de imagen
+CLAVES_CARPETA = {"comunidad": "COMUNIDAD_UPLOAD_FOLDER", "guardarropa": "UPLOAD_FOLDER"}
 
 
 def tipo_imagen(stream):
@@ -25,6 +28,26 @@ def tipo_imagen(stream):
     if cabecera[:4] == b"RIFF" and cabecera[8:12] == b"WEBP":
         return "webp"
     return None
+
+
+def _carpeta_local(carpeta):
+    configurada = current_app.config.get(CLAVES_CARPETA.get(carpeta, ""))
+    return configurada or os.path.join(current_app.static_folder, "uploads", carpeta)
+
+
+def id_desde_url(valor, carpeta="guardarropa"):
+    """Devuelve el id interno para borrar una imagen a partir de lo que se guardó en la base de datos.
+
+    Acepta una URL de Cloudinary, una ruta local (/static/uploads/...) o un nombre de archivo antiguo."""
+    if not valor:
+        return None
+    if valor.startswith("http"):
+        m = re.search(r"/upload/(?:v\d+/)?(.+)\.[A-Za-z0-9]+$", valor)
+        return m.group(1) if m else None
+    m = re.search(r"/static/uploads/([^/]+)/([^/]+)$", valor)
+    if m:
+        return f"{PREFIJO_LOCAL}{m.group(1)}/{m.group(2)}"
+    return f"{PREFIJO_LOCAL}{carpeta}/{os.path.basename(valor)}"  # nombre de archivo de versiones anteriores
 
 
 def cloudinary_activo():
@@ -47,9 +70,7 @@ def subir_imagen(stream, ext, carpeta="comunidad"):
         )
         return resultado["secure_url"], resultado["public_id"]
 
-    destino = current_app.config.get("COMUNIDAD_UPLOAD_FOLDER") or os.path.join(
-        current_app.static_folder, "uploads", carpeta
-    )
+    destino = _carpeta_local(carpeta)
     os.makedirs(destino, exist_ok=True)
     nombre = f"{uuid.uuid4().hex}.{ext}"
     with open(os.path.join(destino, nombre), "wb") as f:
@@ -65,9 +86,7 @@ def eliminar_imagen(id_interno):
         if id_interno.startswith(PREFIJO_LOCAL):
             relativo = id_interno[len(PREFIJO_LOCAL):]
             carpeta, nombre = relativo.split("/", 1)
-            base = current_app.config.get("COMUNIDAD_UPLOAD_FOLDER") or os.path.join(
-                current_app.static_folder, "uploads", carpeta
-            )
+            base = _carpeta_local(carpeta)
             os.remove(os.path.join(base, os.path.basename(nombre)))
         elif cloudinary_activo():
             import cloudinary

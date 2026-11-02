@@ -511,3 +511,62 @@ def test_visitante_ve_contador_de_likes_pero_no_el_boton_de_reportar(client, app
     html = app.test_client().get("/comunidad").data.decode()
     assert 'class="com-like-count">1<' in html and "Reportar" not in html
 
+
+# ---------- guardarropa en el servicio de imágenes ----------
+def test_prenda_guarda_url_y_el_archivo(client, app):
+    import os
+
+    iniciar_sesion(client, app)
+    client.post(
+        "/guardarropa/subir",
+        data={"nombre": "Camisa", "categoria": "Superior", "foto": (io.BytesIO(PNG), "camisa.png")},
+        content_type="multipart/form-data",
+    )
+    with app.app_context():
+        imagen = db.session.scalar(db.select(Guardarropa)).imagen
+    assert imagen.startswith("/static/uploads/guardarropa/")
+    assert len(os.listdir(app.config["UPLOAD_FOLDER"])) == 1
+    assert imagen.encode() in client.get("/guardarropa").data
+
+
+def test_eliminar_prenda_borra_el_archivo(client, app):
+    import os
+
+    iniciar_sesion(client, app)
+    client.post(
+        "/guardarropa/subir",
+        data={"nombre": "Camisa", "categoria": "Superior", "foto": (io.BytesIO(PNG), "camisa.png")},
+        content_type="multipart/form-data",
+    )
+    with app.app_context():
+        pid = db.session.scalar(db.select(Guardarropa)).id
+    client.post(f"/guardarropa/eliminar/{pid}")
+    assert os.listdir(app.config["UPLOAD_FOLDER"]) == []
+
+
+def test_prenda_antigua_con_nombre_de_archivo_sigue_funcionando(client, app):
+    import os
+
+    iniciar_sesion(client, app)
+    carpeta = app.config["UPLOAD_FOLDER"]
+    open(os.path.join(carpeta, "vieja.png"), "wb").write(PNG)
+    with app.app_context():
+        usuario = db.session.scalar(db.select(User))
+        db.session.add(Guardarropa(usuario_id=usuario.id, nombre="Vieja", categoria="Superior", imagen="vieja.png"))
+        db.session.commit()
+        pid = db.session.scalar(db.select(Guardarropa)).id
+    assert b"uploads/guardarropa/vieja.png" in client.get("/guardarropa").data
+    client.post(f"/guardarropa/eliminar/{pid}")
+    assert not os.path.exists(os.path.join(carpeta, "vieja.png"))
+
+
+def test_id_desde_url():
+    from services.imagen_service import id_desde_url
+
+    assert id_desde_url(
+        "https://res.cloudinary.com/demo/image/upload/v1730000000/set-match-go/guardarropa/abc123.jpg"
+    ) == "set-match-go/guardarropa/abc123"
+    assert id_desde_url("/static/uploads/guardarropa/x.png") == "local:guardarropa/x.png"
+    assert id_desde_url("x.png") == "local:guardarropa/x.png"
+    assert id_desde_url("") is None
+

@@ -50,7 +50,7 @@
         {% for prenda in prendas %}
         <div class="cloth-card">
           <div class="cloth-img-wrapper">
-            <img src="{{ url_for('static', filename='uploads/guardarropa/' ~ prenda.imagen) }}" alt="{{ prenda.nombre }}">
+            <img src="{{ prenda.imagen if (prenda.imagen.startswith('http') or prenda.imagen.startswith('/')) else url_for('static', filename='uploads/guardarropa/' ~ prenda.imagen) }}" alt="{{ prenda.nombre }}" loading="lazy">
           </div>
           <div class="cloth-info">
             <span class="category-tag">{{ prenda.categoria }}</span>
