@@ -570,3 +570,92 @@ def test_id_desde_url():
     assert id_desde_url("x.png") == "local:guardarropa/x.png"
     assert id_desde_url("") is None
 
+
+
+# ---------- Etapa 3: compartir ----------
+def test_republicar_crea_copia_con_misma_foto(app, client):
+    pid = publicacion_de_ana(app, client)
+    bea = otra_persona(app, "bea@example.com")
+    r = bea.post(f"/comunidad/republicar/{pid}", data={"descripcion": "¡Me encanta!"})
+    assert r.status_code == 302
+    with app.app_context():
+        copia = db.session.scalar(db.select(Publicacion).where(Publicacion.original_id == pid))
+        original = db.session.get(Publicacion, pid)
+        assert copia.imagen_id == original.imagen_id and copia.estacion == original.estacion
+        assert copia.descripcion == "¡Me encanta!"
+        assert copia.usuario.email == "bea@example.com"
+
+
+def test_no_se_puede_republicar_dos_veces_ni_lo_propio(app, client):
+    pid = publicacion_de_ana(app, client)
+    assert client.post(f"/comunidad/republicar/{pid}").status_code == 302  # Ana: propia
+    bea = otra_persona(app, "bea@example.com")
+    bea.post(f"/comunidad/republicar/{pid}")
+    bea.post(f"/comunidad/republicar/{pid}")
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(Publicacion.id)).where(Publicacion.original_id == pid)) == 1
+        assert db.session.scalar(db.select(db.func.count(Publicacion.id))) == 2
+
+
+def test_republicar_una_republicacion_apunta_al_original(app, client):
+    pid = publicacion_de_ana(app, client)
+    bea = otra_persona(app, "bea@example.com")
+    bea.post(f"/comunidad/republicar/{pid}")
+    with app.app_context():
+        copia_id = db.session.scalar(db.select(Publicacion.id).where(Publicacion.original_id == pid))
+    cami = otra_persona(app, "cami@example.com")
+    cami.post(f"/comunidad/republicar/{copia_id}")
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(Publicacion.id)).where(Publicacion.original_id == pid)) == 2
+
+
+def test_republicar_requiere_login(app, client):
+    pid = publicacion_de_ana(app, client)
+    client.get("/logout")
+    r = app.test_client().post(f"/comunidad/republicar/{pid}")
+    assert r.status_code == 302 and "login" in r.headers["Location"]
+
+
+def test_borrar_republicacion_no_borra_la_foto_original(app, client, monkeypatch):
+    pid = publicacion_de_ana(app, client)
+    bea = otra_persona(app, "bea@example.com")
+    bea.post(f"/comunidad/republicar/{pid}")
+    borradas = []
+    monkeypatch.setattr("routes.eliminar_imagen", lambda i: borradas.append(i))
+    with app.app_context():
+        copia_id = db.session.scalar(db.select(Publicacion.id).where(Publicacion.original_id == pid))
+    bea.post(f"/comunidad/eliminar/{copia_id}")
+    assert borradas == []
+    with app.app_context():
+        assert db.session.get(Publicacion, pid) is not None
+
+
+def test_borrar_original_borra_sus_republicaciones(app, client):
+    pid = publicacion_de_ana(app, client)
+    otra_persona(app, "bea@example.com").post(f"/comunidad/republicar/{pid}")
+    client.post(f"/comunidad/eliminar/{pid}")
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(Publicacion.id))) == 0
+
+
+def test_pagina_publica_con_vista_previa(app, client):
+    pid = publicacion_de_ana(app, client)
+    r = app.test_client().get(f"/p/{pid}")
+    assert r.status_code == 200
+    html = r.get_data(as_text=True)
+    assert 'property="og:image"' in html and "Outfit de" in html
+
+
+def test_pagina_publica_404_si_no_existe(app, client):
+    assert client.get("/p/9999").status_code == 404
+
+
+def test_publicacion_reportada_oculta_pagina_publica_y_republicaciones(app, client):
+    pid = publicacion_de_ana(app, client)
+    otra_persona(app, "bea@example.com").post(f"/comunidad/republicar/{pid}")
+    for i in range(3):
+        otra_persona(app, f"r{i}@example.com").post(f"/comunidad/reportar/{pid}", data={"motivo": "spam"})
+    anonimo = app.test_client()
+    assert anonimo.get(f"/p/{pid}").status_code == 404
+    assert "Outfit de" not in anonimo.get("/comunidad").get_data(as_text=True)
+    assert client.get(f"/p/{pid}").status_code == 200  # su autora sí

@@ -1,0 +1,91 @@
+  <article class="com-card com-post">
+    <div class="com-post-head">
+      <span class="com-avatar">{{ p.usuario.nombre[0] | upper }}</span>
+      <div class="com-post-meta">
+        <strong>{{ p.usuario.nombre }}{% if p.original %} <span class="com-muted">republicó de {{ p.original.usuario.nombre }}</span>{% endif %}</strong>
+        <a class="com-muted com-date" href="{{ url_for('ver_publicacion', id=p.id) }}">{{ p.created_at.strftime('%d/%m/%Y') }}</a>
+      </div>
+      {% if current_user.is_authenticated and current_user.id == p.usuario_id %}
+      <form action="{{ url_for('eliminar_publicacion', id=p.id) }}" method="POST"
+            onsubmit="return confirm('¿Eliminar esta publicación?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="com-delete">Eliminar</button>
+      </form>
+      {% endif %}
+    </div>
+
+    <img class="com-photo" src="{{ p.imagen_url }}" alt="Outfit de {{ p.usuario.nombre }}" loading="lazy">
+
+    <div class="com-post-body">
+      <div class="com-palette-row">
+        <span class="com-season">{{ p.estacion }}</span>
+        <span class="com-dots">
+          {% for color in p.paleta %}
+          <span class="com-dot" style="background-color: {{ color }};" title="{{ color }}"></span>
+          {% endfor %}
+        </span>
+      </div>
+      {% if p.descripcion %}
+      <p class="com-desc">{{ p.descripcion }}</p>
+      {% endif %}
+
+      {% if p.id in en_revision %}
+      <p class="com-review">⚠️ En revisión: esta publicación recibió varios reportes y solo tú puedes verla.</p>
+      {% endif %}
+
+      <div class="com-actions">
+        {% set total = likes_por_pub.get(p.id, 0) %}
+        {% if current_user.is_authenticated %}
+        <button type="button" class="com-like{% if p.id in mis_likes %} is-liked{% endif %}"
+                data-url="{{ url_for('toggle_like', id=p.id) }}"
+                aria-pressed="{{ 'true' if p.id in mis_likes else 'false' }}" aria-label="Me gusta">
+          <span class="com-heart">{{ '♥' if p.id in mis_likes else '♡' }}</span>
+          <span class="com-like-count">{{ total }}</span>
+        </button>
+        {% else %}
+        <a class="com-like" href="{{ url_for('login', next=url_for('comunidad')) }}" title="Inicia sesión para dar like">
+          <span class="com-heart">♡</span> <span class="com-like-count">{{ total }}</span>
+        </a>
+        {% endif %}
+
+        {% set enlace = url_for('ver_publicacion', id=p.id, _external=True) %}
+        <button type="button" class="com-share" data-copy="{{ enlace }}" title="Copiar enlace">🔗 <span>Copiar enlace</span></button>
+        <a class="com-share" target="_blank" rel="noopener"
+           href="https://wa.me/?text={{ ('Mira este outfit en SET-MATCH-GO!: ' ~ enlace) | urlencode }}">WhatsApp</a>
+        {% if current_user.is_authenticated and current_user.id != p.usuario_id %}
+          {% if p.id in mis_republicadas or (p.original and p.original.usuario_id == current_user.id) %}
+          <span class="com-muted">Republicada</span>
+          {% else %}
+          <details class="com-report com-repost">
+            <summary>🔁 Republicar</summary>
+            <form action="{{ url_for('republicar', id=p.id) }}" method="POST">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="text" name="descripcion" maxlength="500" placeholder="Agrega un comentario (opcional)">
+              <button type="submit">Republicar</button>
+            </form>
+          </details>
+          {% endif %}
+        {% endif %}
+
+        {% if current_user.is_authenticated and current_user.id != p.usuario_id %}
+          {% if p.id in mis_reportes %}
+          <span class="com-muted">Reportada</span>
+          {% else %}
+          <details class="com-report">
+            <summary>Reportar</summary>
+            <form action="{{ url_for('reportar_publicacion', id=p.id) }}" method="POST">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <select name="motivo" required>
+                <option value="" disabled selected>Motivo...</option>
+                {% for clave, texto in motivos.items() %}
+                <option value="{{ clave }}">{{ texto }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit">Enviar</button>
+            </form>
+          </details>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </article>

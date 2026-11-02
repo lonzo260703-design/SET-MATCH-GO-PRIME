@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{% if p %}Outfit de {{ p.usuario.nombre }}{% else %}Publicación no encontrada{% endif %} | SET-MATCH-GO!{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/comunidad.css') }}">{% endblock %}
+{% block extra_head %}
+{% if p %}
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="SET-MATCH-GO!">
+<meta property="og:title" content="Outfit de {{ p.usuario.nombre }} · {{ p.estacion }}">
+<meta property="og:description" content="{{ (p.descripcion or 'Mira este outfit con su paleta de colorimetría.') | truncate(160) }}">
+<meta property="og:image" content="{{ p.imagen_url }}">
+<meta property="og:url" content="{{ url_for('ver_publicacion', id=p.id, _external=True) }}">
+<meta name="twitter:card" content="summary_large_image">
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<main class="com-wrapper">
+  {% if p %}
+  {% include "_publicacion.html" %}
+  <p style="text-align:center"><a class="com-btn" href="{{ url_for('comunidad') }}">Ver la comunidad</a></p>
+  {% else %}
+  <div class="com-empty">Esta publicación no existe o ya no está disponible.</div>
+  <p style="text-align:center"><a class="com-btn" href="{{ url_for('comunidad') }}">Ir a la comunidad</a></p>
+  {% endif %}
+</main>
+<script src="{{ url_for('static', filename='js/comunidad.js') }}" defer></script>
+{% endblock %}
