@@ -476,26 +476,14 @@ def register_routes(app):
             .having(func.count(Reporte.usuario_id) >= UMBRAL_REPORTES)
         )
 
-    @app.route("/comunidad")
-    def comunidad():
-        pagina = request.args.get("pagina", 1, type=int)
-        consulta = select(Publicacion)
-        if current_user.is_authenticated:
-            # Las publicaciones ocultas por reportes solo las ve su autora o autor
-            consulta = consulta.where(
-                Publicacion.id.not_in(_ids_ocultos()) | (Publicacion.usuario_id == current_user.id)
-            )
-        else:
-            consulta = consulta.where(Publicacion.id.not_in(_ids_ocultos()))
-        publicaciones = db.paginate(
-            consulta.order_by(Publicacion.created_at.desc(), Publicacion.id.desc()),
-            page=pagina,
-            per_page=9,
-            error_out=False,
-        )
+    def _original_visible():
+        """Una republicación se oculta junto con su original reportada."""
+        return Publicacion.original_id.is_(None) | Publicacion.original_id.not_in(_ids_ocultos())
 
-        ids = [p.id for p in publicaciones.items]
+    def _contexto_tarjetas(ids):
+        """Likes, reportes y estado de revisión necesarios para dibujar tarjetas de publicación."""
         likes_por_pub, mis_likes, mis_reportes, en_revision = {}, set(), set(), set()
+        mis_republicadas = set()
         if ids:
             likes_por_pub = dict(
                 db.session.execute(
@@ -510,31 +498,49 @@ def register_routes(app):
                                    .having(func.count(Reporte.usuario_id) >= UMBRAL_REPORTES)).all()
             )
             if current_user.is_authenticated:
-                mis_likes = set(
-                    db.session.scalars(
-                        select(Like.publicacion_id).where(
-                            Like.usuario_id == current_user.id, Like.publicacion_id.in_(ids)
-                        )
-                    ).all()
-                )
-                mis_reportes = set(
-                    db.session.scalars(
-                        select(Reporte.publicacion_id).where(
-                            Reporte.usuario_id == current_user.id, Reporte.publicacion_id.in_(ids)
-                        )
-                    ).all()
-                )
+                mis_likes = set(db.session.scalars(
+                    select(Like.publicacion_id).where(
+                        Like.usuario_id == current_user.id, Like.publicacion_id.in_(ids))).all())
+                mis_reportes = set(db.session.scalars(
+                    select(Reporte.publicacion_id).where(
+                        Reporte.usuario_id == current_user.id, Reporte.publicacion_id.in_(ids))).all())
+                mis_republicadas = set(db.session.scalars(
+                    select(Publicacion.original_id).where(
+                        Publicacion.usuario_id == current_user.id, Publicacion.original_id.in_(ids))).all())
+        return {
+            "likes_por_pub": likes_por_pub,
+            "mis_likes": mis_likes,
+            "mis_reportes": mis_reportes,
+            "en_revision": en_revision,
+            "mis_republicadas": mis_republicadas,
+            "motivos": MOTIVOS_REPORTE,
+        }
+
+    @app.route("/comunidad")
+    def comunidad():
+        pagina = request.args.get("pagina", 1, type=int)
+        consulta = select(Publicacion)
+        if current_user.is_authenticated:
+            # Las publicaciones ocultas por reportes solo las ve su autora o autor
+            consulta = consulta.where(
+                (Publicacion.id.not_in(_ids_ocultos()) & _original_visible())
+                | (Publicacion.usuario_id == current_user.id)
+            )
+        else:
+            consulta = consulta.where(Publicacion.id.not_in(_ids_ocultos()), _original_visible())
+        publicaciones = db.paginate(
+            consulta.order_by(Publicacion.created_at.desc(), Publicacion.id.desc()),
+            page=pagina,
+            per_page=9,
+            error_out=False,
+        )
 
         ultimo_resultado = current_user.resultados.first() if current_user.is_authenticated else None
         return render_template(
             "comunidad.html",
             publicaciones=publicaciones,
             ultimo_resultado=ultimo_resultado,
-            likes_por_pub=likes_por_pub,
-            mis_likes=mis_likes,
-            mis_reportes=mis_reportes,
-            en_revision=en_revision,
-            motivos=MOTIVOS_REPORTE,
+            **_contexto_tarjetas([p.id for p in publicaciones.items]),
         )
 
     @app.route("/comunidad/publicar", methods=["POST"])
@@ -595,12 +601,67 @@ def register_routes(app):
             flash("Publicación no encontrada.", "error")
             return redirect(url_for("comunidad"))
 
-        imagen_id = publicacion.imagen_id
+        # Una republicación comparte la foto del original: no se borra de Cloudinary.
+        # Si se elimina un original, sus republicaciones también (cascada), así que la foto sobra.
+        imagen_id = None if publicacion.original_id else publicacion.imagen_id
         db.session.delete(publicacion)
         db.session.commit()
-        eliminar_imagen(imagen_id)
+        if imagen_id:
+            eliminar_imagen(imagen_id)
         flash("Publicación eliminada.", "success")
         return redirect(url_for("comunidad"))
+
+    @app.route("/comunidad/republicar/<int:id>", methods=["POST"])
+    @login_required
+    @limiter.limit("30 per hour")
+    def republicar(id):
+        publicacion = db.session.get(Publicacion, id)
+        if publicacion and publicacion.original_id:
+            publicacion = publicacion.original  # siempre se republica la publicación de origen
+        if not publicacion or publicacion.id in set(db.session.scalars(_ids_ocultos())):
+            flash("Publicación no encontrada.", "error")
+            return redirect(url_for("comunidad"))
+        if publicacion.usuario_id == current_user.id:
+            flash("Esa publicación ya es tuya.", "info")
+            return redirect(url_for("comunidad"))
+        ya = db.session.scalar(
+            select(Publicacion.id).where(
+                Publicacion.usuario_id == current_user.id, Publicacion.original_id == publicacion.id
+            )
+        )
+        if ya:
+            flash("Ya republicaste este outfit.", "info")
+            return redirect(url_for("comunidad"))
+
+        comentario = request.form.get("descripcion", "").strip()[:MAX_DESCRIPCION]
+        db.session.add(
+            Publicacion(
+                usuario_id=current_user.id,
+                imagen_url=publicacion.imagen_url,
+                imagen_id=publicacion.imagen_id,
+                descripcion=comentario or None,
+                estacion=publicacion.estacion,
+                subtono=publicacion.subtono,
+                paleta=publicacion.paleta,
+                original_id=publicacion.id,
+            )
+        )
+        db.session.commit()
+        flash("¡Republicaste el outfit en tu perfil de la comunidad!", "success")
+        return redirect(url_for("comunidad"))
+
+    @app.route("/p/<int:id>")
+    def ver_publicacion(id):
+        """Página pública de una publicación, pensada para compartir por enlace."""
+        p = db.session.get(Publicacion, id)
+        oculta = p is not None and (
+            p.id in set(db.session.scalars(_ids_ocultos()))
+            or (p.original_id and p.original_id in set(db.session.scalars(_ids_ocultos())))
+        )
+        es_autor = p is not None and current_user.is_authenticated and current_user.id == p.usuario_id
+        if p is None or (oculta and not es_autor):
+            return render_template("publicacion.html", p=None), 404
+        return render_template("publicacion.html", p=p, **_contexto_tarjetas([p.id]))
 
     @app.route("/comunidad/like/<int:id>", methods=["POST"])
     @login_required

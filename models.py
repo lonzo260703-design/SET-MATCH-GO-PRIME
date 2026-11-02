@@ -88,9 +88,18 @@ class Publicacion(db.Model):
     subtono = db.Column(db.String(10), nullable=False)
     paleta = db.Column(JSON_TYPE, nullable=False, default=list)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+    # Si es una republicación, apunta a la publicación original (comparte su foto)
+    original_id = db.Column(
+        db.Integer, db.ForeignKey("publicaciones.id", ondelete="CASCADE"), nullable=True, index=True
+    )
 
     usuario = db.relationship(
         "User", backref=db.backref("publicaciones", lazy="dynamic", cascade="all, delete-orphan")
+    )
+    original = db.relationship(
+        "Publicacion",
+        remote_side=[id],
+        backref=db.backref("republicaciones", cascade="all, delete-orphan"),
     )
 
 

@@ -2,6 +2,7 @@ import os
 import click
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_wtf.csrf import CSRFError
+from sqlalchemy import inspect, text
 
 from config import DEFAULT_SECRET, config_by_name
 from extensions import csrf, db, limiter, login_manager, mail
@@ -68,16 +69,28 @@ def create_app(config_name=None):
     from routes import register_routes
     register_routes(app)
 
+    def preparar_base_de_datos():
+        """Crea tablas faltantes y agrega columnas nuevas a tablas ya existentes."""
+        db.create_all()
+        inspector = inspect(db.engine)
+        columnas = {c["name"] for c in inspector.get_columns("publicaciones")}
+        if "original_id" not in columnas:
+            db.session.execute(text(
+                "ALTER TABLE publicaciones ADD COLUMN original_id INTEGER "
+                "REFERENCES publicaciones (id) ON DELETE CASCADE"
+            ))
+            db.session.commit()
+
     @app.cli.command("init-db")
     def init_db():
         """Crea las tablas en la base de datos configurada."""
-        db.create_all()
+        preparar_base_de_datos()
         click.echo("Tablas creadas con éxito.")
 
     if app.config.get("AUTO_CREATE_DB", False):
         with app.app_context():
             try:
-                db.create_all()
+                preparar_base_de_datos()
             except Exception as e:
                 app.logger.error(f"Error al crear automáticamente la base de datos: {e}")
 
