@@ -67,6 +67,28 @@
           {% endif %}
         {% endif %}
 
+        {% if current_user.is_authenticated %}
+        <details class="com-report com-repost">
+          <summary>✉️ Enviar</summary>
+          {% if current_user.id != p.usuario_id %}
+          <p style="margin:8px 0 0"><a href="{{ url_for('conversacion', uid=p.usuario_id, publicacion=p.id) }}">Mensaje a {{ p.usuario.nombre }}</a></p>
+          {% endif %}
+          {% for cid, cnombre in contactos %}{% if loop.first %}
+          <form action="{{ url_for('conversacion', uid=cid) }}" method="POST" class="com-send">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="publicacion_id" value="{{ p.id }}">
+            <select onchange="this.form.action = '{{ url_for('bandeja') }}/' + this.value" aria-label="Enviar a">
+              {% endif %}
+              <option value="{{ cid }}">{{ cnombre }}</option>
+              {% if loop.last %}
+            </select>
+            <button type="submit">Enviar</button>
+          </form>
+          {% endif %}{% endfor %}
+          <p style="margin:8px 0 0"><a href="{{ url_for('mensajes_nuevo', publicacion=p.id) }}">Buscar otra persona…</a></p>
+        </details>
+        {% endif %}
+
         {% if current_user.is_authenticated and current_user.id != p.usuario_id %}
           {% if p.id in mis_reportes %}
           <span class="com-muted">Reportada</span>

@@ -12,6 +12,11 @@
   {% block extra_css %}{% endblock %}
   {% block extra_head %}{% endblock %}
   <style>
+    .msg-badge { background: #e74c3c; color: #fff; border-radius: 10px; padding: 1px 7px; font-size: 11px; margin-left: 6px; }
+    .user-avatar-badge { position: relative; }
+    .msg-dot { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background: #e74c3c; border: 2px solid #223243; }
+  </style>
+  <style>
     * {
       box-sizing: border-box;
     }
@@ -866,7 +871,7 @@
       {% if current_user.is_authenticated %}
       <li class="dropdown user-dropdown-container nav-item">
         <a href="#" class="dropdown-toggle user-toggle">
-          <span class="user-avatar-badge">{{ current_user.nombre[0] | upper }}</span>
+          <span class="user-avatar-badge">{{ current_user.nombre[0] | upper }}{% if mensajes_sin_leer %}<i class="msg-dot" aria-label="Mensajes sin leer"></i>{% endif %}</span>
           <span class="user-display-name">{{ current_user.nombre.split()[0] }}</span>
           <span class="arrow-down">▾</span>
         </a>
@@ -878,6 +883,14 @@
           </div>
 
           <div class="user-card-divider"></div>
+
+          <a href="{{ url_for('bandeja') }}" class="user-card-item">
+            <svg class="item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            <span>MENSAJES{% if mensajes_sin_leer %} <b class="msg-badge">{{ mensajes_sin_leer if mensajes_sin_leer < 100 else '99+' }}</b>{% endif %}</span>
+          </a>
 
           <a href="{{ url_for('guardarropa') }}" class="user-card-item">
             <svg class="item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
@@ -993,6 +1006,11 @@
         </li>
 
         {% if current_user.is_authenticated %}
+        <li>
+          <a href="{{ url_for('bandeja') }}" class="mobile-nav-link">
+            <span>💬 Mensajes{% if mensajes_sin_leer %} <b class="msg-badge">{{ mensajes_sin_leer }}</b>{% endif %}</span>
+          </a>
+        </li>
         <li>
           <a href="{{ url_for('guardarropa') }}" class="mobile-nav-link">
             <span>👕 Mi Guardarropa</span>

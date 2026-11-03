@@ -141,3 +141,26 @@ class Reporte(db.Model):
         "Publicacion", backref=db.backref("reportes", lazy="dynamic", cascade="all, delete-orphan")
     )
 
+
+
+class Mensaje(db.Model):
+    """Mensaje privado entre dos personas, con un outfit adjunto opcional."""
+    __tablename__ = "mensajes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    remitente_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    destinatario_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    texto = db.Column(db.String(1000), nullable=True)
+    publicacion_id = db.Column(
+        db.Integer, db.ForeignKey("publicaciones.id", ondelete="SET NULL"), nullable=True
+    )
+    leido = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+
+    remitente = db.relationship("User", foreign_keys=[remitente_id])
+    destinatario = db.relationship("User", foreign_keys=[destinatario_id])
+    publicacion = db.relationship("Publicacion")
