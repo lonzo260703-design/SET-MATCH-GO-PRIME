@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Mensajes | SET-MATCH-GO!{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/mensajes.css') }}">{% endblock %}
+
+{% block content %}
+<main class="msg-wrapper">
+  <header class="msg-header">
+    <h1>Mensajes</h1>
+    <a class="msg-btn" href="{{ url_for('mensajes_nuevo') }}">＋ Nuevo mensaje</a>
+  </header>
+
+  <section class="msg-card">
+    {% for c in conversaciones %}
+    <a class="msg-row{% if c.sin_leer %} is-unread{% endif %}" href="{{ url_for('conversacion', uid=c.persona.id) }}">
+      <span class="msg-avatar">{{ c.persona.nombre[0] | upper }}</span>
+      <span class="msg-row-body">
+        <strong>{{ c.persona.nombre }}</strong>
+        <span class="msg-preview">
+          {% if c.ultimo.remitente_id == current_user.id %}Tú: {% endif %}{% if c.ultimo.texto %}{{ c.ultimo.texto | truncate(70) }}{% else %}👗 Outfit compartido{% endif %}
+        </span>
+      </span>
+      <span class="msg-row-meta">
+        <span class="msg-time">{{ c.ultimo.created_at.strftime('%d/%m') }}</span>
+        {% if c.sin_leer %}<b class="msg-badge">{{ c.sin_leer }}</b>{% endif %}
+      </span>
+    </a>
+    {% else %}
+    <div class="msg-empty">Aún no tienes conversaciones. Escribe a alguien desde la <a href="{{ url_for('comunidad') }}">Comunidad</a> o busca a una persona.</div>
+    {% endfor %}
+  </section>
+</main>
+{% endblock %}

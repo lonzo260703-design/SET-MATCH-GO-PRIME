@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Nuevo mensaje | SET-MATCH-GO!{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/mensajes.css') }}">{% endblock %}
+
+{% block content %}
+<main class="msg-wrapper">
+  <header class="msg-header">
+    <h1>Nuevo mensaje</h1>
+    <a class="msg-link" href="{{ url_for('bandeja') }}">← Mis mensajes</a>
+  </header>
+
+  <section class="msg-card msg-pad">
+    {% if publicacion %}<p class="msg-note">Vas a enviar el outfit de <strong>{{ publicacion.usuario.nombre }}</strong> ({{ publicacion.estacion }}).</p>{% endif %}
+    <form method="GET" class="msg-search">
+      {% if publicacion %}<input type="hidden" name="publicacion" value="{{ publicacion.id }}">{% endif %}
+      <input type="text" name="q" value="{{ q }}" minlength="2" maxlength="60" placeholder="Busca por nombre..." required autofocus>
+      <button type="submit" class="msg-btn">Buscar</button>
+    </form>
+
+    {% for p in personas %}
+    <a class="msg-row" href="{{ url_for('conversacion', uid=p.id, publicacion=publicacion.id if publicacion else None) }}">
+      <span class="msg-avatar">{{ p.nombre[0] | upper }}</span>
+      <span class="msg-row-body"><strong>{{ p.nombre }}</strong></span>
+    </a>
+    {% else %}
+      {% if q %}<p class="msg-empty">No encontramos a nadie con ese nombre.</p>{% endif %}
+    {% endfor %}
+  </section>
+</main>
+{% endblock %}

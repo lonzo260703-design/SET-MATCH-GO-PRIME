@@ -659,3 +659,102 @@ def test_publicacion_reportada_oculta_pagina_publica_y_republicaciones(app, clie
     assert anonimo.get(f"/p/{pid}").status_code == 404
     assert "Outfit de" not in anonimo.get("/comunidad").get_data(as_text=True)
     assert client.get(f"/p/{pid}").status_code == 200  # su autora sí
+
+
+# ---------- Etapa 4: mensajes privados ----------
+def id_de(app, email):
+    from models import User
+    with app.app_context():
+        return db.session.scalar(db.select(User.id).where(User.email == email))
+
+
+def enviar_msg(c, uid, texto="Hola", **extra):
+    return c.post(f"/mensajes/{uid}", data={"texto": texto, **extra})
+
+
+def test_mensajes_requieren_login(app):
+    c = app.test_client()
+    for url in ("/mensajes", "/mensajes/1", "/mensajes/nuevo"):
+        r = c.get(url)
+        assert r.status_code == 302 and "login" in r.headers["Location"]
+    assert c.post("/mensajes/1", data={"texto": "x"}).status_code == 302
+
+
+def test_enviar_y_recibir_mensaje_marca_leido(app, client):
+    iniciar_sesion(client, app, email="ana@example.com")
+    bea = otra_persona(app, "bea@example.com")
+    bea_id, ana_id = id_de(app, "bea@example.com"), id_de(app, "ana@example.com")
+    enviar_msg(client, bea_id, "¿Qué tal tu paleta?")
+    # Bea ve el contador y la bandeja
+    assert 'class="msg-badge"' in bea.get("/mensajes").get_data(as_text=True)
+    assert "¿Qué tal tu paleta?" in bea.get("/mensajes").get_data(as_text=True)
+    # Al abrir la conversación se marca como leído
+    assert "¿Qué tal tu paleta?" in bea.get(f"/mensajes/{ana_id}").get_data(as_text=True)
+    assert 'class="msg-badge"' not in bea.get("/mensajes").get_data(as_text=True)
+
+
+def test_mensaje_vacio_y_a_si_mismo_no_se_envian(app, client):
+    iniciar_sesion(client, app, email="ana@example.com")
+    otra_persona(app, "bea@example.com")
+    from models import Mensaje
+    enviar_msg(client, id_de(app, "bea@example.com"), "   ")
+    enviar_msg(client, id_de(app, "ana@example.com"), "yo conmigo")
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(Mensaje.id))) == 0
+
+
+def test_mensaje_se_recorta_a_1000_y_html_se_escapa(app, client):
+    iniciar_sesion(client, app, email="ana@example.com")
+    otra_persona(app, "bea@example.com")
+    bea_id = id_de(app, "bea@example.com")
+    enviar_msg(client, bea_id, "<script>alert(1)</script>" + "a" * 2000)
+    html = client.get(f"/mensajes/{bea_id}").get_data(as_text=True)
+    assert "<script>alert(1)</script>" not in html and "&lt;script&gt;" in html
+    from models import Mensaje
+    with app.app_context():
+        assert len(db.session.scalar(db.select(Mensaje.texto))) == 1000
+
+
+def test_conversacion_es_privada_para_terceros(app, client):
+    iniciar_sesion(client, app, email="ana@example.com")
+    bea = otra_persona(app, "bea@example.com")
+    cami = otra_persona(app, "cami@example.com")
+    enviar_msg(client, id_de(app, "bea@example.com"), "secreto de Ana y Bea")
+    ana_id = id_de(app, "ana@example.com")
+    assert "secreto de Ana y Bea" not in cami.get(f"/mensajes/{ana_id}").get_data(as_text=True)
+    assert "secreto de Ana y Bea" not in cami.get("/mensajes").get_data(as_text=True)
+
+
+def test_enviar_outfit_en_mensaje(app, client):
+    pid = publicacion_de_ana(app, client)
+    bea = otra_persona(app, "bea@example.com")
+    ana_id = id_de(app, "ana@example.com")
+    r = bea.post(f"/mensajes/{ana_id}", data={"texto": "", "publicacion_id": pid})
+    assert r.status_code == 302
+    html = client.get(f"/mensajes/{id_de(app, 'bea@example.com')}").get_data(as_text=True)
+    assert f"/p/{pid}" in html and "msg-outfit" in html
+
+
+def test_no_se_adjunta_outfit_oculto_ajeno(app, client):
+    pid = publicacion_de_ana(app, client)
+    for i in range(3):
+        otra_persona(app, f"r{i}@example.com").post(f"/comunidad/reportar/{pid}", data={"motivo": "spam"})
+    bea = otra_persona(app, "bea@example.com")
+    ana_id = id_de(app, "ana@example.com")
+    bea.post(f"/mensajes/{ana_id}", data={"texto": "", "publicacion_id": pid})  # solo outfit oculto: se rechaza
+    from models import Mensaje
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(Mensaje.id))) == 0
+
+
+def test_buscar_personas_por_nombre(app, client):
+    iniciar_sesion(client, app, email="ana@example.com")
+    otra_persona(app, "bea@example.com")
+    html = client.get("/mensajes/nuevo?q=An").get_data(as_text=True)
+    assert "msg-row" in html and "mensajes/%d" % id_de(app, "bea@example.com") in html
+    assert "msg-row" not in client.get("/mensajes/nuevo?q=%25").get_data(as_text=True)
+
+
+def test_persona_inexistente_redirige(app, client):
+    iniciar_sesion(client, app, email="ana@example.com")
+    assert client.get("/mensajes/9999").status_code == 302

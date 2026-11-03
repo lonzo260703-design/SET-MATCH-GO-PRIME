@@ -107,3 +107,8 @@
   flex: 1 1 180px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 8px;
   background: #ffffff; color: #1e293b; font: inherit;
 }
+
+.com-send { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.com-send select { padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #1e293b; font: inherit; }
+.com-send button { background: #c0392b; color: #ffffff; border: none; padding: 6px 14px; border-radius: 8px; font: inherit; font-weight: 700; cursor: pointer; }
+.com-repost a { color: #c0392b; }

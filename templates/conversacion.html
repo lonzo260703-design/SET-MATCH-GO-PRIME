@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ persona.nombre }} | Mensajes | SET-MATCH-GO!{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/mensajes.css') }}">{% endblock %}
+
+{% block content %}
+<main class="msg-wrapper">
+  <header class="msg-header">
+    <a class="msg-link" href="{{ url_for('bandeja') }}">← Mensajes</a>
+    <h1>{{ persona.nombre }}</h1>
+  </header>
+
+  <section class="msg-card msg-chat">
+    {% for m in mensajes %}
+    <div class="msg-bubble {{ 'mine' if m.remitente_id == current_user.id else 'theirs' }}">
+      {% if m.publicacion_id %}
+        {% set pub = m.publicacion %}
+        {% if pub and puede_ver(pub) %}
+        <a class="msg-outfit" href="{{ url_for('ver_publicacion', id=pub.id) }}">
+          <img src="{{ pub.imagen_url }}" alt="Outfit de {{ pub.usuario.nombre }}" loading="lazy">
+          <span>{{ pub.estacion }} · de {{ pub.usuario.nombre }}</span>
+        </a>
+        {% else %}
+        <span class="msg-gone">👗 Este outfit ya no está disponible</span>
+        {% endif %}
+      {% endif %}
+      {% if m.texto %}<p>{{ m.texto }}</p>{% endif %}
+      <time>{{ m.created_at.strftime('%d/%m %H:%M') }}</time>
+    </div>
+    {% else %}
+    <div class="msg-empty">Aún no hay mensajes. ¡Saluda a {{ persona.nombre }}!</div>
+    {% endfor %}
+    <span id="final"></span>
+  </section>
+
+  <form class="msg-compose" action="{{ url_for('conversacion', uid=persona.id) }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if adjunta %}
+    <input type="hidden" name="publicacion_id" value="{{ adjunta.id }}">
+    <div class="msg-attach">
+      <img src="{{ adjunta.imagen_url }}" alt="">
+      <span>Se enviará el outfit de {{ adjunta.usuario.nombre }} ({{ adjunta.estacion }})</span>
+      <a href="{{ url_for('conversacion', uid=persona.id) }}" title="Quitar">✕</a>
+    </div>
+    {% endif %}
+    <textarea name="texto" maxlength="1000" rows="2" placeholder="Escribe un mensaje..." {% if not adjunta %}required{% endif %}></textarea>
+    <button type="submit" class="msg-btn">Enviar</button>
+  </form>
+</main>
+{% endblock %}

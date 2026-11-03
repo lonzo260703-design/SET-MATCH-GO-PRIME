@@ -1,0 +1,45 @@
+/* Fondo oscuro con texto blanco: las tarjetas claras fijan su propio color */
+.msg-wrapper { max-width: 640px; margin: 100px auto 60px; padding: 0 16px; }
+.msg-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.msg-header h1 { font-family: 'Times New Roman', Times, serif; font-size: 26px; letter-spacing: 3px; text-transform: uppercase; margin: 0; }
+.msg-link { color: #cbd5e1; text-decoration: none; font-size: 14px; }
+.msg-link:hover { color: #ffffff; text-decoration: underline; }
+.msg-card { background: #ffffff; color: #1e293b; border-radius: 14px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+.msg-pad { padding: 20px; }
+.msg-btn { display: inline-block; background: #c0392b; color: #ffffff; border: none; padding: 10px 20px; border-radius: 8px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; text-decoration: none; }
+.msg-btn:hover { background: #a93226; }
+.msg-note { background: #f1f5f9; color: #334155; padding: 8px 12px; border-radius: 8px; font-size: 13px; margin: 0 0 14px; }
+.msg-search { display: flex; gap: 8px; margin-bottom: 12px; }
+.msg-search input { flex: 1; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; color: #1e293b; background: #ffffff; }
+
+.msg-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; color: #1e293b; text-decoration: none; border-bottom: 1px solid #f1f5f9; }
+.msg-row:hover { background: #f8fafc; }
+.msg-row.is-unread { background: #fff7f5; }
+.msg-avatar { width: 40px; height: 40px; border-radius: 50%; background: #223243; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+.msg-row-body { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; }
+.msg-preview { color: #64748b; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-row.is-unread .msg-preview { color: #1e293b; font-weight: 700; }
+.msg-row-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.msg-time { color: #64748b; font-size: 12px; }
+.msg-card .msg-badge { background: #e74c3c; color: #ffffff; border-radius: 10px; padding: 1px 8px; font-size: 11px; margin: 0; }
+.msg-empty { text-align: center; padding: 36px 20px; color: #64748b; font-size: 14px; }
+.msg-empty a { color: #c0392b; font-weight: 700; }
+
+.msg-chat { padding: 16px; display: flex; flex-direction: column; gap: 10px; min-height: 240px; max-height: 60vh; overflow-y: auto; }
+.msg-bubble { max-width: 80%; padding: 8px 12px; border-radius: 14px; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.msg-bubble p { margin: 0; white-space: pre-line; }
+.msg-bubble time { display: block; font-size: 11px; opacity: .65; margin-top: 4px; }
+.msg-bubble.mine { align-self: flex-end; background: #223243; color: #ffffff; border-bottom-right-radius: 4px; }
+.msg-bubble.theirs { align-self: flex-start; background: #f1f5f9; color: #1e293b; border-bottom-left-radius: 4px; }
+.msg-outfit { display: block; margin-bottom: 6px; color: inherit; text-decoration: none; }
+.msg-outfit img { display: block; width: 100%; max-width: 220px; border-radius: 10px; background: #e2e8f0; }
+.msg-outfit span { display: block; font-size: 12px; margin-top: 4px; opacity: .85; }
+.msg-gone { font-size: 13px; font-style: italic; opacity: .8; }
+
+.msg-compose { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+.msg-compose textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font: inherit; color: #1e293b; background: #ffffff; resize: vertical; }
+.msg-compose .msg-btn { align-self: flex-end; }
+.msg-attach { display: flex; align-items: center; gap: 10px; background: #ffffff; color: #1e293b; padding: 8px 12px; border-radius: 10px; font-size: 13px; }
+.msg-attach img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; }
+.msg-attach span { flex: 1; }
+.msg-attach a { color: #64748b; text-decoration: none; padding: 4px 8px; }

@@ -3,12 +3,12 @@ from urllib.parse import urljoin, urlparse
 
 from flask import current_app, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
-from sqlalchemy import func, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.exc import IntegrityError
 
 from colorimetria import PERFILES, RespuestasInvalidas, clasificar, paleta_de_estacion
 from extensions import db, limiter
-from models import Guardarropa, Like, Publicacion, Reporte, TestResult, User
+from models import Guardarropa, Like, Mensaje, Publicacion, Reporte, TestResult, User
 from services.email_service import (
     enviar_correo_confirmacion,
     enviar_correo_recuperacion,
@@ -24,6 +24,7 @@ LIMITE_PREGUNTAS_INVITADO = 3
 MAX_PREGUNTA = 500
 MAX_DESCRIPCION = 500
 UMBRAL_REPORTES = 3  # reportes de personas distintas para ocultar una publicación del feed
+MAX_MENSAJE = 1000
 MOTIVOS_REPORTE = {
     "inapropiado": "Contenido inapropiado",
     "spam": "Spam",
@@ -476,6 +477,31 @@ def register_routes(app):
             .having(func.count(Reporte.usuario_id) >= UMBRAL_REPORTES)
         )
 
+    def _contactos(limite=15):
+        """Personas con las que ya hay una conversación, las más recientes primero."""
+        yo = current_user.id
+        otro = case((Mensaje.remitente_id == yo, Mensaje.destinatario_id), else_=Mensaje.remitente_id)
+        filas = db.session.execute(
+            select(otro, func.max(Mensaje.id))
+            .where(or_(Mensaje.remitente_id == yo, Mensaje.destinatario_id == yo))
+            .group_by(otro)
+            .order_by(func.max(Mensaje.id).desc())
+            .limit(limite)
+        ).all()
+        ids = [f[0] for f in filas]
+        if not ids:
+            return []
+        nombres = dict(db.session.execute(select(User.id, User.nombre).where(User.id.in_(ids))).all())
+        return [(i, nombres[i]) for i in ids if i in nombres]
+
+    def _puede_ver_publicacion(p):
+        if p is None:
+            return False
+        if current_user.is_authenticated and current_user.id == p.usuario_id:
+            return True
+        ocultas = set(db.session.scalars(_ids_ocultos()))
+        return p.id not in ocultas and not (p.original_id and p.original_id in ocultas)
+
     def _original_visible():
         """Una republicación se oculta junto con su original reportada."""
         return Publicacion.original_id.is_(None) | Publicacion.original_id.not_in(_ids_ocultos())
@@ -507,7 +533,9 @@ def register_routes(app):
                 mis_republicadas = set(db.session.scalars(
                     select(Publicacion.original_id).where(
                         Publicacion.usuario_id == current_user.id, Publicacion.original_id.in_(ids))).all())
+        contactos = _contactos() if current_user.is_authenticated else []
         return {
+            "contactos": contactos,
             "likes_por_pub": likes_por_pub,
             "mis_likes": mis_likes,
             "mis_reportes": mis_reportes,
@@ -662,6 +690,130 @@ def register_routes(app):
         if p is None or (oculta and not es_autor):
             return render_template("publicacion.html", p=None), 404
         return render_template("publicacion.html", p=p, **_contexto_tarjetas([p.id]))
+
+    # ---------- MENSAJES PRIVADOS ----------
+    @app.context_processor
+    def contador_mensajes():
+        if request.endpoint == "static" or not current_user.is_authenticated:
+            return {"mensajes_sin_leer": 0}
+        total = db.session.scalar(
+            select(func.count(Mensaje.id)).where(
+                Mensaje.destinatario_id == current_user.id, Mensaje.leido.is_(False)
+            )
+        )
+        return {"mensajes_sin_leer": total or 0}
+
+    def _publicacion_adjunta(valor):
+        """Devuelve la publicación indicada si existe y la persona puede verla."""
+        try:
+            pub = db.session.get(Publicacion, int(valor)) if valor else None
+        except (TypeError, ValueError):
+            return None
+        return pub if _puede_ver_publicacion(pub) else None
+
+    @app.route("/mensajes")
+    @login_required
+    def bandeja():
+        yo = current_user.id
+        otro = case((Mensaje.remitente_id == yo, Mensaje.destinatario_id), else_=Mensaje.remitente_id)
+        ultimos = (
+            select(func.max(Mensaje.id))
+            .where(or_(Mensaje.remitente_id == yo, Mensaje.destinatario_id == yo))
+            .group_by(otro)
+        )
+        ultimos_msgs = db.session.scalars(
+            select(Mensaje).where(Mensaje.id.in_(ultimos)).order_by(Mensaje.id.desc()).limit(50)
+        ).all()
+        sin_leer = dict(
+            db.session.execute(
+                select(Mensaje.remitente_id, func.count(Mensaje.id))
+                .where(Mensaje.destinatario_id == yo, Mensaje.leido.is_(False))
+                .group_by(Mensaje.remitente_id)
+            ).all()
+        )
+        conversaciones = [
+            {
+                "persona": m.destinatario if m.remitente_id == yo else m.remitente,
+                "ultimo": m,
+                "sin_leer": sin_leer.get(m.remitente_id, 0) if m.remitente_id != yo else 0,
+            }
+            for m in ultimos_msgs
+        ]
+        return render_template("mensajes.html", conversaciones=conversaciones)
+
+    @app.route("/mensajes/nuevo")
+    @login_required
+    def mensajes_nuevo():
+        q = request.args.get("q", "").strip()[:60]
+        publicacion = _publicacion_adjunta(request.args.get("publicacion"))
+        personas = []
+        if len(q) >= 2:
+            patron = "%" + q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+            personas = db.session.scalars(
+                select(User)
+                .where(User.nombre.ilike(patron, escape="\\"), User.id != current_user.id, User.is_confirmed.is_(True))
+                .order_by(User.nombre)
+                .limit(10)
+            ).all()
+        return render_template("mensajes_nuevo.html", q=q, personas=personas, publicacion=publicacion)
+
+    @app.route("/mensajes/<int:uid>", methods=["GET", "POST"])
+    @login_required
+    @limiter.limit("60 per hour", methods=["POST"])
+    def conversacion(uid):
+        persona = db.session.get(User, uid)
+        if not persona or not persona.is_confirmed:
+            flash("Persona no encontrada.", "error")
+            return redirect(url_for("bandeja"))
+        if persona.id == current_user.id:
+            flash("No puedes enviarte mensajes a ti mismo.", "info")
+            return redirect(url_for("bandeja"))
+        yo = current_user.id
+
+        if request.method == "POST":
+            texto = request.form.get("texto", "").strip()[:MAX_MENSAJE]
+            publicacion = _publicacion_adjunta(request.form.get("publicacion_id"))
+            if not texto and not publicacion:
+                flash("Escribe un mensaje antes de enviarlo.", "error")
+                return redirect(url_for("conversacion", uid=uid))
+            db.session.add(
+                Mensaje(
+                    remitente_id=yo,
+                    destinatario_id=uid,
+                    texto=texto or None,
+                    publicacion_id=publicacion.id if publicacion else None,
+                )
+            )
+            db.session.commit()
+            return redirect(url_for("conversacion", uid=uid) + "#final")
+
+        # Al abrir la conversación, los mensajes recibidos quedan como leídos
+        pendientes = db.session.scalars(
+            select(Mensaje).where(
+                Mensaje.remitente_id == uid, Mensaje.destinatario_id == yo, Mensaje.leido.is_(False)
+            )
+        ).all()
+        for m in pendientes:
+            m.leido = True
+        if pendientes:
+            db.session.commit()
+
+        mensajes = db.session.scalars(
+            select(Mensaje)
+            .where(
+                or_(
+                    (Mensaje.remitente_id == yo) & (Mensaje.destinatario_id == uid),
+                    (Mensaje.remitente_id == uid) & (Mensaje.destinatario_id == yo),
+                )
+            )
+            .order_by(Mensaje.id.desc())
+            .limit(100)
+        ).all()[::-1]
+        adjunta = _publicacion_adjunta(request.args.get("publicacion"))
+        return render_template(
+            "conversacion.html", persona=persona, mensajes=mensajes, adjunta=adjunta,
+            puede_ver=_puede_ver_publicacion,
+        )
 
     @app.route("/comunidad/like/<int:id>", methods=["POST"])
     @login_required
