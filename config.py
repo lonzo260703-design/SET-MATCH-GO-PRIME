@@ -27,6 +27,9 @@ class BaseConfig:
     # Correos con acceso al panel de administración (separados por coma)
     ADMIN_EMAILS = {e.strip().lower() for e in os.getenv("ADMIN_EMAILS", "").split(",") if e.strip()}
 
+    # Correo al que escriben las personas para ejercer sus derechos de privacidad
+    CONTACT_EMAIL = os.getenv("CONTACT_EMAIL") or os.getenv("MAIL_USERNAME")
+
     # CONFIGURACIÓN SMTP (FLASK-MAIL)
     MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
     MAIL_PORT = int(os.getenv("MAIL_PORT", 587))

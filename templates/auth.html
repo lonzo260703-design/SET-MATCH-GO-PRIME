@@ -452,6 +452,11 @@
             </div>
           </div>
 
+          <label class="form-check-compact" style="display:flex;gap:8px;align-items:flex-start;font-size:12px;margin:6px 0 12px;line-height:1.4;">
+            <input type="checkbox" name="acepto" value="1" required style="margin-top:2px;">
+            <span>Acepto el <a href="{{ url_for('privacidad') }}" target="_blank" rel="noopener">aviso de privacidad</a> y las reglas de la comunidad.</span>
+          </label>
+
           <button type="submit" class="btn-auth-submit">Registrarse</button>
         </form>
       </div>

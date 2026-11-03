@@ -106,6 +106,8 @@ def register_routes(app):
             confirmar = request.form.get("confirmar", "")
 
             errores = []
+            if not request.form.get("acepto"):
+                errores.append("Debes aceptar el aviso de privacidad para crear tu cuenta.")
             if not 2 <= len(nombre) <= 80:
                 errores.append("El nombre debe tener entre 2 y 80 caracteres.")
             if not EMAIL_RE.match(email) or len(email) > 120:
@@ -299,6 +301,59 @@ def register_routes(app):
                 flash("El nombre debe tener entre 2 y 80 caracteres.", "error")
 
         return render_template("perfil.html")
+
+    # ---------- PRIVACIDAD Y CUENTA ----------
+    @app.route("/privacidad")
+    def privacidad():
+        return render_template("privacidad.html", contacto=current_app.config.get("CONTACT_EMAIL"))
+
+    @app.route("/cuenta/eliminar", methods=["GET", "POST"])
+    @login_required
+    @limiter.limit("5 per hour", methods=["POST"])
+    def eliminar_cuenta():
+        if request.method == "GET":
+            return render_template("eliminar_cuenta.html")
+
+        if not current_user.check_password(request.form.get("password", "")):
+            flash("La contraseña no es correcta.", "error")
+            return redirect(url_for("eliminar_cuenta"))
+        if request.form.get("confirmacion", "").strip().upper() != "ELIMINAR":
+            flash("Escribe ELIMINAR para confirmar.", "error")
+            return redirect(url_for("eliminar_cuenta"))
+
+        usuario = db.session.get(User, current_user.id)
+        uid = usuario.id
+        fotos_comunidad = [p.imagen_id for p in usuario.publicaciones if not p.original_id]
+        fotos_guardarropa = [prenda.imagen for prenda in usuario.prendas]
+
+        # Lo que no se borra solo en cascada
+        db.session.execute(Like.__table__.delete().where(Like.usuario_id == uid))
+        db.session.execute(Reporte.__table__.delete().where(Reporte.usuario_id == uid))
+        db.session.execute(
+            Mensaje.__table__.delete().where((Mensaje.remitente_id == uid) | (Mensaje.destinatario_id == uid))
+        )
+        db.session.execute(
+            PrendaCatalogo.__table__.update().where(PrendaCatalogo.creado_por == uid).values(creado_por=None)
+        )
+        logout_user()
+        db.session.delete(usuario)  # resultados, guardarropa y publicaciones (con sus republicaciones) en cascada
+        db.session.commit()
+        # Mensajes de otras personas que adjuntaban publicaciones que ya no existen
+        db.session.execute(
+            Mensaje.__table__.update()
+            .where(Mensaje.publicacion_id.is_not(None), Mensaje.publicacion_id.not_in(select(Publicacion.id)))
+            .values(publicacion_id=None)
+        )
+        db.session.commit()
+
+        for imagen_id in fotos_comunidad:
+            eliminar_imagen(imagen_id)
+        for url in fotos_guardarropa:
+            if not _imagen_en_uso(url):
+                eliminar_imagen(id_desde_url(url, "guardarropa"))
+        session.clear()
+        flash("Tu cuenta y tus datos fueron eliminados. ¡Gracias por haber sido parte!", "success")
+        return redirect(url_for("index"))
 
     # ---------- TEST DE COLORIMETRÍA ----------
     @app.route("/test", methods=["GET", "POST"])
@@ -498,6 +553,13 @@ def register_routes(app):
             consulta = consulta.where(PrendaCatalogo.id != excepto_catalogo_id)
         return bool(db.session.scalar(consulta))
 
+    def _estacion_base(texto):
+        """'Invierno (Subtono Frío - ...)' -> 'Invierno'; la paleta neutra -> 'Neutro'."""
+        for e in ESTACIONES_CATALOGO:
+            if texto and texto.startswith(e):
+                return e
+        return "Neutro"
+
     def _normalizar_estacion(valor):
         """Acepta 'otono', 'Otoño', 'INVIERNO'... y devuelve el nombre oficial (o '')."""
         quitar = str.maketrans("áéíóúñ", "aeioun")
@@ -551,27 +613,33 @@ def register_routes(app):
         estacion = _normalizar_estacion(request.args.get("estacion", ""))
         categoria = request.args.get("categoria", "")
         consulta = select(PrendaCatalogo).where(PrendaCatalogo.activa.is_(True))
-        if estacion:
+        ultimo = current_user.resultados.first() if current_user.is_authenticated else None
+        mi_base = _estacion_base(ultimo.estacion) if ultimo else None
+        para_mi = bool(mi_base) and request.args.get("para_mi") == "1"
+        if para_mi:
+            estacion = ""
+            consulta = consulta.where(PrendaCatalogo.estacion.in_([mi_base, "Neutro"]))
+        elif estacion:
             consulta = consulta.where(PrendaCatalogo.estacion == estacion)
         if categoria in CATEGORIAS:
             consulta = consulta.where(PrendaCatalogo.categoria == categoria)
         else:
             categoria = ""
-        prendas = db.paginate(
-            consulta.order_by(PrendaCatalogo.created_at.desc(), PrendaCatalogo.id.desc()),
-            page=pagina, per_page=12, error_out=False,
-        )
+        orden = [PrendaCatalogo.created_at.desc(), PrendaCatalogo.id.desc()]
+        if mi_base:  # las que combinan con la paleta de la persona van primero
+            orden.insert(0, case((PrendaCatalogo.estacion.in_([mi_base, "Neutro"]), 0), else_=1))
+        prendas = db.paginate(consulta.order_by(*orden), page=pagina, per_page=12, error_out=False)
         mias = set()
         if current_user.is_authenticated and prendas.items:
             urls = [p.imagen_url for p in prendas.items]
             mias = set(db.session.scalars(
                 select(Guardarropa.imagen).where(Guardarropa.usuario_id == current_user.id, Guardarropa.imagen.in_(urls))
             ).all())
-        ultimo = current_user.resultados.first() if current_user.is_authenticated else None
         return render_template(
             "colecciones.html", prendas=prendas, estacion=estacion, categoria=categoria, mias=mias,
             estaciones=ESTACIONES_CATALOGO, categorias=sorted(CATEGORIAS),
-            mi_estacion=ultimo.estacion if ultimo else None,
+            mi_estacion=ultimo.estacion if ultimo else None, mi_base=mi_base, para_mi=para_mi,
+            mi_paleta=paleta_de_estacion(ultimo.estacion) if ultimo else [],
         )
 
     @app.route("/colecciones/agregar/<int:id>", methods=["POST"])
@@ -611,10 +679,56 @@ def register_routes(app):
             "copias": sum(copias.values()),
             "usuarios": db.session.scalar(select(func.count(User.id))),
         }
+        reportes = _resumen_reportes()
+        resumen["reportadas"] = len(reportes)
+        resumen["ocultas"] = sum(1 for r in reportes if r[3])
         return render_template(
             "admin.html", prendas=prendas, copias=copias, resumen=resumen,
             estaciones=ESTACIONES_CATALOGO, categorias=sorted(CATEGORIAS),
         )
+
+    def _resumen_reportes():
+        """Publicaciones con al menos un reporte: [(publicacion, total, {motivo: n}, oculta)], más reportadas primero."""
+        filas = db.session.execute(
+            select(Reporte.publicacion_id, Reporte.motivo, func.count(Reporte.id)).group_by(Reporte.publicacion_id, Reporte.motivo)
+        ).all()
+        por_pub = {}
+        for pid, motivo, n in filas:
+            por_pub.setdefault(pid, {})[motivo] = n
+        pubs = {p.id: p for p in db.session.scalars(select(Publicacion).where(Publicacion.id.in_(list(por_pub) or [0]))).all()}
+        resumen = []
+        for pid, motivos in por_pub.items():
+            if pid in pubs:
+                total = sum(motivos.values())
+                resumen.append((pubs[pid], total, motivos, total >= UMBRAL_REPORTES))
+        resumen.sort(key=lambda r: (r[1], r[0].id), reverse=True)
+        return resumen
+
+    @app.route("/admin/reportes")
+    @admin_required
+    def admin_reportes():
+        return render_template("admin_reportes.html", resumen=_resumen_reportes(), motivos=MOTIVOS_REPORTE)
+
+    @app.route("/admin/reportes/<int:id>/restaurar", methods=["POST"])
+    @admin_required
+    def admin_restaurar_publicacion(id):
+        """Descarta los reportes: la publicación vuelve al feed y las personas pueden reportarla de nuevo."""
+        db.session.execute(Reporte.__table__.delete().where(Reporte.publicacion_id == id))
+        db.session.commit()
+        flash("Reportes descartados: la publicación vuelve a mostrarse.", "success")
+        return redirect(url_for("admin_reportes"))
+
+    @app.route("/admin/reportes/<int:id>/eliminar", methods=["POST"])
+    @admin_required
+    def admin_eliminar_publicacion(id):
+        publicacion = db.session.get(Publicacion, id) or abort(404)
+        imagen_id = None if publicacion.original_id else publicacion.imagen_id
+        db.session.delete(publicacion)  # sus republicaciones, likes y reportes se eliminan en cascada
+        db.session.commit()
+        if imagen_id:
+            eliminar_imagen(imagen_id)
+        flash("Publicación eliminada.", "success")
+        return redirect(url_for("admin_reportes"))
 
     @app.route("/admin/prenda", methods=["POST"])
     @admin_required

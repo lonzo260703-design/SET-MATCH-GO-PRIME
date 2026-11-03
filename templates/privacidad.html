@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Aviso de privacidad | SET-MATCH-GO!{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/legal.css') }}">{% endblock %}
+
+{% block content %}
+<main class="legal-wrapper">
+  <article class="legal-card">
+    <h1>Aviso de privacidad y reglas de la comunidad</h1>
+    <p class="legal-muted">Última actualización: noviembre de 2026</p>
+
+    <h2>1. Quién es responsable</h2>
+    <p>SET-MATCH-GO! es responsable del tratamiento de tus datos personales.
+    {% if contacto %}Para cualquier duda o solicitud, escribe a <a href="mailto:{{ contacto }}">{{ contacto }}</a>.{% endif %}</p>
+
+    <h2>2. Qué datos recopilamos</h2>
+    <ul>
+      <li><strong>Cuenta:</strong> nombre, correo electrónico y contraseña (se guarda cifrada, nunca en texto).</li>
+      <li><strong>Perfil (opcional):</strong> color de ojos, color de cabello y biografía.</li>
+      <li><strong>Test de colorimetría:</strong> tus respuestas y tu resultado (estación y paleta).</li>
+      <li><strong>Contenido que tú subes:</strong> fotos de tu guardarropa y de tus outfits publicados, descripciones, mensajes privados, me gusta y reportes.</li>
+    </ul>
+
+    <h2>3. Para qué los usamos</h2>
+    <p>Para crear y proteger tu cuenta, calcular tu colorimetría, personalizar las colecciones, mostrar tus publicaciones en la comunidad, permitir mensajes entre personas, enviarte correos de confirmación o recuperación de contraseña y moderar contenido reportado.</p>
+
+    <h2>4. Con quién se comparten</h2>
+    <ul>
+      <li><strong>Lo que publicas en la comunidad</strong> (foto, descripción, tu nombre y tu paleta) es visible para otras personas y, mediante el enlace público, para cualquiera que lo reciba.</li>
+      <li><strong>Tus mensajes privados</strong> solo los ven quien los envía y quien los recibe, y el equipo administrador si una persona los reporta o es necesario por seguridad.</li>
+      <li><strong>Proveedores que procesan datos por nosotros:</strong> almacenamiento de imágenes, base de datos y hosting, envío de correos y el servicio de inteligencia artificial que genera recomendaciones de estilo (tu pregunta y tu resultado de colorimetría se envían para responderte).</li>
+      <li>No vendemos tus datos.</li>
+    </ul>
+
+    <h2>5. Tus derechos</h2>
+    <p>Puedes acceder, rectificar, cancelar u oponerte al uso de tus datos (derechos ARCO). Puedes editar tu información en <a href="{{ url_for('perfil') }}">tu perfil</a> y <a href="{{ url_for('eliminar_cuenta') }}">eliminar tu cuenta</a> en cualquier momento: se borran tus datos, fotos, publicaciones, mensajes y guardarropa. Para otras solicitudes, escríbenos al correo de contacto.</p>
+
+    <h2>6. Cuánto tiempo los conservamos</h2>
+    <p>Mientras tu cuenta exista. Al eliminarla, tus datos se borran de nuestra base de datos y de nuestro almacenamiento de imágenes.</p>
+
+    <h2>7. Reglas de la comunidad</h2>
+    <ul>
+      <li>Publica solo fotos tuyas o que tengas permiso de compartir. No subas imágenes de menores de edad sin autorización de su tutor.</li>
+      <li>No publiques contenido ofensivo, sexual, violento, engañoso ni spam.</li>
+      <li>Respeta a las demás personas en los mensajes privados.</li>
+      <li>Puedes reportar cualquier publicación. Si recibe varios reportes se oculta mientras el equipo la revisa, y podemos eliminar contenido o cuentas que incumplan estas reglas.</li>
+    </ul>
+
+    <h2>8. Cambios a este aviso</h2>
+    <p>Si lo actualizamos, publicaremos la nueva versión en esta página.</p>
+  </article>
+</main>
+{% endblock %}

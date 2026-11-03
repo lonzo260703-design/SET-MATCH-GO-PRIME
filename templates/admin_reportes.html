@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Moderación | SET-MATCH-GO!{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/catalogo.css') }}">{% endblock %}
+
+{% block content %}
+<main class="cat-wrapper" style="max-width: 900px;">
+  <header class="cat-header">
+    <h1>Moderación</h1>
+    <p>Publicaciones reportadas por la comunidad. Con {{ 3 }} o más reportes se ocultan del feed hasta que las revises.</p>
+    <p><a href="{{ url_for('admin_panel') }}" style="color:#fff;font-weight:700">← Panel de administración</a></p>
+  </header>
+
+  {% for p, total, motivos_pub, oculta in resumen %}
+  <section class="adm-card" style="display:flex;gap:16px;flex-wrap:wrap">
+    <img src="{{ p.imagen_url }}" alt="" style="width:130px;height:160px;object-fit:cover;border-radius:10px">
+    <div style="flex:1;min-width:220px">
+      <h2 style="margin-bottom:4px">{{ p.usuario.nombre }}{% if p.original_id %} <span class="cat-meta">(republicación)</span>{% endif %}</h2>
+      <p class="cat-meta" style="margin:0 0 8px">{{ p.created_at.strftime('%d/%m/%Y') }} · {{ p.estacion }} ·
+        <a href="{{ url_for('ver_publicacion', id=p.id) }}" target="_blank" rel="noopener">ver publicación</a></p>
+      {% if p.descripcion %}<p style="margin:0 0 8px;overflow-wrap:anywhere">{{ p.descripcion }}</p>{% endif %}
+      <p style="margin:0 0 10px">
+        <span class="cat-tag {{ 'is-season' if oculta else '' }}">{{ total }} reporte{{ '' if total == 1 else 's' }}{% if oculta %} · oculta{% endif %}</span>
+        {% for clave, n in motivos_pub.items() %}<span class="cat-tag">{{ motivos.get(clave, clave) }}: {{ n }}</span> {% endfor %}
+      </p>
+      <form action="{{ url_for('admin_restaurar_publicacion', id=p.id) }}" method="POST" style="display:inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="cat-btn is-ghost" type="submit">Descartar reportes</button>
+      </form>
+      <form action="{{ url_for('admin_eliminar_publicacion', id=p.id) }}" method="POST" style="display:inline"
+            onsubmit="return confirm('¿Eliminar esta publicación? Sus republicaciones también se eliminan.');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="cat-btn is-danger" type="submit">Eliminar</button>
+      </form>
+    </div>
+  </section>
+  {% else %}
+  <div class="cat-empty">No hay publicaciones reportadas. 🎉</div>
+  {% endfor %}
+</main>
+{% endblock %}
