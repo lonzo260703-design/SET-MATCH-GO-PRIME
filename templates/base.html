@@ -817,6 +817,10 @@
               <div><strong>Invierno</strong></div>
             </a>
             <div style="border-top: 1px solid #eee; margin: 4px 0;"></div>
+            <a href="{{ url_for('catalogo') }}">
+              <span class="menu-icon">👗</span>
+              <div><strong>Catálogo de tiendas</strong></div>
+            </a>
             <a href="{{ url_for('colecciones') }}">
               <span class="menu-icon">🛍️</span>
               <div><strong>Ver Todo</strong></div>
@@ -883,6 +887,13 @@
           </div>
 
           <div class="user-card-divider"></div>
+
+          {% if es_admin %}
+          <a href="{{ url_for('admin_panel') }}" class="user-card-item">
+            <span class="item-icon">🛠️</span>
+            <span>PANEL ADMIN</span>
+          </a>
+          {% endif %}
 
           <a href="{{ url_for('bandeja') }}" class="user-card-item">
             <svg class="item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
@@ -980,6 +991,7 @@
             <a href="{{ url_for('colecciones', estacion='verano') }}">☀️ Verano</a>
             <a href="{{ url_for('colecciones', estacion='otono') }}">🍂 Otoño</a>
             <a href="{{ url_for('colecciones', estacion='invierno') }}">❄️ Invierno</a>
+            <a href="{{ url_for('catalogo') }}">👗 Catálogo de tiendas</a>
             <a href="{{ url_for('colecciones') }}" style="font-weight: bold; color: #e74c3c;">Ver Todo el Catálogo</a>
           </div>
         </li>
@@ -1006,6 +1018,11 @@
         </li>
 
         {% if current_user.is_authenticated %}
+        {% if es_admin %}
+        <li>
+          <a href="{{ url_for('admin_panel') }}" class="mobile-nav-link"><span>🛠️ Panel admin</span></a>
+        </li>
+        {% endif %}
         <li>
           <a href="{{ url_for('bandeja') }}" class="mobile-nav-link">
             <span>💬 Mensajes{% if mensajes_sin_leer %} <b class="msg-badge">{{ mensajes_sin_leer }}</b>{% endif %}</span>

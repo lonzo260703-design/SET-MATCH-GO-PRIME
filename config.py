@@ -24,6 +24,9 @@ class BaseConfig:
     # En producción con varios workers usa Redis: LIMITER_STORAGE_URI=redis://...
     RATELIMIT_STORAGE_URI = os.getenv("LIMITER_STORAGE_URI", "memory://")
 
+    # Correos con acceso al panel de administración (separados por coma)
+    ADMIN_EMAILS = {e.strip().lower() for e in os.getenv("ADMIN_EMAILS", "").split(",") if e.strip()}
+
     # CONFIGURACIÓN SMTP (FLASK-MAIL)
     MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
     MAIL_PORT = int(os.getenv("MAIL_PORT", 587))

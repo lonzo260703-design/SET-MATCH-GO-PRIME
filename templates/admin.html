@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Panel de administración | SET-MATCH-GO!{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/catalogo.css') }}">{% endblock %}
+
+{% block content %}
+<main class="cat-wrapper">
+  <header class="cat-header">
+    <h1>Panel de administración</h1>
+    <p>Sube la ropa de tu sucursal y aparecerá en el <a href="{{ url_for('catalogo') }}" style="color:#fff;font-weight:700">catálogo</a>.</p>
+  </header>
+
+  <section class="adm-stats">
+    <div class="adm-stat"><b>{{ resumen.total }}</b><span>Prendas</span></div>
+    <div class="adm-stat"><b>{{ resumen.activas }}</b><span>Publicadas</span></div>
+    <div class="adm-stat"><b>{{ resumen.copias }}</b><span>Agregadas a guardarropas</span></div>
+    <div class="adm-stat"><b>{{ resumen.usuarios }}</b><span>Usuarios</span></div>
+  </section>
+
+  <section class="adm-card">
+    <h2>Subir prenda</h2>
+    <form action="{{ url_for('admin_crear_prenda') }}" method="POST" enctype="multipart/form-data" class="adm-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label class="adm-wide">Foto (PNG, JPG o WEBP)
+        <input type="file" name="foto" accept="image/png,image/jpeg,image/webp" required>
+      </label>
+      {% set p = None %}
+      {% include "_form_prenda.html" %}
+      <div class="adm-wide"><button type="submit" class="cat-btn">Publicar en el catálogo</button></div>
+    </form>
+  </section>
+
+  <section class="adm-card">
+    <h2>Prendas del catálogo</h2>
+    <div class="adm-scroll">
+    <table class="adm-table">
+      <thead><tr><th></th><th>Prenda</th><th>Estación</th><th>Precio</th><th>Sucursal</th><th>Agregada</th><th></th></tr></thead>
+      <tbody>
+      {% for p in prendas %}
+      <tr class="{{ '' if p.activa else 'adm-off' }}">
+        <td><img src="{{ p.imagen_url }}" alt="" loading="lazy"></td>
+        <td><strong>{{ p.nombre }}</strong><br><span class="cat-meta">{{ p.categoria }}{% if not p.activa %} · retirada{% endif %}</span></td>
+        <td>{{ p.estacion }}</td>
+        <td>{% if p.precio is not none %}${{ '{:,.2f}'.format(p.precio) }}{% else %}—{% endif %}</td>
+        <td>{{ p.sucursal or '—' }}</td>
+        <td>{{ copias.get(p.imagen_url, 0) }}</td>
+        <td>
+          <a class="cat-btn is-ghost" href="{{ url_for('admin_editar_prenda', id=p.id) }}">Editar</a>
+          <form action="{{ url_for('admin_alternar_prenda', id=p.id) }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="cat-btn is-ghost" type="submit">{{ 'Retirar' if p.activa else 'Publicar' }}</button>
+          </form>
+          <form action="{{ url_for('admin_eliminar_prenda', id=p.id) }}" method="POST" onsubmit="return confirm('¿Eliminar esta prenda del catálogo?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="cat-btn is-danger" type="submit">Eliminar</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="cat-meta">Aún no has subido prendas.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </section>
+</main>
+{% endblock %}

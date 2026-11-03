@@ -15,7 +15,8 @@ FIRMAS_IMAGEN = (
 )
 PREFIJO_LOCAL = "local:"
 # Config que define la carpeta local (solo desarrollo y pruebas) de cada tipo de imagen
-CLAVES_CARPETA = {"comunidad": "COMUNIDAD_UPLOAD_FOLDER", "guardarropa": "UPLOAD_FOLDER"}
+CLAVES_CARPETA = {"comunidad": "COMUNIDAD_UPLOAD_FOLDER", "guardarropa": "UPLOAD_FOLDER",
+                   "catalogo": "CATALOGO_UPLOAD_FOLDER"}
 
 
 def tipo_imagen(stream):
