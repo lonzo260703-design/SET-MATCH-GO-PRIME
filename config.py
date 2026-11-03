@@ -9,8 +9,13 @@ DEFAULT_SECRET = "dev-insecure-change-me"
 
 def _database_url():
     url = os.getenv("DATABASE_URL")
-    if url and url.startswith("postgres://"):  # Render entrega este formato
-        url = url.replace("postgres://", "postgresql://", 1)
+    if url:
+        # SQLAlchemy 2.1 usa psycopg 3 por defecto con "postgresql://"; el proyecto usa psycopg2
+        # (psycopg2-binary en requirements.txt), así que se fija el controlador de forma explícita.
+        for prefijo in ("postgres://", "postgresql://", "postgresql+psycopg://"):
+            if url.startswith(prefijo):
+                url = "postgresql+psycopg2://" + url[len(prefijo):]
+                break
     return url or "sqlite:///setmatchgo.db"
 
 

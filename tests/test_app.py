@@ -1081,3 +1081,22 @@ def test_guardarropa_sin_prendas_invita_a_colecciones(app, client):
     iniciar_sesion(client, app)
     html = client.get("/guardarropa").get_data(as_text=True)
     assert "Colecciones" in html and "Mis prendas anteriores" not in html
+
+
+@pytest.mark.parametrize("entrada", [
+    "postgres://u:p@host/db?sslmode=require",
+    "postgresql://u:p@host/db?sslmode=require",
+    "postgresql+psycopg://u:p@host/db?sslmode=require",
+])
+def test_url_de_postgres_usa_psycopg2(monkeypatch, entrada):
+    import config
+
+    monkeypatch.setenv("DATABASE_URL", entrada)
+    assert config._database_url() == "postgresql+psycopg2://u:p@host/db?sslmode=require"
+
+
+def test_sin_database_url_usa_sqlite(monkeypatch):
+    import config
+
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    assert config._database_url().startswith("sqlite:///")
