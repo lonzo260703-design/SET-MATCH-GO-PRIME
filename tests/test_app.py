@@ -801,10 +801,10 @@ def test_admin_sin_confirmar_no_entra(app):
 def test_admin_publica_y_catalogo_es_publico(app, client):
     a = admin(app)
     assert subir_a_catalogo(a).status_code == 302
-    html = app.test_client().get("/catalogo").get_data(as_text=True)
+    html = app.test_client().get("/colecciones").get_data(as_text=True)
     assert "Blazer azul" in html and "$1,299.50" in html and "Centro" in html
-    assert "Blazer azul" not in app.test_client().get("/catalogo?estacion=Verano").get_data(as_text=True)
-    assert "Blazer azul" in app.test_client().get("/catalogo?estacion=Invierno&categoria=Abrigo").get_data(as_text=True)
+    assert "Blazer azul" not in app.test_client().get("/colecciones?estacion=Verano").get_data(as_text=True)
+    assert "Blazer azul" in app.test_client().get("/colecciones?estacion=Invierno&categoria=Abrigo").get_data(as_text=True)
 
 
 def test_admin_valida_datos_y_foto(app):
@@ -822,8 +822,8 @@ def test_agregar_del_catalogo_copia_a_guardarropa_sin_duplicar(app, client):
     with app.app_context():
         pid = db.session.scalar(db.select(PrendaCatalogo.id))
     iniciar_sesion(client, app, email="ana@example.com")
-    client.post(f"/catalogo/agregar/{pid}")
-    client.post(f"/catalogo/agregar/{pid}")
+    client.post(f"/colecciones/agregar/{pid}")
+    client.post(f"/colecciones/agregar/{pid}")
     with app.app_context():
         filas = db.session.scalars(db.select(Guardarropa)).all()
         assert len(filas) == 1 and filas[0].nombre == "Blazer azul" and filas[0].categoria == "Abrigo"
@@ -834,12 +834,12 @@ def test_agregar_requiere_login_y_prenda_retirada_no_se_agrega(app, client):
     subir_a_catalogo(a)
     with app.app_context():
         pid = db.session.scalar(db.select(PrendaCatalogo.id))
-    r = app.test_client().post(f"/catalogo/agregar/{pid}")
+    r = app.test_client().post(f"/colecciones/agregar/{pid}")
     assert r.status_code == 302 and "login" in r.headers["Location"]
     a.post(f"/admin/prenda/{pid}/alternar")
-    assert "Blazer azul" not in app.test_client().get("/catalogo").get_data(as_text=True)
+    assert "Blazer azul" not in app.test_client().get("/colecciones").get_data(as_text=True)
     iniciar_sesion(client, app, email="ana@example.com")
-    client.post(f"/catalogo/agregar/{pid}")
+    client.post(f"/colecciones/agregar/{pid}")
     with app.app_context():
         assert db.session.scalar(db.select(db.func.count(Guardarropa.id))) == 0
 
@@ -849,7 +849,7 @@ def test_borrar_prenda_del_guardarropa_no_rompe_la_foto_del_catalogo(app, client
     with app.app_context():
         pid = db.session.scalar(db.select(PrendaCatalogo.id))
     iniciar_sesion(client, app, email="ana@example.com")
-    client.post(f"/catalogo/agregar/{pid}")
+    client.post(f"/colecciones/agregar/{pid}")
     borradas = []
     monkeypatch.setattr("routes.eliminar_imagen", lambda i: borradas.append(i))
     with app.app_context():
@@ -864,7 +864,7 @@ def test_eliminar_del_catalogo_conserva_foto_si_alguien_la_copio(app, client, mo
     with app.app_context():
         pid = db.session.scalar(db.select(PrendaCatalogo.id))
     iniciar_sesion(client, app, email="ana@example.com")
-    client.post(f"/catalogo/agregar/{pid}")
+    client.post(f"/colecciones/agregar/{pid}")
     borradas = []
     monkeypatch.setattr("routes.eliminar_imagen", lambda i: borradas.append(i))
     a.post(f"/admin/prenda/{pid}/eliminar")
@@ -900,3 +900,15 @@ def test_panel_muestra_resumen(app):
     subir_a_catalogo(a)
     html = a.get("/admin").get_data(as_text=True)
     assert "Panel de administración" in html and "Blazer azul" in html
+
+
+def test_catalogo_antiguo_redirige_a_colecciones(client):
+    r = client.get("/catalogo?estacion=Invierno")
+    assert r.status_code == 301 and r.headers["Location"].endswith("/colecciones?estacion=Invierno")
+
+
+def test_filtro_de_estacion_acepta_minusculas_y_sin_acentos(app):
+    subir_a_catalogo(admin(app), estacion="Otoño", nombre="Botines café")
+    c = app.test_client()
+    assert "Botines café" in c.get("/colecciones?estacion=otono").get_data(as_text=True)
+    assert "Botines café" not in c.get("/colecciones?estacion=verano").get_data(as_text=True)

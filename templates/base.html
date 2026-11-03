@@ -800,27 +800,23 @@
         <a href="{{ url_for('colecciones') }}" class="dropdown-toggle">Colecciones ▾</a>
         <div class="mega-menu collections-dropdown-menu">
           <div class="menu-column">
-            <a href="{{ url_for('colecciones', _anchor='primavera') }}">
+            <a href="{{ url_for('colecciones', estacion='Primavera') }}">
               <span class="menu-icon">🌸</span>
               <div><strong>Primavera</strong></div>
             </a>
-            <a href="{{ url_for('colecciones', _anchor='verano') }}">
+            <a href="{{ url_for('colecciones', estacion='Verano') }}">
               <span class="menu-icon">☀️</span>
               <div><strong>Verano</strong></div>
             </a>
-            <a href="{{ url_for('colecciones', _anchor='otono') }}">
+            <a href="{{ url_for('colecciones', estacion='Otoño') }}">
               <span class="menu-icon">🍂</span>
               <div><strong>Otoño</strong></div>
             </a>
-            <a href="{{ url_for('colecciones', _anchor='invierno') }}">
+            <a href="{{ url_for('colecciones', estacion='Invierno') }}">
               <span class="menu-icon">❄️</span>
               <div><strong>Invierno</strong></div>
             </a>
             <div style="border-top: 1px solid #eee; margin: 4px 0;"></div>
-            <a href="{{ url_for('catalogo') }}">
-              <span class="menu-icon">👗</span>
-              <div><strong>Catálogo de tiendas</strong></div>
-            </a>
             <a href="{{ url_for('colecciones') }}">
               <span class="menu-icon">🛍️</span>
               <div><strong>Ver Todo</strong></div>
@@ -987,12 +983,11 @@
             <span class="arrow">▾</span>
           </button>
           <div class="mobile-accordion-content">
-            <a href="{{ url_for('colecciones', estacion='primavera') }}">🌸 Primavera</a>
-            <a href="{{ url_for('colecciones', estacion='verano') }}">☀️ Verano</a>
-            <a href="{{ url_for('colecciones', estacion='otono') }}">🍂 Otoño</a>
-            <a href="{{ url_for('colecciones', estacion='invierno') }}">❄️ Invierno</a>
-            <a href="{{ url_for('catalogo') }}">👗 Catálogo de tiendas</a>
-            <a href="{{ url_for('colecciones') }}" style="font-weight: bold; color: #e74c3c;">Ver Todo el Catálogo</a>
+            <a href="{{ url_for('colecciones', estacion='Primavera') }}">🌸 Primavera</a>
+            <a href="{{ url_for('colecciones', estacion='Verano') }}">☀️ Verano</a>
+            <a href="{{ url_for('colecciones', estacion='Otoño') }}">🍂 Otoño</a>
+            <a href="{{ url_for('colecciones', estacion='Invierno') }}">❄️ Invierno</a>
+            <a href="{{ url_for('colecciones') }}" style="font-weight: bold; color: #e74c3c;">Ver todas las colecciones</a>
           </div>
         </li>
 

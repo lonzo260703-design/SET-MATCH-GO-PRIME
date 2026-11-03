@@ -6,7 +6,7 @@
 <main class="cat-wrapper">
   <header class="cat-header">
     <h1>Panel de administración</h1>
-    <p>Sube la ropa de tu sucursal y aparecerá en el <a href="{{ url_for('catalogo') }}" style="color:#fff;font-weight:700">catálogo</a>.</p>
+    <p>Sube la ropa de tu sucursal y aparecerá en <a href="{{ url_for('colecciones') }}" style="color:#fff;font-weight:700">colecciones</a>.</p>
   </header>
 
   <section class="adm-stats">
@@ -25,12 +25,12 @@
       </label>
       {% set p = None %}
       {% include "_form_prenda.html" %}
-      <div class="adm-wide"><button type="submit" class="cat-btn">Publicar en el catálogo</button></div>
+      <div class="adm-wide"><button type="submit" class="cat-btn">Publicar en colecciones</button></div>
     </form>
   </section>
 
   <section class="adm-card">
-    <h2>Prendas del catálogo</h2>
+    <h2>Prendas de las colecciones</h2>
     <div class="adm-scroll">
     <table class="adm-table">
       <thead><tr><th></th><th>Prenda</th><th>Estación</th><th>Precio</th><th>Sucursal</th><th>Agregada</th><th></th></tr></thead>
@@ -49,7 +49,7 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button class="cat-btn is-ghost" type="submit">{{ 'Retirar' if p.activa else 'Publicar' }}</button>
           </form>
-          <form action="{{ url_for('admin_eliminar_prenda', id=p.id) }}" method="POST" onsubmit="return confirm('¿Eliminar esta prenda del catálogo?');">
+          <form action="{{ url_for('admin_eliminar_prenda', id=p.id) }}" method="POST" onsubmit="return confirm('¿Eliminar esta prenda de las colecciones?');">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button class="cat-btn is-danger" type="submit">Eliminar</button>
           </form>

@@ -87,12 +87,6 @@ def register_routes(app):
     def index():
         return render_template("index.html")
 
-    # ---------- COLECCIONES ----------
-    @app.route("/colecciones")
-    def colecciones():
-        estacion = request.args.get("estacion")
-        return render_template("colecciones.html", estacion=estacion)
-
     # ---------- TEORÍA Y HERRAMIENTAS DE COLOR ----------
     @app.route("/colorwheel")
     def colorwheel():
@@ -504,6 +498,14 @@ def register_routes(app):
             consulta = consulta.where(PrendaCatalogo.id != excepto_catalogo_id)
         return bool(db.session.scalar(consulta))
 
+    def _normalizar_estacion(valor):
+        """Acepta 'otono', 'Otoño', 'INVIERNO'... y devuelve el nombre oficial (o '')."""
+        quitar = str.maketrans("áéíóúñ", "aeioun")
+        for e in ESTACIONES_CATALOGO:
+            if valor.strip().lower().translate(quitar) == e.lower().translate(quitar):
+                return e
+        return ""
+
     def _leer_datos_prenda(form):
         """Valida el formulario del panel. Devuelve (datos, error)."""
         nombre = form.get("nombre", "").strip()[:100]
@@ -539,15 +541,18 @@ def register_routes(app):
         }, None
 
     @app.route("/catalogo")
-    def catalogo():
+    def catalogo_antiguo():
+        return redirect(url_for("colecciones", **request.args), code=301)
+
+    @app.route("/colecciones")
+    def colecciones():
+        """Colecciones: la ropa que suben las sucursales (ver panel de administración)."""
         pagina = request.args.get("pagina", 1, type=int)
-        estacion = request.args.get("estacion", "")
+        estacion = _normalizar_estacion(request.args.get("estacion", ""))
         categoria = request.args.get("categoria", "")
         consulta = select(PrendaCatalogo).where(PrendaCatalogo.activa.is_(True))
-        if estacion in ESTACIONES_CATALOGO:
+        if estacion:
             consulta = consulta.where(PrendaCatalogo.estacion == estacion)
-        else:
-            estacion = ""
         if categoria in CATEGORIAS:
             consulta = consulta.where(PrendaCatalogo.categoria == categoria)
         else:
@@ -564,17 +569,17 @@ def register_routes(app):
             ).all())
         ultimo = current_user.resultados.first() if current_user.is_authenticated else None
         return render_template(
-            "catalogo.html", prendas=prendas, estacion=estacion, categoria=categoria, mias=mias,
+            "colecciones.html", prendas=prendas, estacion=estacion, categoria=categoria, mias=mias,
             estaciones=ESTACIONES_CATALOGO, categorias=sorted(CATEGORIAS),
             mi_estacion=ultimo.estacion if ultimo else None,
         )
 
-    @app.route("/catalogo/agregar/<int:id>", methods=["POST"])
+    @app.route("/colecciones/agregar/<int:id>", methods=["POST"])
     @login_required
     @limiter.limit("60 per hour")
     def agregar_del_catalogo(id):
         prenda = db.session.get(PrendaCatalogo, id)
-        destino = request.referrer if request.referrer and _url_segura(request.referrer) else url_for("catalogo")
+        destino = request.referrer if request.referrer and _url_segura(request.referrer) else url_for("colecciones")
         if not prenda or not prenda.activa:
             flash("Esa prenda ya no está disponible.", "error")
             return redirect(destino)
@@ -634,7 +639,7 @@ def register_routes(app):
         try:
             db.session.add(PrendaCatalogo(imagen_url=url, imagen_id=imagen_id, creado_por=current_user.id, **datos))
             db.session.commit()
-            flash("Prenda publicada en el catálogo.", "success")
+            flash("Prenda publicada en colecciones.", "success")
         except Exception:
             db.session.rollback()
             eliminar_imagen(imagen_id)
@@ -664,7 +669,7 @@ def register_routes(app):
         prenda = db.session.get(PrendaCatalogo, id) or abort(404)
         prenda.activa = not prenda.activa
         db.session.commit()
-        flash("Prenda publicada de nuevo." if prenda.activa else "Prenda retirada del catálogo.", "success")
+        flash("Prenda publicada de nuevo." if prenda.activa else "Prenda retirada de colecciones.", "success")
         return redirect(url_for("admin_panel"))
 
     @app.route("/admin/prenda/<int:id>/eliminar", methods=["POST"])
@@ -676,7 +681,7 @@ def register_routes(app):
         db.session.commit()
         if not _imagen_en_uso(url):  # si alguien ya la copió, la foto se conserva
             eliminar_imagen(imagen_id)
-        flash("Prenda eliminada del catálogo.", "success")
+        flash("Prenda eliminada de colecciones.", "success")
         return redirect(url_for("admin_panel"))
 
     # ---------- COMUNIDAD (RED SOCIAL DE ESTILO) ----------
