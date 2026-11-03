@@ -69,7 +69,7 @@ def test_respuestas_incompletas_o_invalidas():
 def test_registro_guarda_hash_y_exige_confirmacion(client, app):
     r = client.post(
         "/registro",
-        data={"nombre": "Ana", "email": "ana@example.com", "password": "secreta123", "confirmar": "secreta123"},
+        data={"nombre": "Ana", "email": "ana@example.com", "password": "secreta123", "confirmar": "secreta123", "acepto": "1"},
     )
     assert r.status_code == 302
     with app.app_context():
@@ -79,6 +79,16 @@ def test_registro_guarda_hash_y_exige_confirmacion(client, app):
     # sin confirmar no puede entrar
     r = client.post("/login", data={"email": "ana@example.com", "password": "secreta123"})
     assert r.status_code == 403
+
+
+def test_registro_exige_aceptar_el_aviso_de_privacidad(client, app):
+    r = client.post(
+        "/registro",
+        data={"nombre": "Ana", "email": "ana@example.com", "password": "secreta123", "confirmar": "secreta123"},
+    )
+    assert r.status_code == 400
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(User.id))) == 0
 
 
 def test_registro_valida_datos(client, app):
@@ -95,7 +105,7 @@ def test_registro_correo_duplicado(client, app):
     crear_usuario(app)
     r = client.post(
         "/registro",
-        data={"nombre": "Ana", "email": "ana@example.com", "password": "secreta123", "confirmar": "secreta123"},
+        data={"nombre": "Ana", "email": "ana@example.com", "password": "secreta123", "confirmar": "secreta123", "acepto": "1"},
     )
     assert r.status_code == 400
 
@@ -298,7 +308,7 @@ def test_fallo_de_correo_avisa_y_permite_reenviar(client, app, monkeypatch):
     monkeypatch.setattr(routes, "enviar_correo_confirmacion", falla)
     r = client.post(
         "/registro",
-        data={"nombre": "Ana", "email": "ana@example.com", "password": "secreta123", "confirmar": "secreta123"},
+        data={"nombre": "Ana", "email": "ana@example.com", "password": "secreta123", "confirmar": "secreta123", "acepto": "1"},
         follow_redirects=True,
     )
     assert "Reenviar correo".encode() in r.data or b"Reenviar" in r.data
@@ -912,3 +922,147 @@ def test_filtro_de_estacion_acepta_minusculas_y_sin_acentos(app):
     c = app.test_client()
     assert "Botines café" in c.get("/colecciones?estacion=otono").get_data(as_text=True)
     assert "Botines café" not in c.get("/colecciones?estacion=verano").get_data(as_text=True)
+
+
+# ---------- Colecciones personalizadas ----------
+def _base_de(app):
+    with app.app_context():
+        texto = db.session.scalar(db.select(TestResult.estacion))
+    return next((e for e in ("Primavera", "Verano", "Otoño", "Invierno") if texto.startswith(e)), "Neutro")
+
+
+def _subir_una_por_estacion(app):
+    a = admin(app)
+    for e in ("Primavera", "Verano", "Otoño", "Invierno", "Neutro"):
+        subir_a_catalogo(a, estacion=e, nombre=f"Prenda {e}")
+
+
+def test_colecciones_ordena_y_marca_lo_que_combina(app, client):
+    _subir_una_por_estacion(app)
+    usuario_con_test(client, app)
+    base = _base_de(app)
+    html = client.get("/colecciones").get_data(as_text=True)
+    assert html.count("Combina contigo") == (2 if base != "Neutro" else 1)
+    assert html.index(f"Prenda {base}") < min(
+        html.index(f"Prenda {e}") for e in ("Primavera", "Verano", "Otoño", "Invierno") if e != base
+    )
+
+
+def test_filtro_para_mi_solo_muestra_mi_estacion_y_neutro(app, client):
+    _subir_una_por_estacion(app)
+    usuario_con_test(client, app)
+    base = _base_de(app)
+    html = client.get("/colecciones?para_mi=1").get_data(as_text=True)
+    assert f"Prenda {base}" in html and "Prenda Neutro" in html
+    otras = [e for e in ("Primavera", "Verano", "Otoño", "Invierno") if e != base]
+    assert all(f"Prenda {e}" not in html for e in otras)
+
+
+def test_colecciones_sin_test_invita_a_hacerlo_y_para_mi_se_ignora(app, client):
+    _subir_una_por_estacion(app)
+    iniciar_sesion(client, app, email="ana@example.com")
+    html = client.get("/colecciones?para_mi=1").get_data(as_text=True)
+    assert "test de colorimetría" in html and "Combina contigo" not in html
+    assert all(f"Prenda {e}" in html for e in ("Primavera", "Verano", "Otoño", "Invierno"))
+
+
+# ---------- Moderación ----------
+def _reportar(app, pid, n, motivo="spam"):
+    for i in range(n):
+        otra_persona(app, f"rep{i}@example.com").post(f"/comunidad/reportar/{pid}", data={"motivo": motivo})
+
+
+def test_moderacion_solo_para_admins(app, client):
+    iniciar_sesion(client, app, email="ana@example.com")
+    assert client.get("/admin/reportes").status_code == 404
+    assert client.post("/admin/reportes/1/restaurar").status_code == 404
+    assert client.post("/admin/reportes/1/eliminar").status_code == 404
+
+
+def test_moderacion_lista_reportadas_con_motivos(app, client):
+    pid = publicacion_de_ana(app, client)
+    _reportar(app, pid, 3)
+    html = admin(app).get("/admin/reportes").get_data(as_text=True)
+    assert "3 reportes" in html and "oculta" in html and "Spam" in html or "spam" in html.lower()
+
+
+def test_admin_restaura_publicacion_oculta(app, client):
+    pid = publicacion_de_ana(app, client)
+    _reportar(app, pid, 3)
+    anonimo = app.test_client()
+    assert anonimo.get(f"/p/{pid}").status_code == 404
+    admin(app).post(f"/admin/reportes/{pid}/restaurar")
+    assert anonimo.get(f"/p/{pid}").status_code == 200
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(Reporte.id))) == 0
+
+
+def test_admin_elimina_publicacion_reportada_y_su_foto(app, client):
+    pid = publicacion_de_ana(app, client)
+    _reportar(app, pid, 3)
+    assert len(os.listdir(app.config["COMUNIDAD_UPLOAD_FOLDER"])) == 1
+    admin(app).post(f"/admin/reportes/{pid}/eliminar")
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(Publicacion.id))) == 0
+        assert db.session.scalar(db.select(db.func.count(Reporte.id))) == 0
+    assert os.listdir(app.config["COMUNIDAD_UPLOAD_FOLDER"]) == []
+
+
+def test_panel_cuenta_publicaciones_reportadas(app, client):
+    pid = publicacion_de_ana(app, client)
+    _reportar(app, pid, 1)
+    html = admin(app).get("/admin").get_data(as_text=True)
+    assert "Publicaciones reportadas" in html
+
+
+# ---------- Privacidad y eliminar cuenta ----------
+def test_aviso_de_privacidad_es_publico(client):
+    r = client.get("/privacidad")
+    assert r.status_code == 200 and "Aviso de privacidad" in r.get_data(as_text=True)
+
+
+def test_eliminar_cuenta_requiere_contrasena_y_confirmacion(app, client):
+    iniciar_sesion(client, app, email="ana@example.com")
+    client.post("/cuenta/eliminar", data={"password": "mala", "confirmacion": "ELIMINAR"})
+    client.post("/cuenta/eliminar", data={"password": "secreta123", "confirmacion": "si"})
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(User.id))) == 1
+
+
+def test_eliminar_cuenta_borra_todo_lo_suyo_y_conserva_lo_ajeno(app, client):
+    pid = publicacion_de_ana(app, client)            # Ana publica
+    luis = otra_persona(app, "luis@example.com")
+    luis.post(f"/comunidad/like/{pid}")
+    luis.post(f"/comunidad/republicar/{pid}")
+    luis.post(f"/mensajes/1", data={"texto": "hola", "publicacion_id": pid})
+    luis.post("/test", data=CALIDO)
+    luis.post("/api/generar-diagnostico")
+    luis.post("/comunidad/publicar", data={"foto": (io.BytesIO(PNG), "l.png")}, content_type="multipart/form-data")
+    client.post("/guardarropa/subir", data={"foto": (io.BytesIO(PNG), "g.png"), "nombre": "Camisa", "categoria": "Superior"},
+                content_type="multipart/form-data")
+    with app.app_context():
+        ana_id = db.session.scalar(db.select(User.id).filter_by(email="ana@example.com"))
+    r = client.post("/cuenta/eliminar", data={"password": "secreta123", "confirmacion": "eliminar"})
+    assert r.status_code == 302
+    with app.app_context():
+        assert db.session.get(User, ana_id) is None
+        assert db.session.scalar(db.select(db.func.count(Guardarropa.id))) == 0
+        assert db.session.scalar(db.select(db.func.count(Like.id))) == 0
+        assert db.session.scalar(db.select(db.func.count(TestResult.id))) == 1  # solo queda el de Luis
+        # queda solo la publicación propia de Luis (su republicación de Ana se fue en cascada)
+        assert db.session.scalar(db.select(db.func.count(Publicacion.id))) == 1
+        assert db.session.scalar(db.select(User.id).filter_by(email="luis@example.com")) is not None
+    assert os.listdir(app.config["UPLOAD_FOLDER"]) == [] or all(
+        not f.endswith(".png") for f in os.listdir(app.config["UPLOAD_FOLDER"]) if os.path.isfile(os.path.join(app.config["UPLOAD_FOLDER"], f))
+    )
+    assert client.get("/perfil").status_code == 302  # ya no tiene sesión
+
+
+def test_mensajes_de_otros_no_se_rompen_al_borrar_una_publicacion_adjunta(app, client):
+    pid = publicacion_de_ana(app, client)
+    luis = otra_persona(app, "luis@example.com")
+    with app.app_context():
+        luis_id = db.session.scalar(db.select(User.id).filter_by(email="luis@example.com"))
+    client.post(f"/mensajes/{luis_id}", data={"publicacion_id": pid, "texto": "mira"})
+    client.post("/cuenta/eliminar", data={"password": "secreta123", "confirmacion": "ELIMINAR"})
+    assert luis.get("/mensajes").status_code == 200

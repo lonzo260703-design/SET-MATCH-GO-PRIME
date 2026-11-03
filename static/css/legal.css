@@ -1,0 +1,12 @@
+.legal-wrapper { max-width: 760px; margin: 100px auto 40px; padding: 0 16px; }
+.legal-card { background: #ffffff; color: #1e293b; border-radius: 14px; padding: 26px 28px; line-height: 1.6; font-size: 14px; }
+.legal-card h1 { font-size: 24px; margin: 0 0 6px; color: #1e293b; }
+.legal-card h2 { font-size: 16px; margin: 22px 0 6px; color: #1e293b; }
+.legal-card p, .legal-card li { color: #334155; }
+.legal-card a { color: #c0392b; }
+.legal-muted { color: #64748b; font-size: 12px; }
+.legal-form { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+.legal-form label { font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: .5px; display: flex; flex-direction: column; gap: 4px; }
+.legal-form input { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; font-size: 14px; color: #1e293b; background: #ffffff; text-transform: none; letter-spacing: 0; font-weight: 400; }
+.legal-danger { background: #c0392b; color: #ffffff; border: none; padding: 11px 20px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; align-self: flex-start; }
+.legal-danger:hover { background: #a93226; }

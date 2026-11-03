@@ -23,11 +23,21 @@
   </nav>
 
   {% if mi_estacion %}
-  <p class="cat-hint">Tu paleta: <strong>{{ mi_estacion }}</strong> · las prendas marcadas con tu estación combinan con ella.</p>
+  <section class="cat-mine">
+    <div>
+      <strong>Tu paleta: {{ mi_estacion }}</strong>
+      <span class="cat-dots">{% for c in mi_paleta %}<i style="background-color: {{ c }};" title="{{ c }}"></i>{% endfor %}</span>
+    </div>
+    {% if para_mi %}
+    <a class="cat-chip is-on" href="{{ url_for('colecciones', categoria=categoria or None) }}">✨ Para mí · ver todo</a>
+    {% else %}
+    <a class="cat-chip" href="{{ url_for('colecciones', para_mi=1, categoria=categoria or None) }}">✨ Solo lo que combina conmigo</a>
+    {% endif %}
+  </section>
   {% elif not current_user.is_authenticated %}
-  <p class="cat-hint"><a href="{{ url_for('login', next=url_for('colecciones')) }}">Inicia sesión</a> para agregar prendas a tu guardarropa.</p>
+  <p class="cat-hint"><a href="{{ url_for('login', next=url_for('colecciones')) }}">Inicia sesión</a> y haz el test para ver qué prendas combinan contigo.</p>
   {% else %}
-  <p class="cat-hint">Haz el <a href="{{ url_for('test') }}">test de colorimetría</a> para saber qué estación te favorece.</p>
+  <p class="cat-hint">Haz el <a href="{{ url_for('test') }}">test de colorimetría</a> y te mostraremos primero las prendas que combinan contigo.</p>
   {% endif %}
 
   <section class="cat-grid">
@@ -37,6 +47,7 @@
       <div class="cat-body">
         <h3>{{ p.nombre }}</h3>
         <div class="cat-tags">
+          {% if mi_base and p.estacion in (mi_base, 'Neutro') %}<span class="cat-tag is-match">✨ Combina contigo</span>{% endif %}
           <span class="cat-tag is-season">{{ p.estacion }}</span>
           <span class="cat-tag">{{ p.categoria }}</span>
         </div>
@@ -69,9 +80,9 @@
 
   {% if prendas.pages > 1 %}
   <nav class="cat-pager">
-    {% if prendas.has_prev %}<a href="{{ url_for('colecciones', pagina=prendas.prev_num, estacion=estacion or None, categoria=categoria or None) }}">← Anteriores</a>{% else %}<span></span>{% endif %}
+    {% if prendas.has_prev %}<a href="{{ url_for('colecciones', pagina=prendas.prev_num, estacion=estacion or None, categoria=categoria or None, para_mi=1 if para_mi else None) }}">← Anteriores</a>{% else %}<span></span>{% endif %}
     <span>Página {{ prendas.page }} de {{ prendas.pages }}</span>
-    {% if prendas.has_next %}<a href="{{ url_for('colecciones', pagina=prendas.next_num, estacion=estacion or None, categoria=categoria or None) }}">Siguientes →</a>{% else %}<span></span>{% endif %}
+    {% if prendas.has_next %}<a href="{{ url_for('colecciones', pagina=prendas.next_num, estacion=estacion or None, categoria=categoria or None, para_mi=1 if para_mi else None) }}">Siguientes →</a>{% else %}<span></span>{% endif %}
   </nav>
   {% endif %}
 </main>

@@ -14,6 +14,9 @@
     <div class="adm-stat"><b>{{ resumen.activas }}</b><span>Publicadas</span></div>
     <div class="adm-stat"><b>{{ resumen.copias }}</b><span>Agregadas a guardarropas</span></div>
     <div class="adm-stat"><b>{{ resumen.usuarios }}</b><span>Usuarios</span></div>
+    <a class="adm-stat" href="{{ url_for('admin_reportes') }}" style="text-decoration:none">
+      <b>{{ resumen.reportadas }}</b><span>Publicaciones reportadas{% if resumen.ocultas %} · {{ resumen.ocultas }} ocultas{% endif %}</span>
+    </a>
   </section>
 
   <section class="adm-card">

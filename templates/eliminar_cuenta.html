@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Eliminar mi cuenta | SET-MATCH-GO!{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/legal.css') }}">{% endblock %}
+
+{% block content %}
+<main class="legal-wrapper" style="max-width: 560px;">
+  <article class="legal-card">
+    <h1>Eliminar mi cuenta</h1>
+    <p>Esta acción es <strong>permanente</strong>. Se borrarán:</p>
+    <ul>
+      <li>Tu perfil y tu historial de tests de colorimetría.</li>
+      <li>Tu guardarropa y sus fotos.</li>
+      <li>Tus publicaciones (con sus me gusta y republicaciones) y tus fotos de la comunidad.</li>
+      <li>Tus mensajes privados, enviados y recibidos.</li>
+    </ul>
+    <form action="{{ url_for('eliminar_cuenta') }}" method="POST" class="legal-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Tu contraseña
+        <input type="password" name="password" required autocomplete="current-password">
+      </label>
+      <label>Escribe ELIMINAR para confirmar
+        <input type="text" name="confirmacion" required autocomplete="off">
+      </label>
+      <button type="submit" class="legal-danger">Eliminar mi cuenta definitivamente</button>
+    </form>
+    <p style="margin-top:16px"><a href="{{ url_for('perfil') }}">Cancelar y volver a mi perfil</a></p>
+  </article>
+</main>
+{% endblock %}

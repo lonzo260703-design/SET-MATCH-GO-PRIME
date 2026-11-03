@@ -49,6 +49,12 @@
             </span>
           {% endif %}
 
+          {% if current_user.is_authenticated %}
+          <a href="{{ url_for('colecciones', para_mi=1) }}" class="btn-repetir">
+            ✨ Ver prendas para mí
+          </a>
+          {% endif %}
+
           <a href="{{ url_for('test') }}" class="btn-repetir">
             🔄 Repetir Test
           </a>
