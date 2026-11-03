@@ -800,19 +800,19 @@
         <a href="{{ url_for('colecciones') }}" class="dropdown-toggle">Colecciones ▾</a>
         <div class="mega-menu collections-dropdown-menu">
           <div class="menu-column">
-            <a href="{{ url_for('colecciones', _anchor='primavera') }}">
+            <a href="{{ url_for('colecciones', estacion='Primavera') }}">
               <span class="menu-icon">🌸</span>
               <div><strong>Primavera</strong></div>
             </a>
-            <a href="{{ url_for('colecciones', _anchor='verano') }}">
+            <a href="{{ url_for('colecciones', estacion='Verano') }}">
               <span class="menu-icon">☀️</span>
               <div><strong>Verano</strong></div>
             </a>
-            <a href="{{ url_for('colecciones', _anchor='otono') }}">
+            <a href="{{ url_for('colecciones', estacion='Otoño') }}">
               <span class="menu-icon">🍂</span>
               <div><strong>Otoño</strong></div>
             </a>
-            <a href="{{ url_for('colecciones', _anchor='invierno') }}">
+            <a href="{{ url_for('colecciones', estacion='Invierno') }}">
               <span class="menu-icon">❄️</span>
               <div><strong>Invierno</strong></div>
             </a>
@@ -883,6 +883,13 @@
           </div>
 
           <div class="user-card-divider"></div>
+
+          {% if es_admin %}
+          <a href="{{ url_for('admin_panel') }}" class="user-card-item">
+            <span class="item-icon">🛠️</span>
+            <span>PANEL ADMIN</span>
+          </a>
+          {% endif %}
 
           <a href="{{ url_for('bandeja') }}" class="user-card-item">
             <svg class="item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
@@ -976,11 +983,11 @@
             <span class="arrow">▾</span>
           </button>
           <div class="mobile-accordion-content">
-            <a href="{{ url_for('colecciones', estacion='primavera') }}">🌸 Primavera</a>
-            <a href="{{ url_for('colecciones', estacion='verano') }}">☀️ Verano</a>
-            <a href="{{ url_for('colecciones', estacion='otono') }}">🍂 Otoño</a>
-            <a href="{{ url_for('colecciones', estacion='invierno') }}">❄️ Invierno</a>
-            <a href="{{ url_for('colecciones') }}" style="font-weight: bold; color: #e74c3c;">Ver Todo el Catálogo</a>
+            <a href="{{ url_for('colecciones', estacion='Primavera') }}">🌸 Primavera</a>
+            <a href="{{ url_for('colecciones', estacion='Verano') }}">☀️ Verano</a>
+            <a href="{{ url_for('colecciones', estacion='Otoño') }}">🍂 Otoño</a>
+            <a href="{{ url_for('colecciones', estacion='Invierno') }}">❄️ Invierno</a>
+            <a href="{{ url_for('colecciones') }}" style="font-weight: bold; color: #e74c3c;">Ver todas las colecciones</a>
           </div>
         </li>
 
@@ -1006,6 +1013,11 @@
         </li>
 
         {% if current_user.is_authenticated %}
+        {% if es_admin %}
+        <li>
+          <a href="{{ url_for('admin_panel') }}" class="mobile-nav-link"><span>🛠️ Panel admin</span></a>
+        </li>
+        {% endif %}
         <li>
           <a href="{{ url_for('bandeja') }}" class="mobile-nav-link">
             <span>💬 Mensajes{% if mensajes_sin_leer %} <b class="msg-badge">{{ mensajes_sin_leer }}</b>{% endif %}</span>

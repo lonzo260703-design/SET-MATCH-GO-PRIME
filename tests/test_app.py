@@ -1,3 +1,4 @@
+import os
 import io
 
 import pytest
@@ -5,7 +6,7 @@ import pytest
 from app import create_app
 from colorimetria import RespuestasInvalidas, clasificar
 from extensions import db
-from models import Guardarropa, Like, Publicacion, Reporte, TestResult, User
+from models import Guardarropa, Like, Publicacion, PrendaCatalogo, Reporte, TestResult, User
 from services import gemini_service
 
 CALIDO = {"p1": "calido", "p2": "calido", "p3": "calido", "p4": "calido", "p5": "frio", "p6": "frio", "p7": "suave"}
@@ -24,6 +25,8 @@ def app(tmp_path):
     app = create_app("testing")
     app.config["UPLOAD_FOLDER"] = str(tmp_path)
     app.config["COMUNIDAD_UPLOAD_FOLDER"] = str(tmp_path / "comunidad")
+    app.config["CATALOGO_UPLOAD_FOLDER"] = str(tmp_path / "catalogo")
+    app.config["ADMIN_EMAILS"] = {"admin@example.com"}
     yield app
     with app.app_context():
         db.session.remove()
@@ -758,3 +761,154 @@ def test_buscar_personas_por_nombre(app, client):
 def test_persona_inexistente_redirige(app, client):
     iniciar_sesion(client, app, email="ana@example.com")
     assert client.get("/mensajes/9999").status_code == 302
+
+
+# ---------- Etapa 5: catálogo y panel de administración ----------
+DATOS_PRENDA = {
+    "nombre": "Blazer azul", "categoria": "Abrigo", "estacion": "Invierno",
+    "colores": "Azul marino", "precio": "1299.50", "sucursal": "Centro",
+    "enlace_compra": "https://tienda.example.com/blazer",
+}
+
+
+def subir_a_catalogo(c, contenido=PNG, **cambios):
+    datos = {**DATOS_PRENDA, **cambios, "foto": (io.BytesIO(contenido), "p.png")}
+    return c.post("/admin/prenda", data=datos, content_type="multipart/form-data")
+
+
+def admin(app):
+    c = app.test_client()
+    iniciar_sesion(c, app, email="admin@example.com")
+    return c
+
+
+def test_panel_admin_oculto_para_no_admins(app, client):
+    assert client.get("/admin").status_code in (302, 401)  # sin sesión
+    iniciar_sesion(client, app, email="ana@example.com")
+    assert client.get("/admin").status_code == 404
+    assert subir_a_catalogo(client).status_code == 404
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(PrendaCatalogo.id))) == 0
+
+
+def test_admin_sin_confirmar_no_entra(app):
+    crear_usuario(app, email="admin@example.com", confirmado=False)
+    c = app.test_client()
+    c.post("/login", data={"email": "admin@example.com", "password": "secreta123"})
+    assert c.get("/admin").status_code in (302, 401, 404)
+
+
+def test_admin_publica_y_catalogo_es_publico(app, client):
+    a = admin(app)
+    assert subir_a_catalogo(a).status_code == 302
+    html = app.test_client().get("/colecciones").get_data(as_text=True)
+    assert "Blazer azul" in html and "$1,299.50" in html and "Centro" in html
+    assert "Blazer azul" not in app.test_client().get("/colecciones?estacion=Verano").get_data(as_text=True)
+    assert "Blazer azul" in app.test_client().get("/colecciones?estacion=Invierno&categoria=Abrigo").get_data(as_text=True)
+
+
+def test_admin_valida_datos_y_foto(app):
+    a = admin(app)
+    subir_a_catalogo(a, precio="abc")
+    subir_a_catalogo(a, enlace_compra="javascript:alert(1)")
+    subir_a_catalogo(a, categoria="Otra")
+    subir_a_catalogo(a, contenido=b"no soy una imagen")
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(PrendaCatalogo.id))) == 0
+
+
+def test_agregar_del_catalogo_copia_a_guardarropa_sin_duplicar(app, client):
+    subir_a_catalogo(admin(app))
+    with app.app_context():
+        pid = db.session.scalar(db.select(PrendaCatalogo.id))
+    iniciar_sesion(client, app, email="ana@example.com")
+    client.post(f"/colecciones/agregar/{pid}")
+    client.post(f"/colecciones/agregar/{pid}")
+    with app.app_context():
+        filas = db.session.scalars(db.select(Guardarropa)).all()
+        assert len(filas) == 1 and filas[0].nombre == "Blazer azul" and filas[0].categoria == "Abrigo"
+
+
+def test_agregar_requiere_login_y_prenda_retirada_no_se_agrega(app, client):
+    a = admin(app)
+    subir_a_catalogo(a)
+    with app.app_context():
+        pid = db.session.scalar(db.select(PrendaCatalogo.id))
+    r = app.test_client().post(f"/colecciones/agregar/{pid}")
+    assert r.status_code == 302 and "login" in r.headers["Location"]
+    a.post(f"/admin/prenda/{pid}/alternar")
+    assert "Blazer azul" not in app.test_client().get("/colecciones").get_data(as_text=True)
+    iniciar_sesion(client, app, email="ana@example.com")
+    client.post(f"/colecciones/agregar/{pid}")
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(Guardarropa.id))) == 0
+
+
+def test_borrar_prenda_del_guardarropa_no_rompe_la_foto_del_catalogo(app, client, monkeypatch):
+    subir_a_catalogo(admin(app))
+    with app.app_context():
+        pid = db.session.scalar(db.select(PrendaCatalogo.id))
+    iniciar_sesion(client, app, email="ana@example.com")
+    client.post(f"/colecciones/agregar/{pid}")
+    borradas = []
+    monkeypatch.setattr("routes.eliminar_imagen", lambda i: borradas.append(i))
+    with app.app_context():
+        gid = db.session.scalar(db.select(Guardarropa.id))
+    client.post(f"/guardarropa/eliminar/{gid}")
+    assert borradas == []
+
+
+def test_eliminar_del_catalogo_conserva_foto_si_alguien_la_copio(app, client, monkeypatch):
+    a = admin(app)
+    subir_a_catalogo(a)
+    with app.app_context():
+        pid = db.session.scalar(db.select(PrendaCatalogo.id))
+    iniciar_sesion(client, app, email="ana@example.com")
+    client.post(f"/colecciones/agregar/{pid}")
+    borradas = []
+    monkeypatch.setattr("routes.eliminar_imagen", lambda i: borradas.append(i))
+    a.post(f"/admin/prenda/{pid}/eliminar")
+    assert borradas == []
+    with app.app_context():
+        assert db.session.scalar(db.select(db.func.count(PrendaCatalogo.id))) == 0
+        assert db.session.scalar(db.select(db.func.count(Guardarropa.id))) == 1
+
+
+def test_eliminar_del_catalogo_sin_copias_borra_la_foto(app):
+    a = admin(app)
+    subir_a_catalogo(a)
+    with app.app_context():
+        pid = db.session.scalar(db.select(PrendaCatalogo.id))
+    assert len(os.listdir(app.config["CATALOGO_UPLOAD_FOLDER"])) == 1
+    a.post(f"/admin/prenda/{pid}/eliminar")
+    assert os.listdir(app.config["CATALOGO_UPLOAD_FOLDER"]) == []
+
+
+def test_admin_edita_prenda(app):
+    a = admin(app)
+    subir_a_catalogo(a)
+    with app.app_context():
+        pid = db.session.scalar(db.select(PrendaCatalogo.id))
+    a.post(f"/admin/prenda/{pid}/editar", data={**DATOS_PRENDA, "nombre": "Blazer negro", "precio": ""})
+    with app.app_context():
+        p = db.session.get(PrendaCatalogo, pid)
+        assert p.nombre == "Blazer negro" and p.precio is None
+
+
+def test_panel_muestra_resumen(app):
+    a = admin(app)
+    subir_a_catalogo(a)
+    html = a.get("/admin").get_data(as_text=True)
+    assert "Panel de administración" in html and "Blazer azul" in html
+
+
+def test_catalogo_antiguo_redirige_a_colecciones(client):
+    r = client.get("/catalogo?estacion=Invierno")
+    assert r.status_code == 301 and r.headers["Location"].endswith("/colecciones?estacion=Invierno")
+
+
+def test_filtro_de_estacion_acepta_minusculas_y_sin_acentos(app):
+    subir_a_catalogo(admin(app), estacion="Otoño", nombre="Botines café")
+    c = app.test_client()
+    assert "Botines café" in c.get("/colecciones?estacion=otono").get_data(as_text=True)
+    assert "Botines café" not in c.get("/colecciones?estacion=verano").get_data(as_text=True)

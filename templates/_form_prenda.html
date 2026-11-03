@@ -1,0 +1,25 @@
+<label>Nombre
+  <input type="text" name="nombre" maxlength="100" required value="{{ p.nombre if p else '' }}">
+</label>
+<label>Categoría
+  <select name="categoria" required>
+    {% for c in categorias %}<option value="{{ c }}" {% if p and p.categoria == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+  </select>
+</label>
+<label>Estación recomendada
+  <select name="estacion" required>
+    {% for e in estaciones %}<option value="{{ e }}" {% if p and p.estacion == e %}selected{% endif %}>{{ e }}</option>{% endfor %}
+  </select>
+</label>
+<label>Colores
+  <input type="text" name="colores" maxlength="120" placeholder="Azul marino, beige" value="{{ p.colores or '' if p else '' }}">
+</label>
+<label>Precio (MXN)
+  <input type="text" name="precio" inputmode="decimal" placeholder="599.00" value="{{ p.precio if p and p.precio is not none else '' }}">
+</label>
+<label>Sucursal / tienda
+  <input type="text" name="sucursal" maxlength="100" value="{{ p.sucursal or '' if p else '' }}">
+</label>
+<label class="adm-wide">Enlace de compra (opcional)
+  <input type="url" name="enlace_compra" maxlength="500" placeholder="https://..." value="{{ p.enlace_compra or '' if p else '' }}">
+</label>

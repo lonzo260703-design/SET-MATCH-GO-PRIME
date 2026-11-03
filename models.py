@@ -164,3 +164,22 @@ class Mensaje(db.Model):
     remitente = db.relationship("User", foreign_keys=[remitente_id])
     destinatario = db.relationship("User", foreign_keys=[destinatario_id])
     publicacion = db.relationship("Publicacion")
+
+
+class PrendaCatalogo(db.Model):
+    """Prenda de la tienda/sucursal que sube el equipo administrador; la gente puede copiarla a su guardarropa."""
+    __tablename__ = "catalogo"
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    categoria = db.Column(db.String(50), nullable=False, index=True)
+    estacion = db.Column(db.String(30), nullable=False, default="Neutro", index=True)
+    colores = db.Column(db.String(120), nullable=True)  # texto libre, p. ej. "Azul marino, beige"
+    precio = db.Column(db.Numeric(10, 2), nullable=True)
+    sucursal = db.Column(db.String(100), nullable=True)
+    enlace_compra = db.Column(db.String(500), nullable=True)
+    imagen_url = db.Column(db.String(500), nullable=False)
+    imagen_id = db.Column(db.String(255), nullable=False)
+    activa = db.Column(db.Boolean, default=True, nullable=False, index=True)
+    creado_por = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)

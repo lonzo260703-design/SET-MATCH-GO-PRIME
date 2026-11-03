@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Editar prenda | SET-MATCH-GO!{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/catalogo.css') }}">{% endblock %}
+
+{% block content %}
+<main class="cat-wrapper" style="max-width: 760px;">
+  <header class="cat-header"><h1>Editar prenda</h1></header>
+  <section class="adm-card">
+    <img src="{{ p.imagen_url }}" alt="" style="width:120px;border-radius:10px;margin-bottom:14px">
+    <form action="{{ url_for('admin_editar_prenda', id=p.id) }}" method="POST" class="adm-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% include "_form_prenda.html" %}
+      <div class="adm-wide">
+        <button type="submit" class="cat-btn">Guardar cambios</button>
+        <a class="cat-btn is-ghost" href="{{ url_for('admin_panel') }}">Cancelar</a>
+      </div>
+    </form>
+  </section>
+</main>
+{% endblock %}

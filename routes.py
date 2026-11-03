@@ -1,14 +1,16 @@
 import re
+from decimal import Decimal, InvalidOperation
+from functools import wraps
 from urllib.parse import urljoin, urlparse
 
-from flask import current_app, flash, jsonify, redirect, render_template, request, session, url_for
+from flask import abort, current_app, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import case, func, or_, select
 from sqlalchemy.exc import IntegrityError
 
 from colorimetria import PERFILES, RespuestasInvalidas, clasificar, paleta_de_estacion
 from extensions import db, limiter
-from models import Guardarropa, Like, Mensaje, Publicacion, Reporte, TestResult, User
+from models import Guardarropa, Like, Mensaje, Publicacion, PrendaCatalogo, Reporte, TestResult, User
 from services.email_service import (
     enviar_correo_confirmacion,
     enviar_correo_recuperacion,
@@ -25,6 +27,7 @@ MAX_PREGUNTA = 500
 MAX_DESCRIPCION = 500
 UMBRAL_REPORTES = 3  # reportes de personas distintas para ocultar una publicación del feed
 MAX_MENSAJE = 1000
+ESTACIONES_CATALOGO = ["Primavera", "Verano", "Otoño", "Invierno", "Neutro"]
 MOTIVOS_REPORTE = {
     "inapropiado": "Contenido inapropiado",
     "spam": "Spam",
@@ -83,12 +86,6 @@ def register_routes(app):
     @app.route("/")
     def index():
         return render_template("index.html")
-
-    # ---------- COLECCIONES ----------
-    @app.route("/colecciones")
-    def colecciones():
-        estacion = request.args.get("estacion")
-        return render_template("colecciones.html", estacion=estacion)
 
     # ---------- TEORÍA Y HERRAMIENTAS DE COLOR ----------
     @app.route("/colorwheel")
@@ -464,9 +461,228 @@ def register_routes(app):
         imagen_id = id_desde_url(prenda.imagen, "guardarropa")
         db.session.delete(prenda)
         db.session.commit()
-        eliminar_imagen(imagen_id)
+        # Las prendas copiadas del catálogo comparten foto: solo se borra si nadie más la usa
+        if not _imagen_en_uso(prenda.imagen):
+            eliminar_imagen(imagen_id)
         flash("Prenda eliminada.", "success")
         return redirect(url_for("guardarropa"))
+
+
+    # ---------- CATÁLOGO Y PANEL DE ADMINISTRACIÓN ----------
+    def _es_admin():
+        return (
+            current_user.is_authenticated
+            and current_user.is_confirmed
+            and current_user.email.lower() in current_app.config.get("ADMIN_EMAILS", set())
+        )
+
+    @app.context_processor
+    def datos_admin():
+        return {"es_admin": _es_admin()}
+
+    def admin_required(vista):
+        @wraps(vista)
+        @login_required
+        def envoltura(*args, **kwargs):
+            if not _es_admin():
+                abort(404)  # no revela que el panel existe
+            return vista(*args, **kwargs)
+        return envoltura
+
+    def _imagen_en_uso(url, excepto_catalogo_id=None):
+        """¿Otra prenda (de guardarropa o del catálogo) usa esta misma foto?"""
+        if db.session.scalar(select(func.count(Guardarropa.id)).where(Guardarropa.imagen == url)):
+            return True
+        consulta = select(func.count(PrendaCatalogo.id)).where(PrendaCatalogo.imagen_url == url)
+        if excepto_catalogo_id:
+            consulta = consulta.where(PrendaCatalogo.id != excepto_catalogo_id)
+        return bool(db.session.scalar(consulta))
+
+    def _normalizar_estacion(valor):
+        """Acepta 'otono', 'Otoño', 'INVIERNO'... y devuelve el nombre oficial (o '')."""
+        quitar = str.maketrans("áéíóúñ", "aeioun")
+        for e in ESTACIONES_CATALOGO:
+            if valor.strip().lower().translate(quitar) == e.lower().translate(quitar):
+                return e
+        return ""
+
+    def _leer_datos_prenda(form):
+        """Valida el formulario del panel. Devuelve (datos, error)."""
+        nombre = form.get("nombre", "").strip()[:100]
+        categoria = form.get("categoria", "")
+        estacion = form.get("estacion", "")
+        if not nombre:
+            return None, "Escribe el nombre de la prenda."
+        if categoria not in CATEGORIAS:
+            return None, "Elige una categoría válida."
+        if estacion not in ESTACIONES_CATALOGO:
+            return None, "Elige una estación válida."
+        precio = None
+        bruto = form.get("precio", "").strip().replace(",", ".")
+        if bruto:
+            try:
+                precio = Decimal(bruto)
+                if not (0 <= precio < Decimal("10000000")):
+                    raise InvalidOperation
+                precio = precio.quantize(Decimal("0.01"))
+            except InvalidOperation:
+                return None, "El precio no es válido."
+        enlace = form.get("enlace_compra", "").strip()
+        if enlace and (len(enlace) > 500 or urlparse(enlace).scheme not in ("http", "https") or not urlparse(enlace).netloc):
+            return None, "El enlace de compra debe empezar con http:// o https://."
+        return {
+            "nombre": nombre,
+            "categoria": categoria,
+            "estacion": estacion,
+            "colores": form.get("colores", "").strip()[:120] or None,
+            "precio": precio,
+            "sucursal": form.get("sucursal", "").strip()[:100] or None,
+            "enlace_compra": enlace or None,
+        }, None
+
+    @app.route("/catalogo")
+    def catalogo_antiguo():
+        return redirect(url_for("colecciones", **request.args), code=301)
+
+    @app.route("/colecciones")
+    def colecciones():
+        """Colecciones: la ropa que suben las sucursales (ver panel de administración)."""
+        pagina = request.args.get("pagina", 1, type=int)
+        estacion = _normalizar_estacion(request.args.get("estacion", ""))
+        categoria = request.args.get("categoria", "")
+        consulta = select(PrendaCatalogo).where(PrendaCatalogo.activa.is_(True))
+        if estacion:
+            consulta = consulta.where(PrendaCatalogo.estacion == estacion)
+        if categoria in CATEGORIAS:
+            consulta = consulta.where(PrendaCatalogo.categoria == categoria)
+        else:
+            categoria = ""
+        prendas = db.paginate(
+            consulta.order_by(PrendaCatalogo.created_at.desc(), PrendaCatalogo.id.desc()),
+            page=pagina, per_page=12, error_out=False,
+        )
+        mias = set()
+        if current_user.is_authenticated and prendas.items:
+            urls = [p.imagen_url for p in prendas.items]
+            mias = set(db.session.scalars(
+                select(Guardarropa.imagen).where(Guardarropa.usuario_id == current_user.id, Guardarropa.imagen.in_(urls))
+            ).all())
+        ultimo = current_user.resultados.first() if current_user.is_authenticated else None
+        return render_template(
+            "colecciones.html", prendas=prendas, estacion=estacion, categoria=categoria, mias=mias,
+            estaciones=ESTACIONES_CATALOGO, categorias=sorted(CATEGORIAS),
+            mi_estacion=ultimo.estacion if ultimo else None,
+        )
+
+    @app.route("/colecciones/agregar/<int:id>", methods=["POST"])
+    @login_required
+    @limiter.limit("60 per hour")
+    def agregar_del_catalogo(id):
+        prenda = db.session.get(PrendaCatalogo, id)
+        destino = request.referrer if request.referrer and _url_segura(request.referrer) else url_for("colecciones")
+        if not prenda or not prenda.activa:
+            flash("Esa prenda ya no está disponible.", "error")
+            return redirect(destino)
+        ya = db.session.scalar(
+            select(Guardarropa.id).where(Guardarropa.usuario_id == current_user.id, Guardarropa.imagen == prenda.imagen_url)
+        )
+        if ya:
+            flash("Esa prenda ya está en tu guardarropa.", "info")
+            return redirect(destino)
+        db.session.add(
+            Guardarropa(usuario_id=current_user.id, nombre=prenda.nombre, categoria=prenda.categoria, imagen=prenda.imagen_url)
+        )
+        db.session.commit()
+        flash(f"«{prenda.nombre}» se agregó a tu guardarropa.", "success")
+        return redirect(destino)
+
+    @app.route("/admin")
+    @admin_required
+    def admin_panel():
+        prendas = db.session.scalars(select(PrendaCatalogo).order_by(PrendaCatalogo.created_at.desc(), PrendaCatalogo.id.desc())).all()
+        copias = dict(db.session.execute(
+            select(Guardarropa.imagen, func.count(Guardarropa.id))
+            .where(Guardarropa.imagen.in_([p.imagen_url for p in prendas] or [""]))
+            .group_by(Guardarropa.imagen)
+        ).all())
+        resumen = {
+            "total": len(prendas),
+            "activas": sum(1 for p in prendas if p.activa),
+            "copias": sum(copias.values()),
+            "usuarios": db.session.scalar(select(func.count(User.id))),
+        }
+        return render_template(
+            "admin.html", prendas=prendas, copias=copias, resumen=resumen,
+            estaciones=ESTACIONES_CATALOGO, categorias=sorted(CATEGORIAS),
+        )
+
+    @app.route("/admin/prenda", methods=["POST"])
+    @admin_required
+    @limiter.limit("60 per hour")
+    def admin_crear_prenda():
+        datos, error = _leer_datos_prenda(request.form)
+        archivo = request.files.get("foto")
+        if not error and (not archivo or archivo.filename == ""):
+            error = "Selecciona la foto de la prenda."
+        ext = tipo_imagen(archivo.stream) if not error else None
+        if not error and not ext:
+            error = "El archivo no es una imagen válida (PNG, JPG o WEBP)."
+        if error:
+            flash(error, "error")
+            return redirect(url_for("admin_panel"))
+        try:
+            url, imagen_id = subir_imagen(archivo.stream, ext, "catalogo")
+        except Exception as e:
+            current_app.logger.error(f"Error al subir imagen del catálogo: {e}")
+            flash("No pudimos subir la foto. Inténtalo de nuevo.", "error")
+            return redirect(url_for("admin_panel"))
+        try:
+            db.session.add(PrendaCatalogo(imagen_url=url, imagen_id=imagen_id, creado_por=current_user.id, **datos))
+            db.session.commit()
+            flash("Prenda publicada en colecciones.", "success")
+        except Exception:
+            db.session.rollback()
+            eliminar_imagen(imagen_id)
+            flash("No pudimos guardar la prenda.", "error")
+        return redirect(url_for("admin_panel"))
+
+    @app.route("/admin/prenda/<int:id>/editar", methods=["GET", "POST"])
+    @admin_required
+    def admin_editar_prenda(id):
+        prenda = db.session.get(PrendaCatalogo, id) or abort(404)
+        if request.method == "GET":
+            return render_template("admin_editar.html", p=prenda, estaciones=ESTACIONES_CATALOGO, categorias=sorted(CATEGORIAS))
+        datos, error = _leer_datos_prenda(request.form)
+        if error:
+            flash(error, "error")
+            return redirect(url_for("admin_editar_prenda", id=id))
+        for campo, valor in datos.items():
+            setattr(prenda, campo, valor)
+        # Las copias ya agregadas a guardarropas conservan su nombre y foto originales
+        db.session.commit()
+        flash("Prenda actualizada.", "success")
+        return redirect(url_for("admin_panel"))
+
+    @app.route("/admin/prenda/<int:id>/alternar", methods=["POST"])
+    @admin_required
+    def admin_alternar_prenda(id):
+        prenda = db.session.get(PrendaCatalogo, id) or abort(404)
+        prenda.activa = not prenda.activa
+        db.session.commit()
+        flash("Prenda publicada de nuevo." if prenda.activa else "Prenda retirada de colecciones.", "success")
+        return redirect(url_for("admin_panel"))
+
+    @app.route("/admin/prenda/<int:id>/eliminar", methods=["POST"])
+    @admin_required
+    def admin_eliminar_prenda(id):
+        prenda = db.session.get(PrendaCatalogo, id) or abort(404)
+        url, imagen_id = prenda.imagen_url, prenda.imagen_id
+        db.session.delete(prenda)
+        db.session.commit()
+        if not _imagen_en_uso(url):  # si alguien ya la copió, la foto se conserva
+            eliminar_imagen(imagen_id)
+        flash("Prenda eliminada de colecciones.", "success")
+        return redirect(url_for("admin_panel"))
 
     # ---------- COMUNIDAD (RED SOCIAL DE ESTILO) ----------
     def _ids_ocultos():
