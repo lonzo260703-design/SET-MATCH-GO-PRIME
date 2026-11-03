@@ -81,6 +81,14 @@ def create_app(config_name=None):
                 "REFERENCES publicaciones (id) ON DELETE CASCADE"
             ))
             db.session.commit()
+        if "origen" not in {c["name"] for c in inspector.get_columns("guardarropa")}:
+            db.session.execute(text("ALTER TABLE guardarropa ADD COLUMN origen VARCHAR(12) NOT NULL DEFAULT 'propia'"))
+            # Las prendas cuya foto coincide con una de Colecciones son copias de la tienda
+            db.session.execute(text(
+                "UPDATE guardarropa SET origen = 'coleccion' "
+                "WHERE imagen IN (SELECT imagen_url FROM catalogo)"
+            ))
+            db.session.commit()
 
     @app.cli.command("init-db")
     def init_db():

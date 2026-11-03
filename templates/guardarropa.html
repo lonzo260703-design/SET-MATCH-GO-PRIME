@@ -7,47 +7,42 @@
     
     <div class="wardrobe-header">
       <h2>👔 Mi Guardarropa Digital</h2>
-      <p>Sube y gestiona tus prendas favoritas para coordinar tus combinaciones cromáticas.</p>
-    </div>
-
-    <!-- FORMULARIO DE SUBIDA DE ROPA -->
-    <div class="upload-card">
-      <h3>Añadir Nueva Prenda</h3>
-      <form action="{{ url_for('subir_prenda') }}" method="POST" enctype="multipart/form-data" class="upload-form">
-        <!-- Token de protección CSRF -->
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        
-        <div class="form-grid">
-          <div class="input-group">
-            <label>Nombre de la prenda</label>
-            <input type="text" name="nombre" placeholder="Ej. Camisa Lino Terracota" required>
-          </div>
-          
-          <div class="input-group">
-            <label>Categoría</label>
-            <select name="categoria">
-              <option value="Superior">Prenda Superior (Camisas, Tops)</option>
-              <option value="Inferior">Prenda Inferior (Pantalones, Faldas)</option>
-              <option value="Abrigo">Abrigos & Chaquetas</option>
-              <option value="Calzado">Calzado</option>
-              <option value="Accesorios">Accesorios</option>
-            </select>
-          </div>
-
-          <div class="input-group full-width">
-            <label>Imagen de la prenda</label>
-            <input type="file" name="foto" accept="image/*" required>
-          </div>
-        </div>
-
-        <button type="submit" class="btn-submit">Subir a Mi Guardarropa</button>
-      </form>
+      <p>Tu selección de las colecciones de la tienda para coordinar tus combinaciones cromáticas.</p>
+      <a class="btn-submit" style="display:inline-block;text-decoration:none;margin-top:12px" href="{{ url_for('colecciones', para_mi=1) }}">Ver colecciones</a>
     </div>
 
     <!-- MOSTRARIO DE PRENDAS -->
     <div class="wardrobe-grid">
-      {% if prendas %}
-        {% for prenda in prendas %}
+      {% for prenda in de_coleccion %}
+
+        <div class="cloth-card">
+          <div class="cloth-img-wrapper">
+            <img src="{{ prenda.imagen if (prenda.imagen.startswith('http') or prenda.imagen.startswith('/')) else url_for('static', filename='uploads/guardarropa/' ~ prenda.imagen) }}" alt="{{ prenda.nombre }}" loading="lazy">
+          </div>
+          <div class="cloth-info">
+            <span class="category-tag">{{ prenda.categoria }}</span>
+            <h4>{{ prenda.nombre }}</h4>
+            <form action="{{ url_for('eliminar_prenda', id=prenda.id) }}" method="POST" onsubmit="return confirm('¿Eliminar esta prenda?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn-delete">Eliminar</button>
+            </form>
+          </div>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <p>Aún no has agregado prendas. Entra a <a href="{{ url_for('colecciones', para_mi=1) }}">Colecciones</a> y toca «+ Mi guardarropa» en las que te gusten.</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if propias %}
+    <div class="wardrobe-header" style="margin-top:36px">
+      <h3>Mis prendas anteriores</h3>
+      <p>Las subiste antes de que el guardarropa se limitara a las colecciones. Puedes conservarlas o eliminarlas.</p>
+    </div>
+    <div class="wardrobe-grid">
+      {% for prenda in propias %}
+
         <div class="cloth-card">
           <div class="cloth-img-wrapper">
             <img src="{{ prenda.imagen if (prenda.imagen.startswith('http') or prenda.imagen.startswith('/')) else url_for('static', filename='uploads/guardarropa/' ~ prenda.imagen) }}" alt="{{ prenda.nombre }}" loading="lazy">
@@ -62,12 +57,8 @@
           </div>
         </div>
         {% endfor %}
-      {% else %}
-        <div class="empty-state">
-          <p>Aún no has guardado prendas en tu guardarropa. ¡Añade tu primera prenda arriba!</p>
-        </div>
-      {% endif %}
     </div>
+    {% endif %}
 
   </div>
 </div>

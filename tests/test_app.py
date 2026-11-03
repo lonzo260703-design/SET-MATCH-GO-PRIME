@@ -188,18 +188,27 @@ def test_chat_pregunta_vacia(client):
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
 
 
-def test_guardarropa_subir_y_eliminar(client, app):
-    iniciar_sesion(client, app)
-    r = client.post(
-        "/guardarropa/subir",
-        data={"nombre": "Camisa", "categoria": "Superior", "foto": (io.BytesIO(PNG), "camisa.png")},
-        content_type="multipart/form-data",
-    )
-    assert r.status_code == 302
+def prenda_propia(app, email="ana@example.com", nombre="Camisa"):
+    """Prenda 'subida' antes de que se quitara la subida: archivo local + fila con origen 'propia'."""
+    import uuid
+
+    carpeta = app.config["UPLOAD_FOLDER"]
+    os.makedirs(carpeta, exist_ok=True)
+    archivo = f"{uuid.uuid4().hex}.png"
+    with open(os.path.join(carpeta, archivo), "wb") as f:
+        f.write(PNG)
     with app.app_context():
-        prenda = db.session.scalar(db.select(Guardarropa))
-        assert prenda is not None
-        pid = prenda.id
+        uid = db.session.scalar(db.select(User.id).filter_by(email=email))
+        prenda = Guardarropa(usuario_id=uid, nombre=nombre, categoria="Superior",
+                             imagen=f"/static/uploads/guardarropa/{archivo}", origen="propia")
+        db.session.add(prenda)
+        db.session.commit()
+        return prenda.id
+
+
+def test_guardarropa_eliminar_prenda_propia(client, app):
+    iniciar_sesion(client, app)
+    pid = prenda_propia(app)
     assert client.post(f"/guardarropa/eliminar/{pid}").status_code == 302
     with app.app_context():
         assert db.session.scalar(db.select(Guardarropa)) is None
@@ -249,16 +258,17 @@ def test_reset_token_manipulado_rechazado(client):
     assert client.get("/reset-password/token-falso").status_code == 302
 
 
-def test_subida_rechaza_archivo_no_imagen(client, app):
+def test_ya_no_se_pueden_subir_prendas_propias(client, app):
     iniciar_sesion(client, app)
-    falso = b"<?php echo 1; ?>"
-    client.post(
+    r = client.post(
         "/guardarropa/subir",
-        data={"nombre": "Malo", "categoria": "Superior", "foto": (io.BytesIO(falso), "malo.png")},
+        data={"nombre": "Camisa", "categoria": "Superior", "foto": (io.BytesIO(PNG), "camisa.png")},
         content_type="multipart/form-data",
     )
+    assert r.status_code in (404, 405)
     with app.app_context():
         assert db.session.scalar(db.select(Guardarropa)) is None
+    assert b"foto" not in client.get("/guardarropa").data.split(b"wardrobe-grid")[0]
 
 
 def test_chat_trunca_preguntas_largas(client, monkeypatch):
@@ -526,33 +536,18 @@ def test_visitante_ve_contador_de_likes_pero_no_el_boton_de_reportar(client, app
 
 
 # ---------- guardarropa en el servicio de imágenes ----------
-def test_prenda_guarda_url_y_el_archivo(client, app):
-    import os
-
+def test_guardarropa_muestra_la_foto_de_la_prenda(client, app):
     iniciar_sesion(client, app)
-    client.post(
-        "/guardarropa/subir",
-        data={"nombre": "Camisa", "categoria": "Superior", "foto": (io.BytesIO(PNG), "camisa.png")},
-        content_type="multipart/form-data",
-    )
+    pid = prenda_propia(app)
     with app.app_context():
-        imagen = db.session.scalar(db.select(Guardarropa)).imagen
-    assert imagen.startswith("/static/uploads/guardarropa/")
-    assert len(os.listdir(app.config["UPLOAD_FOLDER"])) == 1
+        imagen = db.session.get(Guardarropa, pid).imagen
     assert imagen.encode() in client.get("/guardarropa").data
 
 
 def test_eliminar_prenda_borra_el_archivo(client, app):
-    import os
-
     iniciar_sesion(client, app)
-    client.post(
-        "/guardarropa/subir",
-        data={"nombre": "Camisa", "categoria": "Superior", "foto": (io.BytesIO(PNG), "camisa.png")},
-        content_type="multipart/form-data",
-    )
-    with app.app_context():
-        pid = db.session.scalar(db.select(Guardarropa)).id
+    pid = prenda_propia(app)
+    assert len(os.listdir(app.config["UPLOAD_FOLDER"])) == 1
     client.post(f"/guardarropa/eliminar/{pid}")
     assert os.listdir(app.config["UPLOAD_FOLDER"]) == []
 
@@ -1038,8 +1033,7 @@ def test_eliminar_cuenta_borra_todo_lo_suyo_y_conserva_lo_ajeno(app, client):
     luis.post("/test", data=CALIDO)
     luis.post("/api/generar-diagnostico")
     luis.post("/comunidad/publicar", data={"foto": (io.BytesIO(PNG), "l.png")}, content_type="multipart/form-data")
-    client.post("/guardarropa/subir", data={"foto": (io.BytesIO(PNG), "g.png"), "nombre": "Camisa", "categoria": "Superior"},
-                content_type="multipart/form-data")
+    prenda_propia(app, email="ana@example.com")
     with app.app_context():
         ana_id = db.session.scalar(db.select(User.id).filter_by(email="ana@example.com"))
     r = client.post("/cuenta/eliminar", data={"password": "secreta123", "confirmacion": "eliminar"})
@@ -1066,3 +1060,24 @@ def test_mensajes_de_otros_no_se_rompen_al_borrar_una_publicacion_adjunta(app, c
     client.post(f"/mensajes/{luis_id}", data={"publicacion_id": pid, "texto": "mira"})
     client.post("/cuenta/eliminar", data={"password": "secreta123", "confirmacion": "ELIMINAR"})
     assert luis.get("/mensajes").status_code == 200
+
+
+def test_guardarropa_separa_colecciones_de_prendas_anteriores(app, client):
+    subir_a_catalogo(admin(app))
+    with app.app_context():
+        cid = db.session.scalar(db.select(PrendaCatalogo.id))
+    iniciar_sesion(client, app, email="ana@example.com")
+    client.post(f"/colecciones/agregar/{cid}")
+    prenda_propia(app, nombre="Playera vieja")
+    html = client.get("/guardarropa").get_data(as_text=True)
+    assert "Blazer azul" in html and "Playera vieja" in html
+    assert html.index("Blazer azul") < html.index("Mis prendas anteriores") < html.index("Playera vieja")
+    with app.app_context():
+        origenes = {p.nombre: p.origen for p in db.session.scalars(db.select(Guardarropa))}
+    assert origenes == {"Blazer azul": "coleccion", "Playera vieja": "propia"}
+
+
+def test_guardarropa_sin_prendas_invita_a_colecciones(app, client):
+    iniciar_sesion(client, app)
+    html = client.get("/guardarropa").get_data(as_text=True)
+    assert "Colecciones" in html and "Mis prendas anteriores" not in html
