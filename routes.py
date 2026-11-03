@@ -454,56 +454,11 @@ def register_routes(app):
     @login_required
     def guardarropa():
         prendas = Guardarropa.query.filter_by(usuario_id=current_user.id).order_by(Guardarropa.fecha_creacion.desc()).all()
-        return render_template('guardarropa.html', prendas=prendas)
-
-    @app.route('/guardarropa/subir', methods=['POST'])
-    @login_required
-    def subir_prenda():
-        if 'foto' not in request.files:
-            flash('No se seleccionó ningún archivo.', 'error')
-            return redirect(url_for('guardarropa'))
-
-        file = request.files['foto']
-        nombre = request.form.get('nombre', '').strip()
-        categoria = request.form.get('categoria', 'Superior')
-
-        if not file or file.filename == '':
-            flash('Debes seleccionar una imagen.', 'error')
-            return redirect(url_for('guardarropa'))
-
-        if not nombre:
-            flash('Debes ingresar un nombre para la prenda.', 'error')
-            return redirect(url_for('guardarropa'))
-
-        ext = tipo_imagen(file.stream)
-        if not ext:
-            flash('El archivo no es una imagen válida (PNG, JPG o WEBP).', 'error')
-            return redirect(url_for('guardarropa'))
-
-        try:
-            url, imagen_id = subir_imagen(file.stream, ext, "guardarropa")
-        except Exception as e:
-            current_app.logger.error(f"Error al subir imagen del guardarropa: {e}")
-            flash('No pudimos subir la foto. Inténtalo de nuevo en un momento.', 'error')
-            return redirect(url_for('guardarropa'))
-
-        try:
-            db.session.add(
-                Guardarropa(
-                    usuario_id=current_user.id,
-                    nombre=nombre[:100],
-                    categoria=categoria if categoria in CATEGORIAS else 'Superior',
-                    imagen=url,
-                )
-            )
-            db.session.commit()
-            flash('¡Prenda guardada en tu guardarropa!', 'success')
-        except Exception:
-            db.session.rollback()
-            eliminar_imagen(imagen_id)
-            flash('No pudimos guardar la prenda. Inténtalo de nuevo.', 'error')
-
-        return redirect(url_for('guardarropa'))
+        return render_template(
+            'guardarropa.html',
+            de_coleccion=[p for p in prendas if p.origen == 'coleccion'],
+            propias=[p for p in prendas if p.origen != 'coleccion'],
+        )
 
     @app.route("/guardarropa/eliminar/<int:id>", methods=["POST"])
     @login_required
@@ -658,7 +613,8 @@ def register_routes(app):
             flash("Esa prenda ya está en tu guardarropa.", "info")
             return redirect(destino)
         db.session.add(
-            Guardarropa(usuario_id=current_user.id, nombre=prenda.nombre, categoria=prenda.categoria, imagen=prenda.imagen_url)
+            Guardarropa(usuario_id=current_user.id, nombre=prenda.nombre, categoria=prenda.categoria,
+                       imagen=prenda.imagen_url, origen="coleccion")
         )
         db.session.commit()
         flash(f"«{prenda.nombre}» se agregó a tu guardarropa.", "success")

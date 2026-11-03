@@ -68,6 +68,8 @@ class Guardarropa(db.Model):
     categoria = db.Column(db.String(50), nullable=False)
     imagen = db.Column(db.String(255), nullable=False)
     fecha_creacion = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+    # 'coleccion' = copiada de Colecciones; 'propia' = subida por la persona (ya no se permite subir)
+    origen = db.Column(db.String(12), nullable=False, default="coleccion", server_default="propia")
 
     # Relación con el usuario
     usuario = db.relationship('User', backref=db.backref('prendas', lazy='dynamic', cascade='all, delete-orphan'))
