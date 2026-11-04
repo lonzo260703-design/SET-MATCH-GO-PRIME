@@ -92,74 +92,71 @@
 
       <div class="cw-outfit-preview">
 
-        <!-- MANIQUÍ FEMENINO ESTILIZADO -->
+        <!-- AVATAR FEMENINO -->
         <svg id="svgFemale" class="cw-avatar-svg" viewBox="0 0 200 350" fill="none">
-          <!-- Sombra de pie de base -->
-          <ellipse cx="100" cy="338" rx="40" ry="5" fill="#E2E8F0" />
-
-          <!-- Stand/Pedestal de Maniquí -->
-          <line x1="100" y1="280" x2="100" y2="338" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" />
-          <ellipse cx="100" cy="338" rx="20" ry="4" fill="#CBD5E1" />
-
-          <!-- Busto / Maniquí Neutro -->
-          <path d="M88 40 C88 28, 112 28, 112 40 L110 58 L90 58 Z" fill="#E2E8F0" />
-          <!-- Percha superior -->
-          <path d="M100 25 C100 18, 106 18, 106 23" stroke="#64748B" stroke-width="2.5" fill="none" stroke-linecap="round" />
-
-          <!-- PRENDA SUPERIOR: Blusa / Top -->
-          <g id="fTopGroup">
-            <path id="fTop" d="M72 58 Q100 68 128 58 Q140 78 144 98 L130 110 L122 96 L120 152 L80 152 L78 96 L70 110 L56 98 Q60 78 72 58 Z" fill="#1816D1" />
-            <path d="M86 58 Q100 75 114 58" stroke="#FFFFFF" stroke-width="2" fill="none" opacity="0.6" />
-            <path d="M80 152 Q100 145 120 152 L120 148 Q100 141 80 148 Z" fill="rgba(0,0,0,0.15)" />
-          </g>
-
-          <!-- PRENDA INFERIOR: Falda / Palazzo -->
-          <g id="fBottomGroup">
-            <path id="fBottom" d="M80 152 L120 152 Q136 210 148 252 Q100 260 52 252 Q64 210 80 152 Z" fill="#CFD116" />
-            <rect x="78" y="150" width="44" height="5" fill="#0F172A" rx="1.5" />
-            <path d="M52 252 Q100 260 148 252 Q140 245 100 252 Q60 245 52 252 Z" fill="rgba(0,0,0,0.2)" />
-          </g>
-
-          <!-- CALZADO Y BASE -->
-          <g id="fShoesGroup">
-            <path id="fShoes" d="M78 285 C83 278 91 284 93 292 L93 298 L77 298 Z M107 292 C109 284 117 278 122 284 L123 298 L107 298 Z" fill="#0F172A" />
-            <!-- Tacones estilizados -->
-            <rect x="78" y="298" width="3" height="12" fill="#0F172A" />
-            <rect x="119" y="298" width="3" height="12" fill="#0F172A" />
+          <ellipse cx="100" cy="338" rx="46" ry="5" fill="#E2E8F0" />
+          <g transform="translate(100 12) scale(0.78) translate(-170 -68) translate(0 30)">
+            <ellipse cx="170" cy="88" rx="26" ry="30" fill="#3b2a24" />
+            <circle cx="170" cy="52" r="11" fill="#3b2a24" />
+            <rect x="162" y="112" width="16" height="22" rx="4" fill="#e3b995" />
+            <ellipse cx="170" cy="92" rx="20" ry="25" fill="#edc9ab" />
+            <path d="M150 80 Q170 62 190 80 Q182 72 170 72 Q158 72 150 80Z" fill="#3b2a24" />
+            <polygon points="126,210 144,214 138,296 124,294" fill="#edc9ab" />
+            <polygon points="214,210 196,214 202,296 216,294" fill="#edc9ab" />
+            <circle cx="130" cy="300" r="7" fill="#edc9ab" />
+            <circle cx="210" cy="300" r="7" fill="#edc9ab" />
+            <g id="fBottomGroup">
+              <g id="fBottom" fill="#CFD116">
+                <path d="M146 250 L194 250 L204 436 L174 436 L170 322 L166 436 L136 436 Z" />
+                <path d="M170 322 L170 254 M152 254 L148 436 M188 254 L192 436" stroke="rgba(0,0,0,0.22)" stroke-width="1" />
+                <rect x="146" y="244" width="48" height="9" rx="2" fill="rgba(0,0,0,0.28)" />
+              </g>
+            </g>
+            <g id="fTopGroup">
+              <g id="fTop" fill="#1816D1">
+                <path d="M142 140 Q150 130 162 130 L170 150 L178 130 Q190 130 198 140 Q210 150 214 210 L196 214 L192 190 L194 248 L146 248 L148 190 L144 214 L126 210 Q130 150 142 140 Z" />
+                <path d="M162 130 L170 150 L178 130" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" />
+              </g>
+            </g>
+            <g id="fShoesGroup">
+              <g id="fShoes" fill="#0F172A">
+                <ellipse cx="150" cy="442" rx="16" ry="6" />
+                <ellipse cx="190" cy="442" rx="16" ry="6" />
+              </g>
+            </g>
           </g>
         </svg>
 
-        <!-- MANIQUÍ MASCULINO ESTILIZADO -->
+        <!-- AVATAR MASCULINO -->
         <svg id="svgMale" class="cw-avatar-svg hidden" viewBox="0 0 200 350" fill="none">
-          <!-- Sombra de pie de base -->
-          <ellipse cx="100" cy="338" rx="42" ry="5" fill="#E2E8F0" />
-
-          <!-- Stand/Pedestal de Maniquí -->
-          <line x1="100" y1="285" x2="100" y2="338" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" />
-          <ellipse cx="100" cy="338" rx="20" ry="4" fill="#CBD5E1" />
-
-          <!-- Busto Neutro -->
-          <path d="M86 38 C86 26, 114 26, 114 38 L110 56 L90 56 Z" fill="#E2E8F0" />
-          <path d="M100 23 C100 16, 106 16, 106 21" stroke="#64748B" stroke-width="2.5" fill="none" stroke-linecap="round" />
-
-          <!-- PRENDA SUPERIOR: Camisa Polo -->
-          <g id="mTopGroup">
-            <path id="mTop" d="M68 56 Q100 65 132 56 Q146 72 154 94 L138 106 L128 94 L128 160 L72 160 L72 94 L62 106 L46 94 Q54 72 68 56 Z" fill="#1816D1" />
-            <path d="M86 56 L100 74 L114 56" stroke="#FFFFFF" stroke-width="2" fill="none" opacity="0.8" />
-            <path d="M72 160 Q100 152 128 160 L128 154 Q100 146 72 154 Z" fill="rgba(0,0,0,0.15)" />
-          </g>
-
-          <!-- PRENDA INFERIOR: Pantalón Chino -->
-          <g id="mBottomGroup">
-            <path id="mBottom" d="M72 160 L128 160 Q131 225 135 288 L110 288 Q103 220 100 195 Q97 220 90 288 L65 288 Q69 225 72 160 Z" fill="#CFD116" />
-            <line x1="100" y1="164" x2="100" y2="198" stroke="rgba(0,0,0,0.25)" stroke-width="1.5" />
-          </g>
-
-          <!-- CALZADO -->
-          <g id="mShoesGroup">
-            <path id="mShoes" d="M58 288 L88 288 L90 304 L54 304 Z M110 288 L140 288 L144 304 L108 304 Z" fill="#0F172A" />
-            <rect x="54" y="300" width="36" height="4" fill="#FFFFFF" rx="1" />
-            <rect x="108" y="300" width="36" height="4" fill="#FFFFFF" rx="1" />
+          <ellipse cx="100" cy="338" rx="46" ry="5" fill="#E2E8F0" />
+          <g transform="translate(100 12) scale(0.84) translate(-510 -88) translate(0 30)">
+            <rect x="502" y="112" width="16" height="22" rx="4" fill="#d9a67f" />
+            <ellipse cx="510" cy="92" rx="21" ry="25" fill="#e4b48c" />
+            <path d="M489 88 Q490 62 510 62 Q530 62 531 88 Q522 76 510 76 Q498 76 489 88Z" fill="#2b2420" />
+            <circle cx="469" cy="300" r="7" fill="#e4b48c" />
+            <circle cx="551" cy="300" r="7" fill="#e4b48c" />
+            <g id="mBottomGroup">
+              <g id="mBottom" fill="#CFD116">
+                <path d="M482 288 L538 288 L542 424 L516 424 L510 326 L504 424 L478 424 Z" />
+                <rect x="482" y="284" width="56" height="8" rx="2" fill="rgba(0,0,0,0.35)" />
+              </g>
+            </g>
+            <g id="mTopGroup">
+              <g id="mTop" fill="#1816D1">
+                <path d="M486 140 Q466 138 463 160 L458 222 L460 288 L478 292 L484 200 Z" />
+                <path d="M534 140 Q554 138 557 160 L562 222 L560 288 L542 292 L536 200 Z" />
+                <path d="M484 144 Q492 132 502 130 L510 146 L518 130 Q528 132 536 144 L538 292 L482 292 Z" />
+                <path d="M502 130 L510 146 L497 142 Z M518 130 L510 146 L523 142 Z" fill="rgba(255,255,255,0.35)" />
+                <path d="M510 146 L510 290" stroke="rgba(0,0,0,0.25)" stroke-width="1.2" />
+              </g>
+            </g>
+            <g id="mShoesGroup">
+              <g id="mShoes" fill="#0F172A">
+                <ellipse cx="490" cy="432" rx="17" ry="6" />
+                <ellipse cx="530" cy="432" rx="17" ry="6" />
+              </g>
+            </g>
           </g>
         </svg>
 
