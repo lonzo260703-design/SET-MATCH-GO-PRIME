@@ -861,8 +861,8 @@
       <li class="dropdown nav-item">
         <a href="#" class="dropdown-toggle">Buscar 🔍</a>
         <div class="search-dropdown">
-          <form action="#" method="GET" class="search-form">
-            <input type="text" name="q" class="search-input" placeholder="Buscar prenda, estilo..." required>
+          <form action="{{ url_for('buscar') }}" method="GET" class="search-form">
+            <input type="text" name="q" class="search-input" placeholder="Buscar prenda, estilo..." minlength="2" maxlength="60" required>
             <button type="submit" class="search-btn">Buscar</button>
           </form>
         </div>
@@ -1005,7 +1005,7 @@
 
         <li>
           <div class="mobile-search-box">
-            <form action="#" method="GET">
+            <form action="{{ url_for('buscar') }}" method="GET">
               <input type="text" name="q" placeholder="Buscar prendas, estilos..." required>
               <button type="submit">🔍</button>
             </form>
