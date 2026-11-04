@@ -2,9 +2,6 @@
 {% block title %}Rueda de Armonías & Probador — SET-MATCH-GO!{% endblock %}
 
 {% block content %}
-<!-- CANVAS DE PARTICULAS FLOTANTES DE FONDO -->
-<canvas id="bgParticlesCanvas"></canvas>
-
 <main class="cw-wrapper">
 
   <!-- ENCABEZADO PRINCIPAL -->
@@ -178,17 +175,6 @@
 </main>
 
 <style>
-  /* FONDO Y CANVAS DE PARTICULAS */
-  #bgParticlesCanvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 0;
-    pointer-events: none;
-  }
-
   .cw-wrapper {
     position: relative;
     z-index: 2;
@@ -487,52 +473,7 @@
 <script>
   document.addEventListener("DOMContentLoaded", function () {
 
-    /* 1. PARTICULAS FLOTANTES DE FONDO */
-    const bgCanvas = document.getElementById("bgParticlesCanvas");
-    const bgCtx = bgCanvas.getContext("2d");
-
-    function resizeBgCanvas() {
-      bgCanvas.width = window.innerWidth;
-      bgCanvas.height = window.innerHeight;
-    }
-    resizeBgCanvas();
-    window.addEventListener("resize", resizeBgCanvas);
-
-    const particles = [];
-    const numParticles = 40;
-
-    for (let i = 0; i < numParticles; i++) {
-      particles.push({
-        x: Math.random() * bgCanvas.width,
-        y: Math.random() * bgCanvas.height,
-        radius: Math.random() * 2.5 + 1,
-        speedX: (Math.random() - 0.5) * 0.5,
-        speedY: (Math.random() - 0.5) * 0.5,
-        alpha: Math.random() * 0.5 + 0.2
-      });
-    }
-
-    function animateParticles() {
-      bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
-
-      particles.forEach(p => {
-        p.x += p.speedX;
-        p.y += p.speedY;
-
-        if (p.x < 0) p.x = bgCanvas.width;
-        if (p.x > bgCanvas.width) p.x = 0;
-        if (p.y < 0) p.y = bgCanvas.height;
-        if (p.y > bgCanvas.height) p.y = 0;
-
-        bgCtx.beginPath();
-        bgCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        bgCtx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
-        bgCtx.fill();
-      });
-
-      requestAnimationFrame(animateParticles);
-    }
-    animateParticles();
+    /* Las partículas de fondo ahora son globales (static/js/particulas.js) */
 
     /* 2. CÍRCULO CROMÁTICO Y PROBADOR */
     const canvas = document.getElementById("colorWheelCanvas");
