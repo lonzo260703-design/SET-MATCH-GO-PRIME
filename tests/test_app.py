@@ -1100,3 +1100,54 @@ def test_sin_database_url_usa_sqlite(monkeypatch):
 
     monkeypatch.delenv("DATABASE_URL", raising=False)
     assert config._database_url().startswith("sqlite:///")
+
+
+# ---------- búsqueda y enlaces del inicio ----------
+def test_boton_explorar_feed_lleva_a_comunidad(app, client):
+    iniciar_sesion(client, app)
+    html = client.get("/").get_data(as_text=True)
+    assert 'href="/comunidad" class="card-btn btn-dark">EXPLORAR FEED' in html
+
+
+def test_formularios_de_busqueda_apuntan_a_buscar(client):
+    html = client.get("/").get_data(as_text=True)
+    assert html.count('action="/buscar"') >= 2 and 'action="#"' not in html
+
+
+def test_buscar_encuentra_prendas_por_nombre_color_y_estacion(app, client):
+    subir_a_catalogo(admin(app), nombre="Blazer azul", colores="Azul marino", estacion="Invierno", sucursal="Centro")
+    c = app.test_client()
+    for q in ("blazer", "marino", "invierno", "centro", "abrigo", "blazer invierno"):
+        assert "Blazer azul" in c.get(f"/buscar?q={q}").get_data(as_text=True), q
+    assert "Blazer azul" not in c.get("/buscar?q=zapatilla").get_data(as_text=True)
+    assert "Blazer azul" not in c.get("/buscar?q=blazer+verano").get_data(as_text=True)
+
+
+def test_buscar_ignora_prendas_retiradas(app):
+    a = admin(app)
+    subir_a_catalogo(a, nombre="Blazer azul")
+    with app.app_context():
+        pid = db.session.scalar(db.select(PrendaCatalogo.id))
+    a.post(f"/admin/prenda/{pid}/alternar")
+    assert "Blazer azul" not in app.test_client().get("/buscar?q=blazer").get_data(as_text=True)
+
+
+def test_buscar_encuentra_outfits_de_la_comunidad(app, client):
+    publicacion_de_ana(app, client)  # descripción: "Look de oficina"
+    html = app.test_client().get("/buscar?q=oficina").get_data(as_text=True)
+    assert "Look de oficina" in html
+
+
+def test_buscar_no_muestra_outfits_ocultos_por_reportes(app, client):
+    pid = publicacion_de_ana(app, client)
+    for i in range(3):
+        otra_persona(app, f"r{i}@example.com").post(f"/comunidad/reportar/{pid}", data={"motivo": "spam"})
+    assert "Look de oficina" not in app.test_client().get("/buscar?q=oficina").get_data(as_text=True)
+
+
+def test_buscar_trata_comodines_como_texto_y_exige_dos_letras(app):
+    subir_a_catalogo(admin(app), nombre="Blazer azul")
+    c = app.test_client()
+    assert "Blazer azul" not in c.get("/buscar?q=%25%25").get_data(as_text=True)
+    assert "Blazer azul" not in c.get("/buscar?q=_____").get_data(as_text=True)
+    assert c.get("/buscar?q=a").status_code == 200 and c.get("/buscar").status_code == 200

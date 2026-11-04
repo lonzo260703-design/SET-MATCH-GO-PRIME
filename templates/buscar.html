@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Buscar{% if q %}: {{ q }}{% endif %} | SET-MATCH-GO!{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/catalogo.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/comunidad.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="cat-wrapper">
+  <header class="cat-header">
+    <h1>Buscar</h1>
+    <form action="{{ url_for('buscar') }}" method="GET" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px">
+      <input type="text" name="q" value="{{ q }}" maxlength="60" minlength="2" required placeholder="Prenda, color, estación, sucursal..."
+             style="padding:10px 14px;border-radius:8px;border:1px solid #cbd5e1;min-width:240px;font:inherit;color:#1e293b;background:#fff">
+      <button type="submit" class="cat-btn">Buscar</button>
+    </form>
+  </header>
+
+  {% if not buscado %}
+  <div class="cat-empty">Escribe al menos 2 letras. Puedes buscar por nombre, categoría, color, estación o sucursal.</div>
+  {% else %}
+  <h2 style="font-size:18px;margin:0 0 12px">Colecciones ({{ prendas|length }})</h2>
+  <section class="cat-grid">
+    {% for p in prendas %}
+    {% include "_prenda_card.html" %}
+    {% else %}
+    <div class="cat-empty" style="grid-column: 1 / -1;">No encontramos prendas para «{{ q }}».</div>
+    {% endfor %}
+  </section>
+
+  <h2 style="font-size:18px;margin:32px 0 12px">Comunidad ({{ publicaciones|length }})</h2>
+  <div class="com-wrapper" style="margin:0 auto;padding:0;max-width:640px">
+    {% for p in publicaciones %}
+    {% include "_publicacion.html" %}
+    {% else %}
+    <div class="com-empty">No encontramos outfits para «{{ q }}».</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</main>
+<script src="{{ url_for('static', filename='js/comunidad.js') }}" defer></script>
+{% endblock %}

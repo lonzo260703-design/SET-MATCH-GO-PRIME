@@ -71,7 +71,7 @@
         <p>Conecta con otros usuarios, comparte tus outfits y descubre combinaciones reales según la teoría del color.</p>
         <div class="card-action">
           {% if current_user.is_authenticated %}
-            <a href="#" class="card-btn btn-dark">EXPLORAR FEED</a>
+            <a href="{{ url_for('comunidad') }}" class="card-btn btn-dark">EXPLORAR FEED</a>
           {% else %}
             <a href="{{ url_for('login') }}" class="card-btn btn-outline">INICIAR SESIÓN</a>
           {% endif %}
@@ -383,4 +383,4 @@
 
   setInterval(nextSlide, 5000);
 </script>
-{% endblock %}
+{% endblock %}

@@ -561,6 +561,25 @@ def register_routes(app):
     def catalogo_antiguo():
         return redirect(url_for("colecciones", **request.args), code=301)
 
+    def _visibles_en_comunidad(consulta):
+        """Oculta lo reportado (salvo para su autor/a) y las republicaciones de originales ocultos."""
+        if current_user.is_authenticated:
+            return consulta.where(
+                (Publicacion.id.not_in(_ids_ocultos()) & _original_visible())
+                | (Publicacion.usuario_id == current_user.id)
+            )
+        return consulta.where(Publicacion.id.not_in(_ids_ocultos()), _original_visible())
+
+    def _mias_de(prendas):
+        """URLs de las prendas de la lista que la persona ya tiene en su guardarropa."""
+        if not (current_user.is_authenticated and prendas):
+            return set()
+        return set(db.session.scalars(
+            select(Guardarropa.imagen).where(
+                Guardarropa.usuario_id == current_user.id, Guardarropa.imagen.in_([p.imagen_url for p in prendas])
+            )
+        ).all())
+
     @app.route("/colecciones")
     def colecciones():
         """Colecciones: la ropa que suben las sucursales (ver panel de administración)."""
@@ -584,17 +603,47 @@ def register_routes(app):
         if mi_base:  # las que combinan con la paleta de la persona van primero
             orden.insert(0, case((PrendaCatalogo.estacion.in_([mi_base, "Neutro"]), 0), else_=1))
         prendas = db.paginate(consulta.order_by(*orden), page=pagina, per_page=12, error_out=False)
-        mias = set()
-        if current_user.is_authenticated and prendas.items:
-            urls = [p.imagen_url for p in prendas.items]
-            mias = set(db.session.scalars(
-                select(Guardarropa.imagen).where(Guardarropa.usuario_id == current_user.id, Guardarropa.imagen.in_(urls))
-            ).all())
         return render_template(
-            "colecciones.html", prendas=prendas, estacion=estacion, categoria=categoria, mias=mias,
+            "colecciones.html", prendas=prendas, estacion=estacion, categoria=categoria, mias=_mias_de(prendas.items),
             estaciones=ESTACIONES_CATALOGO, categorias=sorted(CATEGORIAS),
             mi_estacion=ultimo.estacion if ultimo else None, mi_base=mi_base, para_mi=para_mi,
             mi_paleta=paleta_de_estacion(ultimo.estacion) if ultimo else [],
+        )
+
+    @app.route("/buscar")
+    @limiter.limit("60 per minute")
+    def buscar():
+        """Búsqueda en las colecciones (prendas) y en la comunidad (outfits)."""
+        q = " ".join(request.args.get("q", "").split())[:60]
+        terminos = [x for x in q.split(" ") if len(x) >= 2][:5]
+        prendas, publicaciones = [], []
+        if terminos:
+            def patron(x):
+                return "%" + x.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+
+            filtros_prenda, filtros_pub = [], []
+            for x in terminos:  # cada palabra debe aparecer en algún campo
+                like = patron(x)
+                filtros_prenda.append(or_(*[
+                    c.ilike(like, escape="\\")
+                    for c in (PrendaCatalogo.nombre, PrendaCatalogo.categoria, PrendaCatalogo.estacion,
+                              PrendaCatalogo.colores, PrendaCatalogo.sucursal)
+                ]))
+                filtros_pub.append(or_(Publicacion.descripcion.ilike(like, escape="\\"),
+                                       Publicacion.estacion.ilike(like, escape="\\")))
+            prendas = db.session.scalars(
+                select(PrendaCatalogo).where(PrendaCatalogo.activa.is_(True), *filtros_prenda)
+                .order_by(PrendaCatalogo.created_at.desc(), PrendaCatalogo.id.desc()).limit(24)
+            ).all()
+            publicaciones = db.session.scalars(
+                _visibles_en_comunidad(select(Publicacion).where(*filtros_pub))
+                .order_by(Publicacion.created_at.desc(), Publicacion.id.desc()).limit(6)
+            ).all()
+        ultimo = current_user.resultados.first() if current_user.is_authenticated else None
+        return render_template(
+            "buscar.html", q=q, buscado=bool(terminos), prendas=prendas, publicaciones=publicaciones,
+            mias=_mias_de(prendas), mi_base=_estacion_base(ultimo.estacion) if ultimo else None,
+            **_contexto_tarjetas([p.id for p in publicaciones]),
         )
 
     @app.route("/colecciones/agregar/<int:id>", methods=["POST"])
@@ -833,15 +882,8 @@ def register_routes(app):
     @app.route("/comunidad")
     def comunidad():
         pagina = request.args.get("pagina", 1, type=int)
-        consulta = select(Publicacion)
-        if current_user.is_authenticated:
-            # Las publicaciones ocultas por reportes solo las ve su autora o autor
-            consulta = consulta.where(
-                (Publicacion.id.not_in(_ids_ocultos()) & _original_visible())
-                | (Publicacion.usuario_id == current_user.id)
-            )
-        else:
-            consulta = consulta.where(Publicacion.id.not_in(_ids_ocultos()), _original_visible())
+        # Las publicaciones ocultas por reportes solo las ve su autora o autor
+        consulta = _visibles_en_comunidad(select(Publicacion))
         publicaciones = db.paginate(
             consulta.order_by(Publicacion.created_at.desc(), Publicacion.id.desc()),
             page=pagina,
