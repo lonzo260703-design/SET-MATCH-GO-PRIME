@@ -341,16 +341,45 @@
       box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
     }
 
+    /* ENLACES DE INTERCAMBIO SOLO VISIBLES EN MÓVIL */
+    @media (min-width: 769px) {
+      .mobile-switch-link {
+        display: none;
+      }
+    }
+
+    /* ADAPTACIÓN RESPONSIVE MÓVIL */
     @media (max-width: 768px) {
       .auth-slider-card {
         height: auto;
-        min-height: 560px;
+        min-height: auto;
+        max-width: 100%;
+        border-radius: 16px;
       }
+
       .overlay-panel {
         display: none;
       }
+
+      .forms-container {
+        position: relative;
+        flex-direction: column;
+        height: auto;
+      }
+
       .form-half {
         width: 100%;
+        height: auto;
+        padding: 28px 20px;
+      }
+
+      /* Oculta un formulario según el estado activo */
+      .auth-slider-card:not(.register-mode) .forms-container .form-half:nth-child(2) {
+        display: none;
+      }
+
+      .auth-slider-card.register-mode .forms-container .form-half:nth-child(1) {
+        display: none;
       }
     }
   </style>
@@ -372,7 +401,7 @@
     <!-- CONTENEDOR DE FORMULARIOS FIJOS -->
     <div class="forms-container">
       
-      <!-- LADO IZQUIERDO: INICIO DE SESIÓN -->
+      <!-- LADO IZQUIERDO: INICIAR SESIÓN -->
       <div class="form-half">
         <h2 class="form-title">Iniciar Sesión</h2>
         <p class="form-subtitle">Ingresa tus credenciales para continuar</p>
@@ -412,6 +441,14 @@
           <button type="submit" class="btn-auth-submit" style="background: transparent; color: inherit; border: 1px solid currentColor;">Reenviar correo de confirmación</button>
         </form>
         {% endif %}
+
+        <!-- ENLACE PARA CAMBIAR A REGISTRO EN VISTA MÓVIL -->
+        <div class="mobile-switch-link" style="margin-top: 16px; text-align: center;">
+          <p style="font-size: 0.82rem; color: #64748b; margin: 0;">
+            ¿No tienes una cuenta? 
+            <a href="javascript:void(0)" onclick="toggleAuthMode('register')" style="color: #223243; font-weight: 700; text-decoration: underline;">Regístrate aquí</a>
+          </p>
+        </div>
       </div>
 
       <!-- LADO DERECHO: CREAR CUENTA -->
@@ -459,6 +496,14 @@
 
           <button type="submit" class="btn-auth-submit">Registrarse</button>
         </form>
+
+        <!-- ENLACE PARA CAMBIAR A LOGIN EN VISTA MÓVIL -->
+        <div class="mobile-switch-link" style="margin-top: 16px; text-align: center;">
+          <p style="font-size: 0.82rem; color: #64748b; margin: 0;">
+            ¿Ya tienes una cuenta? 
+            <a href="javascript:void(0)" onclick="toggleAuthMode('login')" style="color: #223243; font-weight: 700; text-decoration: underline;">Inicia sesión</a>
+          </p>
+        </div>
       </div>
 
     </div>
@@ -473,7 +518,6 @@
         <p class="banner-desc">Únete gratis y desbloquea el máximo potencial de tu estilo personal:</p>
 
         <div class="benefit-cards-compact">
-          <!-- BENEFICIO 1: GUARDARROPA DIGITAL -->
           <div class="benefit-item-compact">
             <div class="benefit-icon-compact">👔</div>
             <div class="benefit-text-compact">
@@ -482,7 +526,6 @@
             </div>
           </div>
 
-          <!-- BENEFICIO 2: RED SOCIAL DE MODA -->
           <div class="benefit-item-compact">
             <div class="benefit-icon-compact">🌐</div>
             <div class="benefit-text-compact">
@@ -491,7 +534,6 @@
             </div>
           </div>
 
-          <!-- BENEFICIO 3: ESTILISTA IA ILIMITADO -->
           <div class="benefit-item-compact">
             <div class="benefit-icon-compact">✨</div>
             <div class="benefit-text-compact">
@@ -500,7 +542,6 @@
             </div>
           </div>
 
-          <!-- BENEFICIO 4: HISTORIAL PERSONAL -->
           <div class="benefit-item-compact">
             <div class="benefit-icon-compact">🎨</div>
             <div class="benefit-text-compact">
@@ -544,14 +585,14 @@
     if (targetMode === 'register') {
       card.classList.add('register-mode');
       setTimeout(() => {
-        loginContent.style.display = 'none';
-        registerContent.style.display = 'block';
+        if (loginContent) loginContent.style.display = 'none';
+        if (registerContent) registerContent.style.display = 'block';
       }, 250);
     } else {
       card.classList.remove('register-mode');
       setTimeout(() => {
-        registerContent.style.display = 'none';
-        loginContent.style.display = 'block';
+        if (registerContent) registerContent.style.display = 'none';
+        if (loginContent) loginContent.style.display = 'block';
       }, 250);
     }
   }
@@ -581,11 +622,13 @@
     let currentSlide = 0;
     const slides = document.querySelectorAll('.bg-slide');
 
-    setInterval(() => {
-      slides[currentSlide].classList.remove('active');
-      currentSlide = (currentSlide + 1) % slides.length;
-      slides[currentSlide].classList.add('active');
-    }, 5500);
+    if (slides.length > 0) {
+      setInterval(() => {
+        slides[currentSlide].classList.remove('active');
+        currentSlide = (currentSlide + 1) % slides.length;
+        slides[currentSlide].classList.add('active');
+      }, 5500);
+    }
   });
 </script>
-{% endblock %}
+{% endblock %}
