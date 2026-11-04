@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/particulas.js') }}" defer></script>
   {% block extra_css %}{% endblock %}
   {% block extra_head %}{% endblock %}
   <style>
@@ -861,8 +862,8 @@
       <li class="dropdown nav-item">
         <a href="#" class="dropdown-toggle">Buscar 🔍</a>
         <div class="search-dropdown">
-          <form action="#" method="GET" class="search-form">
-            <input type="text" name="q" class="search-input" placeholder="Buscar prenda, estilo..." required>
+          <form action="{{ url_for('buscar') }}" method="GET" class="search-form">
+            <input type="text" name="q" class="search-input" placeholder="Buscar prenda, estilo..." minlength="2" maxlength="60" required>
             <button type="submit" class="search-btn">Buscar</button>
           </form>
         </div>
@@ -1005,7 +1006,7 @@
 
         <li>
           <div class="mobile-search-box">
-            <form action="#" method="GET">
+            <form action="{{ url_for('buscar') }}" method="GET">
               <input type="text" name="q" placeholder="Buscar prendas, estilos..." required>
               <button type="submit">🔍</button>
             </form>

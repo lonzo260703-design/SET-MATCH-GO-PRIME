@@ -1,0 +1,31 @@
+    <article class="cat-card">
+      <img src="{{ p.imagen_url }}" alt="{{ p.nombre }}" loading="lazy">
+      <div class="cat-body">
+        <h3>{{ p.nombre }}</h3>
+        <div class="cat-tags">
+          {% if mi_base and p.estacion in (mi_base, 'Neutro') %}<span class="cat-tag is-match">✨ Combina contigo</span>{% endif %}
+          <span class="cat-tag is-season">{{ p.estacion }}</span>
+          <span class="cat-tag">{{ p.categoria }}</span>
+        </div>
+        {% if p.colores %}<span class="cat-meta">🎨 {{ p.colores }}</span>{% endif %}
+        {% if p.sucursal %}<span class="cat-meta">📍 {{ p.sucursal }}</span>{% endif %}
+        {% if p.precio is not none %}<span class="cat-price">${{ '{:,.2f}'.format(p.precio) }}</span>{% endif %}
+        <div class="cat-actions">
+          {% if current_user.is_authenticated %}
+            {% if p.imagen_url in mias %}
+            <span class="cat-done">✓ En tu guardarropa</span>
+            {% else %}
+            <form action="{{ url_for('agregar_del_catalogo', id=p.id) }}" method="POST">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="cat-btn">+ Mi guardarropa</button>
+            </form>
+            {% endif %}
+          {% else %}
+          <a class="cat-btn" href="{{ url_for('login', next=url_for('colecciones')) }}">Inicia sesión</a>
+          {% endif %}
+          {% if p.enlace_compra %}
+          <a class="cat-btn is-ghost" href="{{ p.enlace_compra }}" target="_blank" rel="noopener noreferrer nofollow">Comprar</a>
+          {% endif %}
+        </div>
+      </div>
+    </article>
