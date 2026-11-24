@@ -1,4 +1,6 @@
 import re
+import time
+from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from functools import wraps
 from urllib.parse import urljoin, urlparse
@@ -27,6 +29,7 @@ MAX_PREGUNTA = 500
 MAX_DESCRIPCION = 500
 UMBRAL_REPORTES = 3  # reportes de personas distintas para ocultar una publicación del feed
 MAX_MENSAJE = 1000
+LIMITE_EDICION_SEGUNDOS = 900  # 15 minutos para editar o eliminar mensajes
 ESTACIONES_CATALOGO = ["Primavera", "Verano", "Otoño", "Invierno", "Neutro"]
 MOTIVOS_REPORTE = {
     "inapropiado": "Contenido inapropiado",
@@ -426,6 +429,7 @@ def register_routes(app):
 
         return jsonify({
             "respuesta": respuesta,
+            "modelo": "gemini-3.5-flash-lite",
             "preguntas_restantes": preguntas_restantes,
             "limite_alcanzado": False
         })
@@ -476,7 +480,6 @@ def register_routes(app):
             eliminar_imagen(imagen_id)
         flash("Prenda eliminada.", "success")
         return redirect(url_for("guardarropa"))
-
 
     # ---------- CATÁLOGO Y PANEL DE ADMINISTRACIÓN ----------
     def _es_admin():
@@ -613,17 +616,18 @@ def register_routes(app):
     @app.route("/buscar")
     @limiter.limit("60 per minute")
     def buscar():
-        """Búsqueda en las colecciones (prendas) y en la comunidad (outfits)."""
+        """Búsqueda en usuarios, colecciones (prendas) y comunidad (outfits)."""
         q = " ".join(request.args.get("q", "").split())[:60]
         terminos = [x for x in q.split(" ") if len(x) >= 2][:5]
-        prendas, publicaciones = [], []
+        usuarios, prendas, publicaciones = [], [], []
         if terminos:
             def patron(x):
                 return "%" + x.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
 
-            filtros_prenda, filtros_pub = [], []
+            filtros_usuario, filtros_prenda, filtros_pub = [], [], []
             for x in terminos:  # cada palabra debe aparecer en algún campo
                 like = patron(x)
+                filtros_usuario.append(User.nombre.ilike(like, escape="\\"))
                 filtros_prenda.append(or_(*[
                     c.ilike(like, escape="\\")
                     for c in (PrendaCatalogo.nombre, PrendaCatalogo.categoria, PrendaCatalogo.estacion,
@@ -631,6 +635,11 @@ def register_routes(app):
                 ]))
                 filtros_pub.append(or_(Publicacion.descripcion.ilike(like, escape="\\"),
                                        Publicacion.estacion.ilike(like, escape="\\")))
+
+            usuarios = db.session.scalars(
+                select(User).where(User.is_confirmed.is_(True), *filtros_usuario)
+                .order_by(User.nombre).limit(12)
+            ).all()
             prendas = db.session.scalars(
                 select(PrendaCatalogo).where(PrendaCatalogo.activa.is_(True), *filtros_prenda)
                 .order_by(PrendaCatalogo.created_at.desc(), PrendaCatalogo.id.desc()).limit(24)
@@ -639,10 +648,12 @@ def register_routes(app):
                 _visibles_en_comunidad(select(Publicacion).where(*filtros_pub))
                 .order_by(Publicacion.created_at.desc(), Publicacion.id.desc()).limit(6)
             ).all()
+
         ultimo = current_user.resultados.first() if current_user.is_authenticated else None
         return render_template(
-            "buscar.html", q=q, buscado=bool(terminos), prendas=prendas, publicaciones=publicaciones,
-            mias=_mias_de(prendas), mi_base=_estacion_base(ultimo.estacion) if ultimo else None,
+            "buscar.html", q=q, buscado=bool(terminos), usuarios=usuarios, prendas=prendas,
+            publicaciones=publicaciones, mias=_mias_de(prendas),
+            mi_base=_estacion_base(ultimo.estacion) if ultimo else None,
             **_contexto_tarjetas([p.id for p in publicaciones]),
         )
 
@@ -1020,6 +1031,15 @@ def register_routes(app):
         return render_template("publicacion.html", p=p, **_contexto_tarjetas([p.id]))
 
     # ---------- MENSAJES PRIVADOS ----------
+    _escribiendo = {}  # {(remitente_id, destinatario_id): timestamp}
+
+    def _puede_modificar_mensaje(msg):
+        if not msg or not msg.created_at:
+            return False
+        creado = msg.created_at
+        ahora = datetime.now(timezone.utc) if creado.tzinfo is not None else datetime.utcnow()
+        return (ahora - creado).total_seconds() <= LIMITE_EDICION_SEGUNDOS
+
     @app.context_processor
     def contador_mensajes():
         if request.endpoint == "static" or not current_user.is_authenticated:
@@ -1087,7 +1107,7 @@ def register_routes(app):
 
     @app.route("/mensajes/<int:uid>", methods=["GET", "POST"])
     @login_required
-    @limiter.limit("60 per hour", methods=["POST"])
+    @limiter.limit("120 per hour", methods=["POST"])
     def conversacion(uid):
         persona = db.session.get(User, uid)
         if not persona or not persona.is_confirmed:
@@ -1113,9 +1133,9 @@ def register_routes(app):
                 )
             )
             db.session.commit()
+            _escribiendo.pop((yo, uid), None)
             return redirect(url_for("conversacion", uid=uid) + "#final")
 
-        # Al abrir la conversación, los mensajes recibidos quedan como leídos
         pendientes = db.session.scalars(
             select(Mensaje).where(
                 Mensaje.remitente_id == uid, Mensaje.destinatario_id == yo, Mensaje.leido.is_(False)
@@ -1140,8 +1160,88 @@ def register_routes(app):
         adjunta = _publicacion_adjunta(request.args.get("publicacion"))
         return render_template(
             "conversacion.html", persona=persona, mensajes=mensajes, adjunta=adjunta,
-            puede_ver=_puede_ver_publicacion,
+            puede_ver=_puede_ver_publicacion, puede_modificar=_puede_modificar_mensaje,
         )
+
+    @app.route("/api/mensajes/<int:uid>/typing", methods=["POST"])
+    @login_required
+    @limiter.exempt
+    def api_mensajes_typing(uid):
+        _escribiendo[(current_user.id, uid)] = time.time()
+        return jsonify({"ok": True})
+
+    @app.route("/api/mensajes/editar/<int:mid>", methods=["POST"])
+    @login_required
+    @limiter.exempt
+    def api_editar_mensaje(mid):
+        msg = db.session.get(Mensaje, mid)
+        if not msg or msg.remitente_id != current_user.id:
+            return jsonify({"error": "No autorizado"}), 403
+        if not _puede_modificar_mensaje(msg):
+            return jsonify({"error": "El tiempo límite para editar este mensaje ha expirado"}), 403
+        data = request.get_json(silent=True) or {}
+        texto = str(data.get("texto", "")).strip()[:MAX_MENSAJE]
+        if not texto:
+            return jsonify({"error": "El mensaje no puede estar vacío"}), 400
+        msg.texto = texto
+        db.session.commit()
+        return jsonify({"ok": True, "texto": msg.texto})
+
+    @app.route("/api/mensajes/eliminar/<int:mid>", methods=["POST"])
+    @login_required
+    @limiter.exempt
+    def api_eliminar_mensaje(mid):
+        msg = db.session.get(Mensaje, mid)
+        if not msg or msg.remitente_id != current_user.id:
+            return jsonify({"error": "No autorizado"}), 403
+        if not _puede_modificar_mensaje(msg):
+            return jsonify({"error": "El tiempo límite para eliminar este mensaje ha expirado"}), 403
+        db.session.delete(msg)
+        db.session.commit()
+        return jsonify({"ok": True})
+
+    @app.route("/api/mensajes/<int:uid>/estado")
+    @login_required
+    @limiter.exempt
+    def api_mensajes_estado(uid):
+        yo = current_user.id
+
+        todos = db.session.scalars(
+            select(Mensaje)
+            .where(
+                or_(
+                    (Mensaje.remitente_id == yo) & (Mensaje.destinatario_id == uid),
+                    (Mensaje.remitente_id == uid) & (Mensaje.destinatario_id == yo),
+                )
+            )
+            .order_by(Mensaje.id.desc())
+            .limit(100)
+        ).all()[::-1]
+
+        hubo_leidos = False
+        for m in todos:
+            if m.destinatario_id == yo and not m.leido:
+                m.leido = True
+                hubo_leidos = True
+        if hubo_leidos:
+            db.session.commit()
+
+        esta_escribiendo = (time.time() - _escribiendo.get((uid, yo), 0)) < 3.5
+
+        return jsonify({
+            "escribiendo": esta_escribiendo,
+            "mensajes": [
+                {
+                    "id": m.id,
+                    "mio": m.remitente_id == yo,
+                    "editable": (m.remitente_id == yo) and _puede_modificar_mensaje(m),
+                    "texto": m.texto or "",
+                    "leido": bool(m.leido),
+                    "fecha": m.created_at.strftime("%d/%m %H:%M") if m.created_at else "",
+                }
+                for m in todos
+            ],
+        })
 
     @app.route("/comunidad/like/<int:id>", methods=["POST"])
     @login_required
@@ -1188,4 +1288,3 @@ def register_routes(app):
                 db.session.rollback()
                 flash("Ya habías reportado esta publicación.", "info")
         return redirect(request.referrer if request.referrer and _url_segura(request.referrer) else url_for("comunidad"))
-

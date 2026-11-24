@@ -81,6 +81,11 @@ def create_app(config_name=None):
                 "REFERENCES publicaciones (id) ON DELETE CASCADE"
             ))
             db.session.commit()
+        if "permite_comentarios" not in columnas:
+            db.session.execute(text(
+                "ALTER TABLE publicaciones ADD COLUMN permite_comentarios BOOLEAN NOT NULL DEFAULT 1"
+            ))
+            db.session.commit()
         if "origen" not in {c["name"] for c in inspector.get_columns("guardarropa")}:
             db.session.execute(text("ALTER TABLE guardarropa ADD COLUMN origen VARCHAR(12) NOT NULL DEFAULT 'propia'"))
             # Las prendas cuya foto coincide con una de Colecciones son copias de la tienda
@@ -108,4 +113,4 @@ def create_app(config_name=None):
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=os.getenv("FLASK_DEBUG", "1") == "1")
+    app.run(host="0.0.0.0", port=5000, debug=os.getenv("FLASK_DEBUG", "1") == "1")

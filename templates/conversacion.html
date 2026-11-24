@@ -1,6 +1,136 @@
 {% extends "base.html" %}
 {% block title %}{{ persona.nombre }} | Mensajes | SET-MATCH-GO!{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/mensajes.css') }}">{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mensajes.css') }}">
+<style>
+  .msg-bubble {
+    position: relative;
+  }
+
+  /* Acciones editar / borrar en mensajes propios */
+  .msg-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    margin-bottom: 4px;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+  .msg-bubble.mine:hover .msg-actions,
+  .msg-bubble.mine:focus-within .msg-actions {
+    opacity: 1;
+  }
+  .msg-act-btn {
+    background: rgba(255, 255, 255, 0.14);
+    border: none;
+    color: #e2e8f0;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    cursor: pointer;
+    line-height: 1.2;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .msg-act-btn:hover {
+    background: rgba(255, 255, 255, 0.28);
+    color: #ffffff;
+  }
+  .msg-act-btn.del:hover {
+    background: #e74c3c;
+    color: #ffffff;
+  }
+
+  /* Pie de burbuja: hora + palomitas */
+  .msg-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    margin-top: 4px;
+  }
+  .msg-bubble.theirs .msg-meta {
+    justify-content: flex-start;
+  }
+  .msg-ticks {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: -1.5px;
+    color: rgba(255, 255, 255, 0.55);
+    user-select: none;
+  }
+  .msg-ticks.read {
+    color: #38bdf8;
+  }
+
+  /* Modo edición inline */
+  .msg-edit-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 200px;
+  }
+  .msg-edit-input {
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font: inherit;
+    font-size: 0.92rem;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    outline: none;
+    resize: vertical;
+  }
+  .msg-edit-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+  .msg-edit-save, .msg-edit-cancel {
+    border: none;
+    border-radius: 5px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .msg-edit-save {
+    background: #2ecc71;
+    color: #ffffff;
+  }
+  .msg-edit-cancel {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+  }
+
+  /* Burbuja animada de 3 puntos */
+  .typing-bubble {
+    display: none;
+    align-items: center;
+    gap: 5px;
+    padding: 12px 16px !important;
+    width: fit-content;
+    min-width: 56px;
+  }
+  .typing-bubble.active {
+    display: inline-flex;
+  }
+  .typing-dot {
+    width: 7px;
+    height: 7px;
+    background-color: #64748b;
+    border-radius: 50%;
+    animation: typingBounce 1.3s infinite ease-in-out;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.18s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.36s; }
+
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-5px); opacity: 1; }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
 <main class="msg-wrapper">
@@ -9,9 +139,20 @@
     <h1>{{ persona.nombre }}</h1>
   </header>
 
-  <section class="msg-card msg-chat">
+  <section class="msg-card msg-chat" id="chatContainer">
     {% for m in mensajes %}
-    <div class="msg-bubble {{ 'mine' if m.remitente_id == current_user.id else 'theirs' }}">
+    {% set es_mio = (m.remitente_id == current_user.id) %}
+    {% set editable = es_mio and puede_modificar(m) %}
+    <div class="msg-bubble {{ 'mine' if es_mio else 'theirs' }}" data-msg-id="{{ m.id }}">
+      {% if editable %}
+      <div class="msg-actions">
+        {% if m.texto %}
+        <button type="button" class="msg-act-btn edit" title="Editar mensaje">✏️</button>
+        {% endif %}
+        <button type="button" class="msg-act-btn del" title="Eliminar mensaje">🗑️</button>
+      </div>
+      {% endif %}
+
       {% if m.publicacion_id %}
         {% set pub = m.publicacion %}
         {% if pub and puede_ver(pub) %}
@@ -23,16 +164,31 @@
         <span class="msg-gone">👗 Este outfit ya no está disponible</span>
         {% endif %}
       {% endif %}
-      {% if m.texto %}<p>{{ m.texto }}</p>{% endif %}
-      <time>{{ m.created_at.strftime('%d/%m %H:%M') }}</time>
+
+      {% if m.texto %}<p class="msg-text">{{ m.texto }}</p>{% endif %}
+
+      <div class="msg-meta">
+        <time>{{ m.created_at.strftime('%d/%m %H:%M') }}</time>
+        {% if es_mio %}
+        <span class="msg-ticks {{ 'read' if m.leido else '' }}" title="{{ 'Leído' if m.leido else 'Enviado' }}">
+          {{ '✓✓' if m.leido else '✓' }}
+        </span>
+        {% endif %}
+      </div>
     </div>
     {% else %}
-    <div class="msg-empty">Aún no hay mensajes. ¡Saluda a {{ persona.nombre }}!</div>
+    <div class="msg-empty" id="msgEmpty">Aún no hay mensajes. ¡Saluda a {{ persona.nombre }}!</div>
     {% endfor %}
+
+    <div class="msg-bubble theirs typing-bubble" id="typingIndicator" aria-label="{{ persona.nombre }} está escribiendo">
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+    </div>
     <span id="final"></span>
   </section>
 
-  <form class="msg-compose" action="{{ url_for('conversacion', uid=persona.id) }}" method="POST">
+  <form class="msg-compose" id="msgForm" action="{{ url_for('conversacion', uid=persona.id) }}" method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {% if adjunta %}
     <input type="hidden" name="publicacion_id" value="{{ adjunta.id }}">
@@ -42,8 +198,274 @@
       <a href="{{ url_for('conversacion', uid=persona.id) }}" title="Quitar">✕</a>
     </div>
     {% endif %}
-    <textarea name="texto" maxlength="1000" rows="2" placeholder="Escribe un mensaje..." {% if not adjunta %}required{% endif %}></textarea>
+    <textarea name="texto" id="msgInput" maxlength="1000" rows="2" placeholder="Escribe un mensaje..." {% if not adjunta %}required{% endif %}></textarea>
     <button type="submit" class="msg-btn">Enviar</button>
   </form>
 </main>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const uid = {{ persona.id }};
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
+  const form = document.getElementById("msgForm");
+  const textarea = document.getElementById("msgInput");
+  const chatContainer = document.getElementById("chatContainer");
+  const typingIndicator = document.getElementById("typingIndicator");
+
+  if (!form || !textarea || !chatContainer) return;
+
+  const scrollAbajo = () => {
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  };
+  scrollAbajo();
+
+  // Notificar que el usuario está escribiendo
+  let ultimoAvisoTyping = 0;
+  textarea.addEventListener("input", () => {
+    const ahora = Date.now();
+    if (ahora - ultimoAvisoTyping > 2000 && textarea.value.trim().length > 0) {
+      ultimoAvisoTyping = ahora;
+      fetch(`/api/mensajes/${uid}/typing`, {
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken }
+      }).catch(() => {});
+    }
+  });
+
+  // Enviar con Enter (Shift+Enter para nueva línea)
+  textarea.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
+  // Envío instantáneo sin recargar
+  form.addEventListener("submit", async (e) => {
+    const pubInput = form.querySelector('input[name="publicacion_id"]');
+    if (pubInput && pubInput.value) return;
+
+    e.preventDefault();
+    const texto = textarea.value.trim();
+    if (!texto) return;
+
+    const formData = new FormData(form);
+    textarea.value = "";
+    ultimoAvisoTyping = 0;
+
+    try {
+      await fetch(form.action, {
+        method: "POST",
+        body: formData
+      });
+      await consultarEstado();
+    } catch (_) {
+      form.submit();
+    }
+  });
+
+  // Delegación de eventos para Editar y Eliminar mensajes propios
+  chatContainer.addEventListener("click", async (e) => {
+    const btnEdit = e.target.closest(".msg-act-btn.edit");
+    const btnDel = e.target.closest(".msg-act-btn.del");
+    const bubble = e.target.closest(".msg-bubble[data-msg-id]");
+    if (!bubble) return;
+    const mid = bubble.dataset.msgId;
+
+    // ELIMINAR
+    if (btnDel) {
+      if (!confirm("¿Eliminar este mensaje?")) return;
+      const res = await fetch(`/api/mensajes/eliminar/${mid}`, {
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken }
+      });
+      if (res.ok) {
+        bubble.remove();
+        mostrarVacioSiAplica();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || "No se pudo eliminar el mensaje.");
+        bubble.querySelector(".msg-actions")?.remove();
+      }
+      return;
+    }
+
+    // EDITAR
+    if (btnEdit) {
+      if (bubble.querySelector(".msg-edit-box")) return;
+      const pEl = bubble.querySelector(".msg-text");
+      if (!pEl) return;
+      const textoOriginal = pEl.textContent;
+      pEl.style.display = "none";
+
+      const editBox = document.createElement("div");
+      editBox.className = "msg-edit-box";
+      editBox.innerHTML = `
+        <textarea class="msg-edit-input" rows="2" maxlength="1000"></textarea>
+        <div class="msg-edit-actions">
+          <button type="button" class="msg-edit-cancel">Cancelar</button>
+          <button type="button" class="msg-edit-save">Guardar</button>
+        </div>
+      `;
+      const editInput = editBox.querySelector(".msg-edit-input");
+      editInput.value = textoOriginal;
+      pEl.insertAdjacentElement("afterend", editBox);
+      editInput.focus();
+
+      editBox.querySelector(".msg-edit-cancel").addEventListener("click", () => {
+        editBox.remove();
+        pEl.style.display = "";
+      });
+
+      const guardarEdicion = async () => {
+        const nuevoTexto = editInput.value.trim();
+        if (!nuevoTexto || nuevoTexto === textoOriginal) {
+          editBox.remove();
+          pEl.style.display = "";
+          return;
+        }
+        const res = await fetch(`/api/mensajes/editar/${mid}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken
+          },
+          body: JSON.stringify({ texto: nuevoTexto })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          pEl.textContent = data.texto;
+        } else {
+          const err = await res.json().catch(() => ({}));
+          alert(err.error || "El tiempo límite para editar ha expirado.");
+          bubble.querySelector(".msg-actions")?.remove();
+        }
+        editBox.remove();
+        pEl.style.display = "";
+      };
+
+      editBox.querySelector(".msg-edit-save").addEventListener("click", guardarEdicion);
+      editInput.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter" && !ev.shiftKey) {
+          ev.preventDefault();
+          guardarEdicion();
+        } else if (ev.key === "Escape") {
+          editBox.remove();
+          pEl.style.display = "";
+        }
+      });
+    }
+  });
+
+  function mostrarVacioSiAplica() {
+    if (chatContainer.querySelectorAll(".msg-bubble[data-msg-id]").length === 0 && !document.getElementById("msgEmpty")) {
+      const empty = document.createElement("div");
+      empty.className = "msg-empty";
+      empty.id = "msgEmpty";
+      empty.textContent = "Aún no hay mensajes. ¡Saluda a {{ persona.nombre }}!";
+      chatContainer.insertBefore(empty, typingIndicator);
+    }
+  }
+
+  function renderBurbuja(m) {
+    const emptyMsg = document.getElementById("msgEmpty");
+    if (emptyMsg) emptyMsg.remove();
+
+    const div = document.createElement("div");
+    div.className = `msg-bubble ${m.mio ? "mine" : "theirs"}`;
+    div.dataset.msgId = m.id;
+
+    if (m.editable) {
+      const actions = document.createElement("div");
+      actions.className = "msg-actions";
+      if (m.texto) {
+        actions.innerHTML += '<button type="button" class="msg-act-btn edit" title="Editar mensaje">✏️</button>';
+      }
+      actions.innerHTML += '<button type="button" class="msg-act-btn del" title="Eliminar mensaje">🗑️</button>';
+      div.appendChild(actions);
+    }
+
+    if (m.texto) {
+      const p = document.createElement("p");
+      p.className = "msg-text";
+      p.textContent = m.texto;
+      div.appendChild(p);
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "msg-meta";
+
+    const timeEl = document.createElement("time");
+    timeEl.textContent = m.fecha;
+    meta.appendChild(timeEl);
+
+    if (m.mio) {
+      const ticks = document.createElement("span");
+      ticks.className = `msg-ticks ${m.leido ? "read" : ""}`;
+      ticks.title = m.leido ? "Leído" : "Enviado";
+      ticks.textContent = m.leido ? "✓✓" : "✓";
+      meta.appendChild(ticks);
+    }
+
+    div.appendChild(meta);
+    chatContainer.insertBefore(div, typingIndicator);
+  }
+
+  async function consultarEstado() {
+    try {
+      const res = await fetch(`/api/mensajes/${uid}/estado`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (data.mensajes) {
+        const idsServidor = new Set(data.mensajes.map(m => String(m.id)));
+        let huboNuevos = false;
+
+        chatContainer.querySelectorAll(".msg-bubble[data-msg-id]").forEach(el => {
+          if (!idsServidor.has(el.dataset.msgId)) {
+            el.remove();
+          }
+        });
+
+        data.mensajes.forEach(m => {
+          const existente = chatContainer.querySelector(`.msg-bubble[data-msg-id="${m.id}"]`);
+          if (existente) {
+            // Si ya venció el límite de tiempo, quitar botones de editar/borrar en vivo
+            if (!m.editable) {
+              existente.querySelector(".msg-actions")?.remove();
+            }
+            const pEl = existente.querySelector(".msg-text");
+            if (pEl && !existente.querySelector(".msg-edit-box") && pEl.textContent !== m.texto) {
+              pEl.textContent = m.texto;
+            }
+            if (m.mio) {
+              const ticks = existente.querySelector(".msg-ticks");
+              if (ticks) {
+                ticks.textContent = m.leido ? "✓✓" : "✓";
+                ticks.title = m.leido ? "Leído" : "Enviado";
+                ticks.classList.toggle("read", m.leido);
+              }
+            }
+          } else {
+            renderBurbuja(m);
+            huboNuevos = true;
+          }
+        });
+
+        mostrarVacioSiAplica();
+        if (huboNuevos) scrollAbajo();
+      }
+
+      if (data.escribiendo) {
+        typingIndicator.classList.add("active");
+        scrollAbajo();
+      } else {
+        typingIndicator.classList.remove("active");
+      }
+    } catch (_) {}
+  }
+
+  setInterval(consultarEstado, 1100);
+});
+</script>
 {% endblock %}
