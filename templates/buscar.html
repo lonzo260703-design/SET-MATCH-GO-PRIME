@@ -10,15 +10,39 @@
   <header class="cat-header">
     <h1>Buscar</h1>
     <form action="{{ url_for('buscar') }}" method="GET" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px">
-      <input type="text" name="q" value="{{ q }}" maxlength="60" minlength="2" required placeholder="Prenda, color, estación, sucursal..."
-             style="padding:10px 14px;border-radius:8px;border:1px solid #cbd5e1;min-width:240px;font:inherit;color:#1e293b;background:#fff">
+      <input type="text" name="q" value="{{ q }}" maxlength="60" minlength="2" required placeholder="Usuario, prenda, color, estación, sucursal..."
+             style="padding:10px 14px;border-radius:8px;border:1px solid #cbd5e1;min-width:260px;font:inherit;color:#1e293b;background:#fff">
       <button type="submit" class="cat-btn">Buscar</button>
     </form>
   </header>
 
   {% if not buscado %}
-  <div class="cat-empty">Escribe al menos 2 letras. Puedes buscar por nombre, categoría, color, estación o sucursal.</div>
+  <div class="cat-empty">Escribe al menos 2 letras. Puedes buscar por usuario, nombre de prenda, categoría, color, estación o sucursal.</div>
   {% else %}
+  <h2 style="font-size:18px;margin:0 0 12px">Usuarios ({{ usuarios|length }})</h2>
+  <section style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:32px">
+    {% for u in usuarios %}
+    <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px;overflow:hidden">
+        <span style="width:36px;height:36px;border-radius:50%;background:#ffffff;color:#223243;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">
+          {{ u.nombre[0] | upper }}
+        </span>
+        <div style="overflow:hidden">
+          <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.nombre }}</strong>
+          {% if u.biografia %}
+          <small style="color:#94a3b8;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.biografia }}</small>
+          {% endif %}
+        </div>
+      </div>
+      {% if current_user.is_authenticated and current_user.id != u.id %}
+      <a href="{{ url_for('conversacion', uid=u.id) }}" class="cat-btn" style="padding:6px 12px;font-size:12px;text-decoration:none;flex-shrink:0">Mensaje</a>
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="cat-empty" style="grid-column: 1 / -1;">No encontramos usuarios para «{{ q }}».</div>
+    {% endfor %}
+  </section>
+
   <h2 style="font-size:18px;margin:0 0 12px">Colecciones ({{ prendas|length }})</h2>
   <section class="cat-grid">
     {% for p in prendas %}

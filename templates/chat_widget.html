@@ -1,3 +1,7 @@
+<!-- Librerías para renderizar Markdown seguro en el chat -->
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+
 <!-- BOTÓN FLOTANTE DE IA -->
 <div id="chatIaToggle" onclick="toggleChatWindow()" style="position: fixed; bottom: 25px; right: 25px; z-index: 2500; background: #e74c3c; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
   <span style="font-size: 28px;">✨</span>
@@ -5,26 +9,41 @@
 
 <!-- VENTANA DEL CHAT -->
 <div id="chatIaWindow" style="display: none; position: fixed; bottom: 95px; right: 25px; width: 340px; height: 460px; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 2500; flex-direction: column; overflow: hidden; border: 1px solid #eee;">
-  <div style="background: #2c3e50; color: white; padding: 14px 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+  <div style="background: #2c3e50; color: white; padding: 14px 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
     <span>✨ Estilista IA SET-MATCH-GO!</span>
     <span onclick="toggleChatWindow()" style="cursor: pointer; font-size: 18px;">✕</span>
   </div>
 
-  <div id="chatMessages" style="flex-grow: 1; padding: 15px; overflow-y: auto; background: #f8f9fa; font-size: 0.88rem; display: flex; flex-direction: column; gap: 10px;">
-    <div style="background: #e2e8f0; color: #333; padding: 10px 14px; border-radius: 10px; max-width: 85%; align-self: flex-start;">
-      ¡Hola! 👋 Soy tu estilista personal. Pregúntame sobre combinaciones de prendas, tonos para tu piel o consejos de moda.
+  <div id="chatMessages" style="flex-grow: 1; padding: 15px; overflow-y: auto; background: #f8f9fa; font-size: 0.88rem; display: flex; flex-direction: column; gap: 12px;">
+    <div class="chat-msg-row ia-row">
+      <div class="ia-chat-bubble">
+        ¡Hola! 👋 Soy tu estilista personal. Pregúntame sobre combinaciones de prendas, tonos para tu piel o consejos de moda.
+      </div>
     </div>
   </div>
 
   {% if not current_user.is_authenticated %}
-  <div id="chatLimitNotice" style="background: #fff3cd; color: #856404; font-size: 0.75rem; padding: 6px 12px; text-align: center; border-top: 1px solid #ffeeba;">
+  <div id="chatLimitNotice" style="background: #fff3cd; color: #856404; font-size: 0.75rem; padding: 6px 12px; text-align: center; border-top: 1px solid #ffeeba; flex-shrink: 0;">
     Consultas de prueba disponibles
   </div>
   {% endif %}
 
-  <div style="padding: 10px; background: white; border-top: 1px solid #eee; display: flex; gap: 6px;">
-    <input type="text" id="chatInput" placeholder="Escribe tu duda de moda..." style="flex-grow: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.85rem;" onkeypress="if(event.key === 'Enter') enviarPreguntaIa()">
-    <button onclick="enviarPreguntaIa()" style="background: #2c3e50; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer;">Enviar</button>
+  <!-- BANNER DE MODO EDICIÓN -->
+  <div id="chatEditBanner" style="display: none; background: #eff6ff; color: #1e40af; font-size: 0.76rem; padding: 6px 12px; border-top: 1px solid #bfdbfe; justify-content: space-between; align-items: center; flex-shrink: 0;">
+    <span>✏️ Editando mensaje...</span>
+    <button type="button" onclick="cancelarEdicionChat()" style="background: none; border: none; color: #dc2626; font-weight: 700; cursor: pointer; font-size: 0.76rem; padding: 0;">Cancelar</button>
+  </div>
+
+  <div style="padding: 10px; background: white; border-top: 1px solid #eee; display: flex; align-items: flex-end; gap: 6px; flex-shrink: 0;">
+    <textarea
+      id="chatInput"
+      rows="1"
+      maxlength="500"
+      placeholder="Escribe tu duda de moda..."
+      oninput="ajustarAlturaInput(this)"
+      onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); enviarPreguntaIa(); }"
+    ></textarea>
+    <button id="chatSendBtn" onclick="enviarPreguntaIa()" style="background: #2c3e50; color: white; border: none; padding: 9px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; flex-shrink: 0;">Enviar</button>
   </div>
 </div>
 
@@ -40,7 +59,186 @@
   </div>
 </div>
 
+<style>
+  #chatInput {
+    flex-grow: 1;
+    padding: 8px 12px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    line-height: 1.35;
+    resize: none;
+    overflow-y: hidden;
+    min-height: 36px;
+    max-height: 110px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+
+  #chatInput:focus {
+    border-color: #2c3e50;
+  }
+
+  /* CONTENEDORES DE FILA Y ACCIONES (COPIAR / EDITAR) */
+  .chat-msg-row {
+    display: flex;
+    flex-direction: column;
+    max-width: 85%;
+    position: relative;
+  }
+
+  .chat-msg-row.user-row {
+    align-self: flex-end;
+    align-items: flex-end;
+  }
+
+  .chat-msg-row.ia-row {
+    align-self: flex-start;
+    align-items: flex-start;
+  }
+
+  .user-chat-bubble {
+    background: #2c3e50;
+    color: white;
+    padding: 10px 14px;
+    border-radius: 12px 12px 4px 12px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    width: fit-content;
+  }
+
+  .chat-msg-row.editing .user-chat-bubble {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  .ia-chat-bubble {
+    background: #e2e8f0;
+    color: #1e293b;
+    padding: 10px 14px;
+    border-radius: 12px 12px 12px 4px;
+    line-height: 1.45;
+    word-wrap: break-word;
+    width: fit-content;
+  }
+
+  .ia-chat-bubble p {
+    margin: 0 0 6px 0;
+  }
+
+  .ia-chat-bubble p:last-child {
+    margin-bottom: 0;
+  }
+
+  .ia-chat-bubble ul,
+  .ia-chat-bubble ol {
+    margin: 4px 0 6px 0;
+    padding-left: 18px;
+  }
+
+  .ia-chat-bubble li {
+    margin-bottom: 3px;
+  }
+
+  .ia-chat-bubble strong {
+    color: #0f172a;
+    font-weight: 700;
+  }
+
+  .chat-msg-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+
+  .chat-msg-row:hover .chat-msg-actions,
+  .chat-msg-row:focus-within .chat-msg-actions {
+    opacity: 1;
+  }
+
+  .chat-action-btn {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+  }
+
+  .chat-action-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #94a3b8;
+  }
+
+  .chat-edited-tag {
+    font-size: 0.68rem;
+    color: #cbd5e1;
+    font-style: italic;
+    margin-left: 4px;
+  }
+
+  .ia-thinking-bubble {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #e2e8f0;
+    color: #334155;
+    padding: 10px 14px;
+    border-radius: 12px 12px 12px 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    max-width: 85%;
+    align-self: flex-start;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .ia-thinking-dots {
+    display: inline-flex;
+    gap: 4px;
+  }
+
+  .ia-thinking-dots span {
+    width: 6px;
+    height: 6px;
+    background-color: #2c3e50;
+    border-radius: 50%;
+    animation: iaBounce 1.3s infinite ease-in-out;
+  }
+
+  .ia-thinking-dots span:nth-child(2) { animation-delay: 0.18s; }
+  .ia-thinking-dots span:nth-child(3) { animation-delay: 0.36s; }
+
+  .ia-thinking-text {
+    transition: opacity 0.2s ease;
+  }
+
+  .ia-model-chip {
+    color: #2563eb;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8rem;
+  }
+
+  @keyframes iaBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+</style>
+
 <script>
+  let filaEnEdicion = null;
+
   function toggleChatWindow() {
     const win = document.getElementById('chatIaWindow');
     win.style.display = (win.style.display === 'none' || win.style.display === '') ? 'flex' : 'none';
@@ -50,20 +248,216 @@
     document.getElementById('loginRequireModal').style.display = 'none';
   }
 
+  function ajustarAlturaInput(el) {
+    el.style.height = 'auto';
+    const maxAltura = 110;
+    if (el.scrollHeight > maxAltura) {
+      el.style.height = maxAltura + 'px';
+      el.style.overflowY = 'auto';
+    } else {
+      el.style.height = el.scrollHeight + 'px';
+      el.style.overflowY = 'hidden';
+    }
+  }
+
+  async function copiarTextoBurbuja(texto, boton) {
+    try {
+      await navigator.clipboard.writeText(texto);
+      const original = boton.innerHTML;
+      boton.innerHTML = '✓ Copiado';
+      boton.style.color = '#16a34a';
+      boton.style.borderColor = '#86efac';
+      setTimeout(() => {
+        boton.innerHTML = original;
+        boton.style.color = '';
+        boton.style.borderColor = '';
+      }, 1600);
+    } catch (err) {
+      console.error('No se pudo copiar:', err);
+    }
+  }
+
+  function iniciarEdicionChat(fila) {
+    cancelarEdicionChat();
+    filaEnEdicion = fila;
+    fila.classList.add('editing');
+
+    const textoActual = fila.dataset.textoOriginal || '';
+    const input = document.getElementById('chatInput');
+    const banner = document.getElementById('chatEditBanner');
+    const sendBtn = document.getElementById('chatSendBtn');
+
+    input.value = textoActual;
+    ajustarAlturaInput(input);
+    input.focus();
+
+    banner.style.display = 'flex';
+    if (sendBtn) sendBtn.textContent = 'Actualizar';
+  }
+
+  function cancelarEdicionChat() {
+    if (filaEnEdicion) {
+      filaEnEdicion.classList.remove('editing');
+      filaEnEdicion = null;
+    }
+    const input = document.getElementById('chatInput');
+    const banner = document.getElementById('chatEditBanner');
+    const sendBtn = document.getElementById('chatSendBtn');
+
+    input.value = '';
+    ajustarAlturaInput(input);
+    banner.style.display = 'none';
+    if (sendBtn) sendBtn.textContent = 'Enviar';
+  }
+
+  function crearFilaUsuario(texto, editado = false) {
+    const row = document.createElement('div');
+    row.className = 'chat-msg-row user-row';
+    row.dataset.textoOriginal = texto;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'user-chat-bubble';
+    bubble.textContent = texto;
+
+    if (editado) {
+      const tag = document.createElement('span');
+      tag.className = 'chat-edited-tag';
+      tag.textContent = '(editado)';
+      bubble.appendChild(tag);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'chat-msg-actions';
+
+    const btnCopiar = document.createElement('button');
+    btnCopiar.type = 'button';
+    btnCopiar.className = 'chat-action-btn';
+    btnCopiar.innerHTML = '📋 Copiar';
+    btnCopiar.onclick = () => copiarTextoBurbuja(row.dataset.textoOriginal, btnCopiar);
+
+    const btnEditar = document.createElement('button');
+    btnEditar.type = 'button';
+    btnEditar.className = 'chat-action-btn';
+    btnEditar.innerHTML = '✏️ Editar';
+    btnEditar.onclick = () => iniciarEdicionChat(row);
+
+    actions.appendChild(btnCopiar);
+    actions.appendChild(btnEditar);
+    row.appendChild(bubble);
+    row.appendChild(actions);
+
+    return row;
+  }
+
+  function crearFilaIA(respuestaCruda) {
+    const row = document.createElement('div');
+    row.className = 'chat-msg-row ia-row';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'ia-chat-bubble';
+    bubble.innerHTML = formatearMarkdownChat(respuestaCruda);
+
+    const actions = document.createElement('div');
+    actions.className = 'chat-msg-actions';
+
+    const btnCopiar = document.createElement('button');
+    btnCopiar.type = 'button';
+    btnCopiar.className = 'chat-action-btn';
+    btnCopiar.innerHTML = '📋 Copiar';
+    // Copia el texto plano limpio (sin asteriscos ni etiquetas HTML)
+    btnCopiar.onclick = () => copiarTextoBurbuja(bubble.innerText.trim(), btnCopiar);
+
+    actions.appendChild(btnCopiar);
+    row.appendChild(bubble);
+    row.appendChild(actions);
+
+    return row;
+  }
+
+  function formatearMarkdownChat(texto) {
+    if (!texto) return '';
+    if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+      const htmlCrudo = marked.parse(texto, { breaks: true });
+      return DOMPurify.sanitize(htmlCrudo, {
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'ul', 'ol', 'li', 'code'],
+        ALLOWED_ATTR: []
+      });
+    }
+    const div = document.createElement('div');
+    div.textContent = texto;
+    return div.innerHTML;
+  }
+
+  function crearBurbujaPensando(contenedor, modeloIA = "gemini-3.5-flash-lite") {
+    const burbuja = document.createElement('div');
+    burbuja.className = 'ia-thinking-bubble';
+    burbuja.innerHTML = `
+      <div class="ia-thinking-dots">
+        <span></span><span></span><span></span>
+      </div>
+      <span class="ia-thinking-text">Pensando....</span>
+    `;
+    contenedor.appendChild(burbuja);
+    contenedor.scrollTop = contenedor.scrollHeight;
+
+    const textoEl = burbuja.querySelector('.ia-thinking-text');
+    const fases = [
+      { delay: 800, html: `Modelo: <span class="ia-model-chip">${modeloIA}</span>` },
+      { delay: 1900, html: 'Dando resultados del pensamiento...' }
+    ];
+
+    const timers = fases.map(fase =>
+      setTimeout(() => {
+        textoEl.style.opacity = '0';
+        setTimeout(() => {
+          textoEl.innerHTML = fase.html;
+          textoEl.style.opacity = '1';
+          contenedor.scrollTop = contenedor.scrollHeight;
+        }, 160);
+      }, fase.delay)
+    );
+
+    return () => {
+      timers.forEach(clearTimeout);
+      burbuja.remove();
+    };
+  }
+
   async function enviarPreguntaIa() {
     const input = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('chatSendBtn');
     const pregunta = input.value.trim();
     if (!pregunta) return;
 
     const messagesBox = document.getElementById('chatMessages');
 
-    const userMsg = document.createElement('div');
-    userMsg.style.cssText = "background: #2c3e50; color: white; padding: 10px 14px; border-radius: 10px; max-width: 85%; align-self: flex-end;";
-    userMsg.textContent = pregunta;
-    messagesBox.appendChild(userMsg);
+    if (filaEnEdicion) {
+      // Actualiza el texto de la burbuja editada y elimina las respuestas siguientes
+      filaEnEdicion.dataset.textoOriginal = pregunta;
+      const bubble = filaEnEdicion.querySelector('.user-chat-bubble');
+      bubble.textContent = pregunta;
 
-    input.value = '';
+      const tag = document.createElement('span');
+      tag.className = 'chat-edited-tag';
+      tag.textContent = '(editado)';
+      bubble.appendChild(tag);
+
+      while (filaEnEdicion.nextSibling) {
+        filaEnEdicion.nextSibling.remove();
+      }
+      cancelarEdicionChat();
+    } else {
+      const userRow = crearFilaUsuario(pregunta);
+      messagesBox.appendChild(userRow);
+      input.value = '';
+      ajustarAlturaInput(input);
+    }
+
+    input.disabled = true;
+    if (sendBtn) sendBtn.disabled = true;
     messagesBox.scrollTop = messagesBox.scrollHeight;
+
+    const quitarPensando = crearBurbujaPensando(messagesBox, "gemini-3.5-flash-lite");
 
     try {
       const res = await fetch('/api/chat-ia', {
@@ -76,16 +470,15 @@
       });
 
       const data = await res.json();
+      quitarPensando();
 
       if (res.status === 403 && data.limite_alcanzado) {
         document.getElementById('loginRequireModal').style.display = 'flex';
         return;
       }
 
-      const iaMsg = document.createElement('div');
-      iaMsg.style.cssText = "background: #e2e8f0; color: #333; padding: 10px 14px; border-radius: 10px; max-width: 85%; align-self: flex-start;";
-      iaMsg.textContent = data.respuesta;
-      messagesBox.appendChild(iaMsg);
+      const iaRow = crearFilaIA(data.respuesta);
+      messagesBox.appendChild(iaRow);
 
       const limitNotice = document.getElementById('chatLimitNotice');
       if (limitNotice && data.preguntas_restantes !== undefined) {
@@ -94,11 +487,17 @@
 
       messagesBox.scrollTop = messagesBox.scrollHeight;
     } catch (e) {
+      quitarPensando();
       console.error(e);
       const err = document.createElement('div');
       err.style.cssText = "background: #fde8e8; color: #9b1c1c; padding: 10px 14px; border-radius: 10px; max-width: 85%; align-self: flex-start;";
       err.textContent = 'No pude responder ahora. Inténtalo de nuevo.';
       messagesBox.appendChild(err);
+      messagesBox.scrollTop = messagesBox.scrollHeight;
+    } finally {
+      input.disabled = false;
+      if (sendBtn) sendBtn.disabled = false;
+      input.focus();
     }
   }
 </script>
