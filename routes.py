@@ -85,6 +85,51 @@ def _completar_diagnostico(datos):
     return datos
 
 
+def _contexto_ia_usuario():
+    """Construye el contexto de colorimetría (sesión + historial en BD + guardarropa) para el chat IA."""
+    contexto = dict(session.get("ultimo_resultado") or {})
+
+    if not current_user.is_authenticated:
+        return contexto or None
+
+    resultados = current_user.resultados.limit(5).all()
+    if resultados:
+        ultimo = resultados[0]
+        if not contexto.get("estacion"):
+            contexto["estacion"] = ultimo.estacion
+            contexto["subtono"] = ultimo.subtono
+            contexto["paleta"] = paleta_de_estacion(ultimo.estacion)
+            contexto["respuestas"] = ultimo.respuestas
+
+        contexto["historial_tests"] = [
+            {
+                "fecha": r.created_at.strftime("%d/%m/%Y"),
+                "estacion": r.estacion,
+                "subtono": r.subtono,
+                "respuestas": r.respuestas,
+            }
+            for r in resultados
+        ]
+
+    contexto["usuario"] = {
+        "nombre": current_user.nombre,
+        "color_ojos": current_user.color_ojos,
+        "color_cabello": current_user.color_cabello,
+    }
+
+    prendas = (
+        current_user.prendas.order_by(Guardarropa.fecha_creacion.desc())
+        .limit(25)
+        .all()
+    )
+    if prendas:
+        contexto["guardarropa"] = [
+            {"nombre": p.nombre, "categoria": p.categoria} for p in prendas
+        ]
+
+    return contexto or None
+
+
 def register_routes(app):
     @app.route("/")
     def index():
@@ -421,7 +466,7 @@ def register_routes(app):
 
             session["preguntas_ia_count"] = preguntas_realizadas + 1
 
-        respuesta = responder_chat_estilista(pregunta, session.get("ultimo_resultado"))
+        respuesta = responder_chat_estilista(pregunta, _contexto_ia_usuario())
 
         preguntas_restantes = None
         if not current_user.is_authenticated:
